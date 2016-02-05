@@ -1,0 +1,5 @@
+
+
+
+plotConvergence(convergence.asc)
+
