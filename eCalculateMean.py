@@ -24,6 +24,12 @@ parser.add_argument("-d",
                     metavar='\b',
                     help="Directory where the DNS data is stored. (Give full directory)",
                     required=True)
+parser.add_argument("-i",
+                    "--VelComponent",
+                    metavar='\b',
+                    help="Velocity component to plot.",
+                    required=True,
+                    type=int)
 
 ut.print_Start_Bar()
 args = parser.parse_args()
@@ -107,7 +113,7 @@ z_avgd_mean = cumulative
 
 # Average in spanwise direction
 for nz in range(0, ff.Nz):
-    cumulative[:, :] += ff.ff[args.VelComponent, :, :, nz]
+    cumulative[:, :] += ff.velocityField[args.VelComponent, :, :, nz]
 
 z_avgd_mean[:, :] = cumulative[:, :] * (1.0/ff.Nz)
     
