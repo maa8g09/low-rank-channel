@@ -5,7 +5,7 @@ import Utils as ut
 
 
 def resolvent_formulation(ffg):
-
+    x = []
     tmp = np.zeros((ffg.Nx, ffg.Nd*ffg.modes, ffg.Nz), dtype=np.complex128)
 
     # Loop through wavenumber triplets
@@ -35,7 +35,7 @@ def resolvent_formulation(ffg):
                     text02='(mx)kx: ('+str(ffg.Mx[ia])+') '+ str(alpha)+'    (mz)kz: ('+str(ffg.Mz[ib])+') '+ str(beta)
                     print(text02)
 
-                    state_vecs = get_state_vectors(ffg, alpha, beta)
+                    state_vecs = get_state_vectors(ffg, alpha, beta, x)
                     state_vecs['y_cheb_full'] = np.squeeze(np.asarray(state_vecs['y_cheb_full']))
                     ffg.set_y(state_vecs['y_cheb_full'])
 
@@ -127,7 +127,7 @@ def resolvent_formulation(ffg):
 
 
 
-def resolvent_approximation(ffcf, rank):
+def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
 
     kx = ffcf.Mx * ffcf.alpha      # list of wavenumbers to use (modes multiplied by fundamental alpha)
     kz = ffcf.Mz * ffcf.beta       # list of wavenumbers to use (modes multiplied by fundamental beta)
@@ -150,10 +150,10 @@ def resolvent_approximation(ffcf, rank):
 
             if alpha == 0 or beta == 0:
                 # Make sure that the mean is copied over to the approximation
-                u_hat_approx[mx, :, mz] = ffcf.ff[mx, :, mz]
+                u_hat_approx[mx, :, mz] = ffmean.velocityField[mx, :, mz]
                 continue
 
-            state_vecs = get_state_vectors(ffcf, alpha, beta)
+            state_vecs = get_state_vectors(ffcf, alpha, beta, turb_profile)
             state_vecs['y_cheb_full'] = np.squeeze(np.asarray(state_vecs['y_cheb_full']))
             
             vel_modes, singular_values, forcing_modes = np.linalg.svd(state_vecs['H'])
@@ -225,7 +225,7 @@ def resolvent_approximation(ffcf, rank):
 
 
 
-def get_state_vectors(ffg, alpha, beta):
+def get_state_vectors(ffg, alpha, beta, vel_profile):
     """
     We are calculating the state vectors in this function. The methodology
     followed here is given in the following reference in the "Formulation" 
@@ -288,31 +288,36 @@ def get_state_vectors(ffg, alpha, beta):
     del_hat_4 = D4 - 2.0*D2*K2 + K2*K2*I
     
 
-
-    if ffg.baseflow == 'lam':
-        # Laminar Base flow 
-        U = np.identity(ffg.modes) 
-        np.fill_diagonal(U, 1.0 - y_cheb**2.0) # 1 at centreline
-        
-        dU_dy  = np.identity(ffg.modes)
-        np.fill_diagonal(dU_dy, -2.0*y_cheb)
-        
-        d2U_dy2 = -2.0
-
-    elif ffg.baseflow == 'cou':
-        # Couette Base flow
-        U = np.identity(ffg.modes)
-        np.fill_diagonal(U, y_cheb)
-        
-        dU_dy  = np.identity(ffg.modes)
-        np.fill_diagonal(dU_dy, 1.0)
-        
-        d2U_dy2 = 0.0
+    if len(vel_profile) == 0:
+        if ffg.baseflow == 'lam':
+            # Laminar Base flow 
+            U = np.identity(ffg.modes)
+            np.fill_diagonal(U, 1.0 - y_cheb**2.0) # 1 at centreline
+            
+            dU_dy  = np.identity(ffg.modes)
+            np.fill_diagonal(dU_dy, -2.0*y_cheb)
+            
+            d2U_dy2 = -2.0
     
+        elif ffg.baseflow == 'cou':
+            # Couette Base flow
+            U = np.identity(ffg.modes)
+            np.fill_diagonal(U, y_cheb)
+            
+            dU_dy  = np.identity(ffg.modes)
+            np.fill_diagonal(dU_dy, 1.0)
+            
+            d2U_dy2 = 0.0
+        
     else:
-        # Error message
-        ut.error("Base flow not specified.")
+        # Use Turbulent Mean
+        U = np.identity(vel_profile)
+        np.fill_diagonal(U, vel_profile)
+        
+        dU_dy = np.identity(vel_profile)
+        np.fill_diagonal(dU_dy, 0.0)
     
+        d2U_dy2 = 0.0
 
     # pg 60 Schmid Henningson eqns 3.29 and 3.30
     SQ_operator = ((Lap/ffg.Re) - (1.0j * alpha * U))

@@ -303,6 +303,20 @@ def read_Grid(directory, fileName):
     return aray
 
 
+def read_Vel_Profile(fileName):
+    file = open(fileName, 'r')
+    aray = []
+
+    for j, line in enumerate(file):
+        if j!=0: # Don't read the first line.
+            values = line.split()
+            aray.append(float(values[0]))
+
+    aray = np.asanyarray(aray)
+
+    return aray
+
+
 def write_approximated_ASC(flowField, output_directory, rank):
 
     fileName = "u_rank.asc"
@@ -513,6 +527,21 @@ def write_Symms_File(directory, fileName, N, symStrAry):
 #        for i in range(0, N):
 #            string = symStrAry[i] + '\n'
 #            file.write(string)
+
+    file.close()
+
+    return 0
+
+
+def write_Vel_Profile(vel_profile, output_directory, fileName):
+    
+    fileName += ".txt"
+    
+    file = open(output_directory + fileName, "w")
+    
+    for i in range(0, len(vel_profile)):
+        vel = format(vel_profile[i], '.16f')
+        file.write(vel)
 
     file.close()
 

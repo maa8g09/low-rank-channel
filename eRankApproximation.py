@@ -44,6 +44,14 @@ parser.add_argument("-d",
                     metavar='\b',
                     help="Directory where u0_Details.txt is kept.",
                     required=True)
+parser.add_argument("-v",
+                    "--TurbMeanProfile",
+                    metavar='\b',
+                    help="Turbulent mean velocity profile. (Prefix with full directory)")
+parser.add_argument("-m",
+                    "--MeanFile",
+                    metavar='\b',
+                    help="(S,P) Mean ascii file. (Prefix with full directory)")
 
 args = parser.parse_args()
 
@@ -101,9 +109,29 @@ ffcf = ffClass.FlowFieldChannelFlow(var['Nd'],
                                     "sp")
 
 
+
+# Read velocity profile
+turb_mean = ut.read_Vel_Profile(args.TurbMeanFile)
+# Read mean asc file
+tmp = args.MeanFile.find("uMean")
+meanDir = args.MeanFile[:tmp]
+var = ut.read_ASC_SP(meanDir, str(args.MeanFile)[:-4])
+ffmean = ffClass.FlowFieldGeometry(var2['bf'],
+                                   var2['wp'],
+                                   var2['Nd'],
+                                   var2['Nx'],
+                                   var2['Ny'],
+                                   var2['Nz'],
+                                   var2['Re'],
+                                   var2['c'],
+                                   var2['theta'])
+
+ffmean = ffClass.FlowField(ffmean, var['ff'], "sp")
+
+
 ####################################################################################################
 # Constrct an approximation.
-ffcf = cr.resolvent_approximation(ffcf, args.Rank)
+ffcf = cr.resolvent_approximation(ffcf, args.Rank, turb_mean, ffmean)
 
 
 ####################################################################################################

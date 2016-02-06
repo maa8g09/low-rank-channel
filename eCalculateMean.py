@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import os
+import numpy as np
 import Utils as ut
 import FlowField as ffClass
 
@@ -89,9 +90,40 @@ ut.write_GEOM(ff, mean_directory, fileName)
 ut.write_Details(ff, mean_directory, fileName)
 ut.write_FF(mean_directory, fileName)
 
-# plot velocity profile
 
-# plot contour plots
+
+
+
+
+
+
+#### Calculate velocity profile
+# Calculate the mean profile
+cumulative = np.zeros((ff.Nx, ff.Ny))
+vel_profile = np.zeros((ff.Ny))
+
+z_avgd_mean = cumulative
+
+
+# Average in spanwise direction
+for nz in range(0, ff.Nz):
+    cumulative[:, :] += ff.ff[args.VelComponent, :, :, nz]
+
+z_avgd_mean[:, :] = cumulative[:, :] * (1.0/ff.Nz)
+    
+cumulative = vel_profile
+# Average in streamwise direction
+for nx in range(0, ff.Nx):
+    cumulative[:] += z_avgd_mean[nx, :]
+    
+vel_profile[:] = cumulative[:] * (1.0/ff.Nx)
+
+
+# Write the mean profile in wall-normal direction
+ut.write_Vel_Profile(vel_profile, mean_directory, "turb_mean")
+
+
+# maybe plot contour plots
 
 
 command = "rm -rf " + tmp_directory
