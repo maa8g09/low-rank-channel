@@ -47,11 +47,13 @@ parser.add_argument("-d",
 parser.add_argument("-v",
                     "--TurbMeanProfile",
                     metavar='\b',
-                    help="Turbulent mean velocity profile. (Prefix with full directory)")
+                    help="Turbulent mean velocity profile. (Prefix with full directory)",
+                    required=True)
 parser.add_argument("-m",
                     "--MeanFile",
                     metavar='\b',
-                    help="(S,P) Mean ascii file. (Prefix with full directory)")
+                    help="(S,P) Mean ascii file. (Prefix with full directory)",
+                    required=True)
 
 args = parser.parse_args()
 
