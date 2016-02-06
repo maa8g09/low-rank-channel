@@ -541,6 +541,7 @@ def write_Vel_Profile(vel_profile, output_directory, fileName):
     
     for i in range(0, len(vel_profile)):
         vel = format(vel_profile[i], '.16f')
+        vel += "\n"
         file.write(vel)
 
     file.close()
