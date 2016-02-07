@@ -308,9 +308,8 @@ def read_Vel_Profile(fileName):
     aray = []
 
     for j, line in enumerate(file):
-        if j!=0: # Don't read the first line.
-            values = line.split()
-            aray.append(float(values[0]))
+        values = line.split()
+        aray.append(float(values[0]))
 
     aray = np.asanyarray(aray)
 

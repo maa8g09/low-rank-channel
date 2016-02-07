@@ -116,7 +116,7 @@ for nz in range(0, ff.Nz):
     cumulative[:, :] += ff.velocityField[args.VelComponent, :, :, nz]
 
 z_avgd_mean[:, :] = cumulative[:, :] * (1.0/ff.Nz)
-    
+
 cumulative = vel_profile
 # Average in streamwise direction
 for nx in range(0, ff.Nx):

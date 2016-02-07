@@ -135,7 +135,7 @@ def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
     # Ny = num of modes when approximating    
     Ny_orig = ffcf.Ny
     ffcf.set_Ny(Ny_orig+2)
-    
+
     rank = min(rank, 3*ffcf.modes)
     ffcf.set_rank(rank)
 
@@ -287,7 +287,9 @@ def get_state_vectors(ffg, alpha, beta, vel_profile):
     Lap = D2 - K2*I #Laplacian
     del_hat_4 = D4 - 2.0*D2*K2 + K2*K2*I
     
-
+    #print("\nVelocity profile length: " + str(len(vel_profile)))
+    #print("")
+    #print(vel_profile)
     if len(vel_profile) == 0:
         if ffg.baseflow == 'lam':
             # Laminar Base flow 
@@ -311,10 +313,10 @@ def get_state_vectors(ffg, alpha, beta, vel_profile):
         
     else:
         # Use Turbulent Mean
-        U = np.identity(vel_profile)
+        U = np.identity(len(vel_profile))
         np.fill_diagonal(U, vel_profile)
         
-        dU_dy = np.identity(vel_profile)
+        dU_dy = np.identity(len(vel_profile))
         np.fill_diagonal(dU_dy, 0.0)
     
         d2U_dy2 = 0.0

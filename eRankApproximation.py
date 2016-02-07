@@ -113,11 +113,11 @@ ffcf = ffClass.FlowFieldChannelFlow(var['Nd'],
 
 
 # Read velocity profile
-turb_mean = ut.read_Vel_Profile(args.TurbMeanFile)
+turb_mean = ut.read_Vel_Profile(args.TurbMeanProfile)
 # Read mean asc file
 tmp = args.MeanFile.find("uMean")
 meanDir = args.MeanFile[:tmp]
-var = ut.read_ASC_SP(meanDir, str(args.MeanFile)[:-4])
+var = ut.read_ASC_SP(meanDir, "uMean")
 ffmean = ffClass.FlowFieldGeometry(var2['bf'],
                                    var2['wp'],
                                    var2['Nd'],
