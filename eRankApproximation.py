@@ -36,7 +36,7 @@ parser.add_argument("-f",
 parser.add_argument("-r",
                     "--Rank",
                     metavar='\b',
-                    help="Number of modes to use to recreate flow field.",
+                    help="Number of velocity modes to use to recreate flow field.",
                     required=True,
                     type=int)
 parser.add_argument("-d",
