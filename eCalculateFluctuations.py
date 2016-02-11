@@ -33,13 +33,17 @@ d = args.Directory
 if d[-1] != '/':
     d += '/'
 
-##################################################################
-# Read total (instantaneous) vel field
+#================================================================
+#### Read total (instantaneous) vel field
+#================================================================
 var = ut.read_FF(pwd, args.File[:-3])
 
 var2 = ut.read_Details(d, "u0")
 
-# Construct instance of ffClass
+
+#================================================================
+#### Construct instance of ffClass
+#================================================================
 ff = ffClass.FlowFieldGeometry(var2['bf'],
                                var2['wp'],
                                var2['Nd'],
@@ -53,31 +57,45 @@ ff = ffClass.FlowFieldGeometry(var2['bf'],
 ff = ffClass.FlowField(ff, var['ff'], "pp")
 
 
-
-##################################################################
-# Read mean file
+#================================================================
+#### Read mean file
+#================================================================
 var = ut.read_FF(pwd, args.MeanFile[:-3])
 
-# Construct instance of ffClass
+
+#================================================================
+#### Construct instance of ffClass
+#================================================================
 meanff = ffClass.FlowField(ff, var['ff'], "pp")
 
 
-##################################################################
-# Calculate the difference
+#================================================================
+#### Calculate the difference
+#================================================================
+
 delta = ut.calculate_Difference(ff.velocityField, meanff.velocityField) # ff1 - ff2
 
+
+#================================================================
 # Construct instance of ffClass
+#================================================================
 delta = ffClass.FlowField(ff, delta, "pp")
 
 
-##################################################################
-# Save ASC, GEOM, FF
+#================================================================
+#### Save ASC, GEOM, FF
+#================================================================
 fileName = args.File[:-3] + "_flucs"
 ut.write_ASC(delta, pwd, fileName)
 ut.write_GEOM(delta, pwd, fileName)
 ut.write_FF(pwd, fileName)
 
+
+#================================================================
+#### Remove excess files
+#================================================================
 command = "rm " + fileName + ".asc " + fileName + ".geom "
 os.system(command)
-    
+
+
 ut.print_EndMessage()

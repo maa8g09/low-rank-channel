@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(description="Generate a recurrence plot, over t
 parser.add_argument("-d",
                     "--Directory",
                     metavar='\b',
-                    help="Output directory.",
+                    help="Output directory. The directory should be the data-X/ folder.",
                     required=True)
 parser.add_argument("-T0",
                     "--T0",

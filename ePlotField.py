@@ -106,8 +106,9 @@ ffg = ffClass.FlowFieldGeometry(var2['bf'],
 
 ff = ffClass.FlowField(ffg, var['ff'], "pp")
 i = args.VelComponent
-m = i+1
-p = i-1
+n = args.SpatialComponent
+m = n+1
+p = n-1
 
 if m==3:
     m=0
@@ -166,7 +167,7 @@ elif n == 2:
 
     print("\nPlotting some awesome contourplots in z direction")
     for j in range(0, ff.Nz):
-        ut.plot_Contour(z_directory, str(args.File[:-3]), ff.x, ff.y, ff.velocityField[i, :, :, j].T, ":", ":", format(ff.z[j], '.2f'), ff.Re, "-", "-", str(j), ff.velocityField[m, :, :, j], ff.velocityField[p, :, :, j], "x", "y", velName)
+        ut.plot_Contour(z_directory, str(args.File[:-3]), ff.x, ff.y, ff.velocityField[i, :, :, j].T, ":", ":", format(ff.z[j], '.2f'), ff.Re, "-", "-", str(j), ff.velocityField[m, :, :, j].T, ff.velocityField[p, :, :, j].T, "x", "y", velName)
         print(j)
 
 
@@ -175,5 +176,6 @@ elif n == 2:
 os.chdir(images_directory)
 command = "rm *.asc *.geom"
 os.system(command)
+
 
 ut.print_EndMessage()

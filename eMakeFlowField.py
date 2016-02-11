@@ -7,7 +7,6 @@
 ## Need to add all the usual things about yourself. Name, Institute etc.
 
 
-import os
 import argparse
 import time
 import FlowField as ffClass
@@ -130,8 +129,8 @@ else:
 
 ####################################################################################################
 # Pass the FlowField class to main_resolvent (this is where the flow field is generated)
-ff = cr.resolvent_formulation(flowFieldGeometry)
-ff = ffClass.FlowField(flowFieldGeometry, ff, "pp")
+vff = cr.resolvent_formulation(flowFieldGeometry)
+ff = ffClass.FlowField(flowFieldGeometry, vff, "pp")
 ####################################################################################################
 # Save flow field to output_directory
 if args.SaveDAT:

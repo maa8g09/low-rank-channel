@@ -171,6 +171,7 @@ def read_Details(directory, fileName):
 
 def read_FF(directory, fileName):
     command = "field2ascii -p " + fileName+".ff " + fileName
+    print("\n",command,"\n")
     os.system(command)
 
     var = read_ASC_PP(directory, fileName)
@@ -432,7 +433,7 @@ def write_DAT(flowField, output_directory, fileName):
 
     title   = 'TITLE= "Initial flow field at Re = ' + str(flowField.Re) + '"\n'
     columns = 'VARIABLES = "X", "Y", "Z", "U", "V", "W"\n'
-    zones   = 'ZONE I=' + str(flowField.Nx) + ', J=' + str(flowField.Ny) + ', K=' + str(flowField.Nz) + ', F=POINT\n'
+    zones   = 'ZONE I=' + str(int(flowField.Nx)) + ', J=' + str(int(flowField.Ny)) + ', K=' + str(int(flowField.Nz)) + ', F=POINT\n'
 
     file.write(title)
     file.write(columns)
@@ -563,12 +564,14 @@ def plot_Contour(output_directory, fileName,
     x, y = np.meshgrid(xAxis, yAxis)
     v_min = np.amin(data)
     v_max = np.amax(data)
-    v = np.linspace(v_min, v_max, 9, endpoint=True)
-#    ticks_at = [v_min, 0, v_max]
+    v = np.linspace(v_min, v_max, 301, endpoint=True)
+    ticks_at = [v_min, 0, v_max]
     origin = 'lower'
 
-
-    fig = plt.figure()
+    my_dpi = 96
+    figx = abs(xAxis[0] - xAxis[-1]) * 200.0
+    figy = abs(yAxis[0] - yAxis[-1]) * 200.0
+    fig = plt.figure(figsize=(figx/my_dpi, figy/my_dpi), dpi=my_dpi)
     CS = plt.contourf(x, 
                       y, 
                       data, 
@@ -589,17 +592,17 @@ def plot_Contour(output_directory, fileName,
     title = "Re" + str(Re) + "\nt = " + fileName[1:] + "\n[ " + velName + " , " + xCoordStr + " , " + yCoordStr + " , " + zCoordStr + " ]"
     plt.title(title)
 
-#    cbar = fig.colorbar(CS,ticks=ticks_at,format='%1.2g')#,fraction=0.046, pad=0.04)
-    cbar = fig.colorbar(CS)
+#    cbar = fig.colorbar(CS)
+    cbar = fig.colorbar(CS,ticks=ticks_at,format='%1.2g')#,fraction=0.046, pad=0.04)
     cbar.ax.set_ylabel(velName)
 
-#    plt.axes().set_aspect('equal')
+    plt.axes().set_aspect('equal')
 
     plt.xticks(xticks)#, fontsize = 15)
     plt.yticks(yticks)#, fontsize = 15)
 
-    fileName = output_directory + fileName + "_x" + nxCoordStr + "_y" + nyCoordStr + "_z" + nzCoordStr + ".png"
-    plt.savefig(fileName, dpi=100)
+    fileName = output_directory + fileName + "_" + velName + "_x" + nxCoordStr + "_y" + nyCoordStr + "_z" + nzCoordStr + ".png"
+    plt.savefig(fileName, dpi=96)
     plt.close(fig)
 
     return 0
@@ -624,6 +627,21 @@ def plot_Convergence_DNS(data, T0, T1): # include T0 and T1 in the name of the f
     plt.savefig(fileName)
 
     return 0
+
+
+def plot_Vel_Profile(output_directory, fileName, vel_profile, y,
+                     xAxisName, yAxisName):
+
+    my_dpi = 96
+    plt.figure(figsize=(400/my_dpi, 800/my_dpi), dpi=my_dpi)
+    plt.plot(vel_profile, y, 'k-')
+    plt.xlabel(xAxisName)
+    plt.ylabel(yAxisName)
+    plt.grid(True)
+    plt.savefig(output_directory + fileName + ".png", dpi=my_dpi)
+
+    return 0
+
 
 def calculate_Difference(ff1, ff2): # 4D velocity fields
 
@@ -660,7 +678,6 @@ def calculate_Mean(dns_data_directory, tmp_directory, T0, T1):
         k = str(k)
         
         if k[0] == 'u' and k[-3:] == '.ff':
-            print(k[:-3])
             timeUnit = float(k[1:-3])
 
             bool_start_pt = isclose(T0, timeUnit) # for the end points
@@ -694,6 +711,37 @@ def calculate_Mean(dns_data_directory, tmp_directory, T0, T1):
     mean_ff = (1.0 / TSteps) * mean_ff
 
     var['ff'] = mean_ff
+
+    return var
+
+
+def calculate_Vel_Profiles(ff):
+
+    cumulative = np.zeros((ff.Nd, ff.Nx, ff.Ny))
+    vel_profile = np.zeros((ff.Nd, ff.Ny))
+    z_avgd_mean = cumulative
+    
+    # Average in spanwise direction
+    for i in range(0, ff.Nd):
+        for nz in range(0, ff.Nz):
+            cumulative[i, :, :] += ff.velocityField[i, :, :, nz]
+
+    z_avgd_mean = (1.0/ff.Nz) * cumulative
+    cumulative = vel_profile
+    
+    # Average in streamwise direction
+    for i in range(0, ff.Nd):
+        for nx in range(0, ff.Nx):
+            cumulative[i, :] += z_avgd_mean[i, nx, :]
+
+    vel_profile = (1.0/ff.Nx) * cumulative
+
+    var = {}
+    var['u'] = vel_profile[0, :]
+    var['v'] = vel_profile[1, :]
+    var['w'] = vel_profile[2, :]
+    var['U'] = np.sqrt(var['u']**2 + var['v']**2 + var['w']**2)
+    var['y'] = np.linspace(-1.0, 1.0, ff.Ny)
 
     return var
 

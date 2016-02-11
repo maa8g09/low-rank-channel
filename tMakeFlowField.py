@@ -31,17 +31,17 @@ def main(wp, Nd, Nx, Ny, Nz, Re, c, th, bf, d, asc, dat, hdf5):
     ####################################################################################################
     # Save flow field to output_directory
     if dat:
-        ut.write_DAT(ff, output_directory)
+        ut.write_DAT(ff, output_directory, "u0")
     
     if asc:
-        ut.write_ASC(ff, output_directory)
-        ut.write_GEOM(ff, output_directory)
+        ut.write_ASC(ff, output_directory, "u0")
+        ut.write_GEOM(ff, output_directory, "u0")
     
     #if hdf5:
     #    ut.writeHDF5(ff, flowFieldGeometry, output_directory)
     
     # Save details of the flow field in a file called u0_details.txt
-    ut.write_Details(ff, output_directory)
+    ut.write_Details(ff, output_directory, "u0")
     
     print("\nThe flow field has been stored at")
     print(output_directory)
@@ -51,4 +51,4 @@ def main(wp, Nd, Nx, Ny, Nz, Re, c, th, bf, d, asc, dat, hdf5):
 asc = True
 dat = True
 hdf = False
-main("KB", 3, 60, 30, 40, 1000.0, 0.3, -1.0, "cou", "/home/arslan/Desktop/test", asc, dat, hdf)
+main("KB", 3, 60, 30, 40, 1000.0, 0.3, -1.0, "lam", "/home/arslan/Desktop/test", asc, dat, hdf)

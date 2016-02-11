@@ -1,7 +1,6 @@
 import numpy as np
 import PseudoSpectralMethods as ps
 import Tests
-import Utils as ut
 
 
 def resolvent_formulation(ffg):
@@ -41,13 +40,16 @@ def resolvent_formulation(ffg):
 
                     vel_modes, singular_values, forcing_modes = np.linalg.svd(state_vecs['H'])
                     Tests.SVDNorm(vel_modes, singular_values, forcing_modes, state_vecs['H'])
+                    Tests.orthogonality(vel_modes)
+                    Tests.orthogonality(forcing_modes)
 
-                    # Non-weighted resolvent modes
-                    resolvent_modes = np.linalg.solve(state_vecs['cq'].T, vel_modes)
+                    # Non-weighted resolvent modes (physical velocity modes)
+                    resolvent_modes = np.linalg.solve(state_vecs['cq'], vel_modes)
                     Tests.divergence(resolvent_modes, alpha, beta, ffg.modes, state_vecs['D1'])
+                    resolvent_modes = np.asmatrix(resolvent_modes)
 
                     # u_tilde = chi_tilde * Psi
-                    u_tilde = ffg.chi_tilde[i] * resolvent_modes[:, 0] # Rank 1
+                    u_tilde = resolvent_modes[:, 0] * ffg.chi_tilde[i] # Rank 1
                     u_tilde = np.asmatrix(u_tilde)
 
                     # Inverse fourier transform
@@ -90,27 +92,22 @@ def resolvent_formulation(ffg):
     U_v = tmp.real[:,   ffg.modes:ffg.modes*2, :]
     U_w = tmp.real[:, 2*ffg.modes:ffg.modes*3, :]
 
-    old = True
-    if old == True:
-        ffg.set_Ny(ffg.modes)
-
     generated_ff = np.zeros((ffg.Nd, ffg.Nx, ffg.Ny, ffg.Nz), dtype=np.float64)
 
-    if old == False:
-        U_u = np.concatenate((top_boundary[:,:,:],
-                              U_u[:,:,:],
-                              bot_boundary[:,:,:]),
-                              axis=1)
+    U_u = np.concatenate((top_boundary[:,:,:],
+                          U_u[:,:,:],
+                          bot_boundary[:,:,:]),
+                          axis=1)
 
-        U_v = np.concatenate((top_boundary[:,:,:],
-                              U_v[:,:,:],
-                              bot_boundary[:,:,:]),
-                              axis=1)
+    U_v = np.concatenate((top_boundary[:,:,:],
+                          U_v[:,:,:],
+                          bot_boundary[:,:,:]),
+                          axis=1)
 
-        U_w = np.concatenate((top_boundary[:,:,:],
-                              U_w[:,:,:],
-                              bot_boundary[:,:,:]),
-                              axis=1)
+    U_w = np.concatenate((top_boundary[:,:,:],
+                          U_w[:,:,:],
+                          bot_boundary[:,:,:]),
+                          axis=1)
 
     for i in range(0, ffg.Nd):
         for nx in range(0, ffg.Nx):
@@ -160,12 +157,12 @@ def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
             Tests.SVDNorm(vel_modes, singular_values, forcing_modes, state_vecs['H'])
             
             # Non-weighted resolvent modes
-            resolvent_modes = np.linalg.solve(state_vecs['cq'].T, vel_modes)
+            resolvent_modes = np.linalg.solve(state_vecs['cq'], vel_modes)
             Tests.divergence(resolvent_modes, alpha, beta, ffcf.modes, state_vecs['D1'])
             Tests.orthogonality(vel_modes)
 
             # chi  = singular_values * eta
-            chi = get_scalars(ffcf.ff[mx, :, mz], vel_modes, rank)
+            chi = get_scalars(ffcf.ff[mx, :, mz], resolvent_modes, state_vecs['cq'], rank)
             chi = np.asarray(chi)
             chi = np.asmatrix(chi)
             print('chi shape')
@@ -355,13 +352,13 @@ def get_state_vectors(ffg, alpha, beta, vel_profile):
     clencurt_quadrature = np.vstack((np.hstack((clencurt_quadrature,Z,Z)),
                                      np.hstack((Z,clencurt_quadrature,Z)),
                                      np.hstack((Z,Z,clencurt_quadrature))))
-    C = clencurt_quadrature * C
+
+    clencurt_quadrature = np.asmatrix(clencurt_quadrature)
     
+    C_w = clencurt_quadrature * C
     
     # Adjoint of C maps the forcing vector to the state vector
-    C_adj = np.linalg.pinv(C)
-    C_adj = C.getH()
-    
+    w_inv_C_adj = C.conjugate().T * np.linalg.inv(clencurt_quadrature)
 
     # Calculating the resolvent operator
     I = np.eye(A.shape[0])
@@ -371,7 +368,7 @@ def get_state_vectors(ffg, alpha, beta, vel_profile):
     R_A = -1.0 * Linv # resolvent of A
 
     # Calculating the transfer function
-    H = C * R_A * C_adj # transfer function
+    H = C_w * R_A * w_inv_C_adj # transfer function
     
     state_vecs = {}
     state_vecs['H'] = H
@@ -384,24 +381,33 @@ def get_state_vectors(ffg, alpha, beta, vel_profile):
 
 
 
-def get_scalars(u_hat, vel_modes, rank):
+def get_scalars(u_hat, resolvent_modes, cq, rank):
+
+
+
+
+
+
+
+
+
 
     #========================================================================
     # Projecting with the required amount of column vectors==================
     #========================================================================
     vel_modes = np.asmatrix(vel_modes) # vel_modes have already been mutltiplied by the clencurt quadrature
     psi = vel_modes[: , :rank] # column vectors
-    
+
     # Get the complex conjugate of the modes.
     psi_star = psi.H
-    
+
     # Initialize the scalars vector (shape = Nd*Ny, long vector for u, v, w)
     chi = np.zeros((rank, 1), dtype=np.complex128)
-    
+
     # Convert from array to matrix for multiplication later
     u_hat = np.asmatrix(u_hat).T
-    
+
     chi = psi_star * u_hat
-        
+
     return chi
     

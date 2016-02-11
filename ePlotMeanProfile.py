@@ -130,6 +130,7 @@ for ny in range(0, ffcf.Ny):                             # laminar profile
     y[ny] = np.cos(ny*np.pi/(ffcf.Ny-1))
     u_lam[ny] = 1.0 - y[ny]**2.0
 
+
 #### Plot 1
 u_lam = u_lam[ffcf.Ny/2.0:-1].T
 vel = vel_stable[ffcf.Ny/2.0:-1].T
