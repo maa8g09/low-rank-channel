@@ -18,16 +18,17 @@ def main(wp, Nd, Nx, Ny, Nz, Re, c, th, bf, d, asc, dat, hdf5):
 
     ####################################################################################################
     # Pass these variables to the FlowField class to construct an instance of the geometry
-    flowFieldGeometry = ffClass.FlowFieldGeometry(bf,wp, Nd, Nx, Ny, Nz, Re, c, th)
+    ffg = ffClass.FlowFieldGeometry(bf,wp, Nd, Nx, Ny, Nz, Re, c, th)
 
     ####################################################################################################
     # Make the correct directory to store the flow field in
-    output_directory = ut.make_FlowField_output_directory(d, flowFieldGeometry, date)
+    output_directory = ut.make_FlowField_output_directory(d, ffg, date)
 
     ####################################################################################################
     # Pass the FlowField class to main_resolvent (this is where the flow field is generated)
-    ff = cr.resolvent_formulation(flowFieldGeometry)
-    ff = ffClass.FlowField(flowFieldGeometry, ff, "pp")
+    vff, y = cr.resolvent_formulation(ffg)
+    ff = ffClass.FlowField(ffg, vff, "pp")
+    ff.set_y(y)
     ####################################################################################################
     # Save flow field to output_directory
     if dat:
@@ -35,10 +36,11 @@ def main(wp, Nd, Nx, Ny, Nz, Re, c, th, bf, d, asc, dat, hdf5):
     
     if asc:
         ut.write_ASC(ff, output_directory, "u0")
+        ut.write_ASC_Py(ff, output_directory, "u0")
         ut.write_GEOM(ff, output_directory, "u0")
     
     #if hdf5:
-    #    ut.writeHDF5(ff, flowFieldGeometry, output_directory)
+    #    ut.writeHDF5(ff, ffg, output_directory)
     
     # Save details of the flow field in a file called u0_details.txt
     ut.write_Details(ff, output_directory, "u0")
@@ -51,4 +53,5 @@ def main(wp, Nd, Nx, Ny, Nz, Re, c, th, bf, d, asc, dat, hdf5):
 asc = True
 dat = True
 hdf = False
-main("KB", 3, 60, 30, 40, 1000.0, 0.3, -1.0, "lam", "/home/arslan/Desktop/test", asc, dat, hdf)
+main("KB", 3, 36, 65, 36, 1200.0, 0.6666666666666666666, 0.0, "lam", "/Users/arslan/Desktop/test", asc, dat, hdf)
+# NX MUST EQUAL NZ

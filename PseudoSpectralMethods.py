@@ -309,9 +309,8 @@ def chebint(fk, x, debug):
     return p
 
 
-def my_ifft(u_tilde, alpha, beta, FlowFieldGeometry):
+def my_ifft(u_tilde, alpha, beta, ffg):
 
-    ffg = FlowFieldGeometry
     u = np.zeros((ffg.Nx, 3*ffg.modes, ffg.Nz), dtype=np.complex128)
     u_tilde = np.asarray(u_tilde)
     u_tilde = u_tilde[:, 0]

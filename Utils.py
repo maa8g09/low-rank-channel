@@ -398,6 +398,29 @@ def write_ASC(flowField, output_directory, fileName):
     return 0
 
 
+def write_ASC_Py(flowField, output_directory, fileName):
+    fileName += '_pp.asc'
+    file = open(output_directory + fileName, "w")
+
+    for nx in range(0, flowField.Nx):
+        for ny in range(0, flowField.Ny):
+            for nz in range(0, flowField.Nz):
+                for nd in range(0, flowField.Nd):
+                    tmp = flowField.velocityField[nd, nx, ny, nz]
+                    line = str(nd) + '\t'
+                    line+= str(nx) + '\t'
+                    line+= str(ny) + '\t'
+                    line+= str(nz) + '\t'
+                    line+= format(tmp, '.16f')
+                    file.write(line + "\n")
+
+    file.close()
+
+    print('\nSaved ASCII Py file')
+
+    return 0
+
+
 def write_Details(flowField, output_directory, fileName):
 
     fileName += "_Details.txt"
@@ -427,27 +450,28 @@ def write_Details(flowField, output_directory, fileName):
 
     return 0
 
-def write_DAT(flowField, output_directory, fileName):
+def write_DAT(ff, output_directory, fileName):
     fileName += '.dat'
     file = open(output_directory + fileName, "w")
 
-    title   = 'TITLE= "Initial flow field at Re = ' + str(flowField.Re) + '"\n'
-    columns = 'VARIABLES = "X", "Y", "Z", "U", "V", "W"\n'
-    zones   = 'ZONE I=' + str(int(flowField.Nx)) + ', J=' + str(int(flowField.Ny)) + ', K=' + str(int(flowField.Nz)) + ', F=POINT\n'
+    title   = 'TITLE= "Initial flow field at Re = ' + str(ff.Re) + '"\n'
+    columns = 'VARIABLES = "X", "Y", "Z", "U"\n'#, "V", "W"\n'
+    zones   = 'ZONE I=' + str(int(ff.Nx)) + ', J=' + str(int(ff.Ny)) + ', K=' + str(int(ff.Nz)) + ', DATAPACKING=POINT\n'
+#    zones   = 'ZONE I=' + str(int(ff.Nx)) + ', J=' + str(int(ff.Ny)) + ', DATAPACKING=POINT\n'
 
     file.write(title)
     file.write(columns)
     file.write(zones)
 
-    for nx in range(0, flowField.Nx):
-        for ny in range(0, flowField.Ny):
-            for nz in range(0, flowField.Nz):
-                string  = format(flowField.x[nx], '.8f') + ' '
-                string += format(flowField.y[ny], '.8f') + ' '
-                string += format(flowField.z[nz], '.8f') + ' '
-                string += format(flowField.velocityField[0, nx, ny, nz], '.16f') + ' '
-                string += format(flowField.velocityField[1, nx, ny, nz], '.16f') + ' '
-                string += format(flowField.velocityField[2, nx, ny, nz], '.16f') + ' '
+    for nx in range(0, ff.Nx):
+        for ny in range(0, ff.Ny):
+            for nz in range(0, ff.Nz):
+                string  = format(ff.x[nx], '.2f') + ' '
+                string += format(ff.y[ny], '.2f') + ' '
+                string += format(ff.z[nz], '.2f') + ' '
+                string += format(ff.velocityField[0, nx, ny, nz], '.16f') + ' '
+#                string += format(ff.velocityField[1, nx, ny, nz], '.16f') + ' '
+#                string += format(ff.velocityField[2, nx, ny, nz], '.16f')
 
                 file.write(string+'\n')
 
@@ -569,7 +593,7 @@ def plot_Contour(output_directory, fileName,
     origin = 'lower'
 
     my_dpi = 96
-    figx = abs(xAxis[0] - xAxis[-1]) * 200.0
+    figx = abs(xAxis[0] - xAxis[-1]) * 400.0
     figy = abs(yAxis[0] - yAxis[-1]) * 200.0
     fig = plt.figure(figsize=(figx/my_dpi, figy/my_dpi), dpi=my_dpi)
     CS = plt.contourf(x, 

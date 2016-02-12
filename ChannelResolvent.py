@@ -4,7 +4,9 @@ import Tests
 
 
 def resolvent_formulation(ffg):
+    
     x = []
+    y_cheb = np.zeros((ffg.Ny))
     tmp = np.zeros((ffg.Nx, ffg.Nd*ffg.modes, ffg.Nz), dtype=np.complex128)
 
     # Loop through wavenumber triplets
@@ -17,9 +19,10 @@ def resolvent_formulation(ffg):
         modes_streamwise = fund_alpha * ffg.Mx
         modes_spanwise   = fund_beta * ffg.Mz
 
-        text01='alpha:'+ str(fund_alpha)+ '  beta:'+ str(fund_beta)+ '    amplitude:'+ str(ffg.chi_tilde[i])
+        text01='alpha:'+ str(fund_alpha)+ '\tbeta:'+ str(fund_beta)+ '\tamplitude:'+ str(ffg.chi_tilde[i])
+        
         print(text01)
-        print('kx = mx * alpha        kz = mz * beta')
+        print('kx = mx * alpha\tkz = mz * beta')
 
         # Loop through the stationary modes
         for ia in range(0, len(modes_streamwise)):
@@ -31,12 +34,13 @@ def resolvent_formulation(ffg):
                     if alpha == 0 or beta == 0:
                         continue
 
-                    text02='(mx)kx: ('+str(ffg.Mx[ia])+') '+ str(alpha)+'    (mz)kz: ('+str(ffg.Mz[ib])+') '+ str(beta)
+                    text02 ='(mx)kx: ('+str(ffg.Mx[ia])+') '+ str(alpha) + '\t\t'
+                    text02+='(mz)kz: ('+str(ffg.Mz[ib])+') '+ str(beta)
                     print(text02)
 
                     state_vecs = get_state_vectors(ffg, alpha, beta, x)
                     state_vecs['y_cheb_full'] = np.squeeze(np.asarray(state_vecs['y_cheb_full']))
-                    ffg.set_y(state_vecs['y_cheb_full'])
+                    y_cheb = state_vecs['y_cheb_full']
 
                     vel_modes, singular_values, forcing_modes = np.linalg.svd(state_vecs['H'])
                     Tests.SVDNorm(vel_modes, singular_values, forcing_modes, state_vecs['H'])
@@ -53,7 +57,7 @@ def resolvent_formulation(ffg):
                     u_tilde = np.asmatrix(u_tilde)
 
                     # Inverse fourier transform
-                    physical_ff = np.zeros((ffg.Nx, 3*ffg.modes, ffg.Nz), dtype=np.complex128)
+                    physical_ff = np.zeros((ffg.Nx, ffg.Nd*ffg.modes, ffg.Nz), dtype=np.complex128)
                     physical_ff = ps.my_ifft(u_tilde[:,0], alpha, beta, ffg)
                     tmp += physical_ff
 
@@ -77,8 +81,9 @@ def resolvent_formulation(ffg):
 #        generated_ff[:, :,         1:ffg.Ny-1, :]   = tmp2[:, :,          0:ffg.modes, :].real
 #        generated_ff[:, :,  ffg.Ny+1:ffg.Ny*2-1, :] = tmp2[:, :,  ffg.modes:ffg.modes*2, :].real
 #        generated_ff[:, :,2*ffg.Ny+1:ffg.Ny*3-1, :] = tmp2[:, :,2*ffg.modes:ffg.modes*3, :].real
-
-
+    y_cheb = np.asarray(y_cheb)
+    y_cheb = np.squeeze(y_cheb)
+    
     # My way of re-arranging...
     if ffg.baseflow == "lam":
         top_boundary = np.zeros((ffg.Nx, 1, ffg.Nz)) # no-slip boundary condition
@@ -120,7 +125,7 @@ def resolvent_formulation(ffg):
                     elif i == 2: # w direction
                         generated_ff[i, nx, ny, nz] = U_w[nx, ny, nz]
 
-    return generated_ff
+    return generated_ff, y_cheb
 
 
 

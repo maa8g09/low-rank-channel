@@ -32,7 +32,7 @@ class FlowFieldGeometry(object):
         self.Nx = Nx
         self.Ny = Ny
         self.Nz = Nz
-        constant = 1.0
+        constant = 4.0
         self.Lx = constant * 2.0*np.pi / kx[0]
         self.Lz = constant * 2.0*np.pi / kz[0]
 
@@ -40,7 +40,7 @@ class FlowFieldGeometry(object):
         # X axis
         # Full range of Fourier modes
         self.Mx_full = np.arange((-Nx/2.0), (Nx/2.0)+1)
-        # 1 harmonic
+        # 1 harmonic 
         self.Mx = np.arange(-1.0, 2.0)
 
         # Z axis____________________________________________________________________________________
@@ -51,12 +51,12 @@ class FlowFieldGeometry(object):
 
         # X & Z axes________________________________________________________________________________
         self.x = np.linspace(0.0, self.Lx, Nx)
-        self.y_uniform = np.linspace(-1.0, 1.0, Ny)
-        self.y = np.linspace(-1.0, 1.0, Ny)
+        self.y_uniform = np.linspace(1.0, -1.0, Ny)
+        self.y = np.linspace(1.0, -1.0, Ny)
         self.z = np.linspace(-self.Lz/2.0, self.Lz/2.0, Nz)
 
         # Total number of modes_____________________________________________________________________
-        self.modes = self.Ny - 2
+        self.modes = self.Ny - 2 # take away the first and last grid points
         self.t = 0
 
         # Reynolds number___________________________________________________________________________
