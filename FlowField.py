@@ -138,6 +138,13 @@ class FlowFieldChannelFlow(object):
         elif state == "sp":
             self.pp = False
             self.sp = True
+
+        # X & Z axes________________________________________________________________________________
+        self.x = np.linspace(0.0, self.Lx, Nx)
+        self.y = np.linspace(1.0, -1.0, Ny)
+        for ny in range(0, Ny):
+            self.y[ny] = np.cos(ny * np.pi/ (Ny-1) )
+        self.z = np.linspace(-self.Lz/2.0, self.Lz/2.0, Nz)
         
     def set_modes(self, m):
         self.modes = m
