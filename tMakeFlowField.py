@@ -53,5 +53,5 @@ def main(wp, Nd, Nx, Ny, Nz, Re, c, th, bf, d, asc, dat, hdf5):
 asc = True
 dat = True
 hdf = False
-main("KB", 3, 36, 65, 36, 1200.0, 0.6666666666666666666, 0.0, "lam", "/Users/arslan/Desktop/test", asc, dat, hdf)
+main("KB", 3, 64, 64, 64, 1200.0, 0.6666666666666666666, 0.0, "lam", "/home/arslan/Desktop/test", asc, dat, hdf)
 # NX MUST EQUAL NZ

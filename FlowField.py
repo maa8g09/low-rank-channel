@@ -32,9 +32,14 @@ class FlowFieldGeometry(object):
         self.Nx = Nx
         self.Ny = Ny
         self.Nz = Nz
-        constant = 4.0
-        self.Lx = constant * 2.0*np.pi / kx[0]
-        self.Lz = constant * 2.0*np.pi / kz[0]
+        lamda_x = 2.0*np.pi / kx[0]
+        lamda_z = 2.0*np.pi / kz[0]
+        required_Lx = 4.0 * np.pi
+        required_Lz = 2.0 * np.pi
+        cx = required_Lx / lamda_x
+        cz = required_Lz / lamda_z
+        self.Lx = cx * lamda_x # Length is 4pi
+        self.Lz = cz * lamda_z 
 
         # Stationary nodes along each axis__________________________________________________________
         # X axis
