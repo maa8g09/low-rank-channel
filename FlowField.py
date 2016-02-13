@@ -131,7 +131,7 @@ class FlowFieldChannelFlow(object):
         self.c = c
         self.baseflow = baseflow
         self.Re = Re
-        self.ff = ff
+        self.velocityField = ff
         if state == "pp":
             self.pp = True
             self.sp = False            
@@ -150,7 +150,7 @@ class FlowFieldChannelFlow(object):
         self.modes = m
 
     def set_ff(self, ff):
-        self.ff = ff
+        self.velocityField = ff
         
     def set_Ny(self, Ny):
         self.Ny = Ny

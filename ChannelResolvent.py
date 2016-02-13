@@ -167,7 +167,7 @@ def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
             Tests.orthogonality(vel_modes)
 
             # chi  = singular_values * eta
-            chi = get_scalars(ffcf.ff[mx, :, mz], resolvent_modes, state_vecs['cq'], rank)
+            chi = get_scalars(ffcf.velocityField[mx, :, mz], resolvent_modes, state_vecs['cq'], rank)
             chi = np.asarray(chi)
             chi = np.asmatrix(chi)
             print('chi shape')
@@ -175,7 +175,7 @@ def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
             
             u_tilde_approx = vel_modes[:,:rank] * chi
 
-            result = np.asmatrix(ffcf.ff[mx, :, mz]).T - u_tilde_approx
+            result = np.asmatrix(ffcf.velocityField[mx, :, mz]).T - u_tilde_approx
             result = np.linalg.norm(result)
 
 #            text03='|| u_original - u_approx || = ' + str(result)
@@ -184,7 +184,7 @@ def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
             u_hat_approx[mx, :, mz] = np.squeeze(np.asarray(u_tilde_approx))
 
 
-    diff = np.abs(ffcf.ff - u_hat_approx)
+    diff = np.abs(ffcf.velocityField - u_hat_approx)
     diff = np.linalg.norm(diff)
 #    text01 = '\n|| u_original || =' + format(np.linalg.norm(ffcf.ff), '.8f')
 #    text02 = '\n || u_approx ||  =' + format(np.linalg.norm(u_hat_approx), '.8f')
@@ -192,7 +192,7 @@ def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
 #    print(text01)
 #    print(text02)
     print(text03)
-    diff_orig = np.linalg.norm(ffcf.ff)
+    diff_orig = np.linalg.norm(ffcf.velocityField)
     diff_aprx = np.linalg.norm(u_hat_approx)
     diff = diff_orig - diff_aprx
     text02='\n|| u_original || - || u_approx || = '+str(diff)+'\n'
