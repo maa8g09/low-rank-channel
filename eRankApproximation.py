@@ -94,7 +94,8 @@ var = ut.read_ASC_SP(temp_rank_folder, str(args.File)[:-3])
 details_directory = args.Directory
 if details_directory[-1] != "/":
     details_directory += "/"
-var2 = ut.read_Details(details_directory, "u0")
+
+var2 = ut.read_Details(details_directory, str(args.File)[:-3])
 
 ffcf = ffClass.FlowFieldChannelFlow(var['Nd'],
                                     var['Nx'],
@@ -105,15 +106,15 @@ ffcf = ffClass.FlowFieldChannelFlow(var['Nd'],
                                     var['alpha'],
                                     var['beta'],
                                     var2['c'],
-                                    "lam",
+                                    var2['bf'],
                                     var2['Re'],
                                     var['ff'],
                                     "sp")
 
 
-
 # Read velocity profile
 turb_mean = ut.read_Vel_Profile(args.TurbMeanProfile)
+
 # Read mean asc file
 tmp = args.MeanFile.find("uMean")
 meanDir = args.MeanFile[:tmp]

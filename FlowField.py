@@ -35,7 +35,7 @@ class FlowFieldGeometry(object):
         lamda_x = 2.0*np.pi / kx[0]
         lamda_z = 2.0*np.pi / kz[0]
         required_Lx = 4.0 * np.pi
-        required_Lz = 2.0 * np.pi
+        required_Lz = 3.0 * np.pi
         cx = required_Lx / lamda_x
         cz = required_Lz / lamda_z
         self.Lx = cx * lamda_x # Length is 4pi
