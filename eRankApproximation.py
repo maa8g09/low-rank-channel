@@ -56,7 +56,6 @@ parser.add_argument("-m",
                     required=True)
 parser.add_argument("-0",
                     "--NoMean",
-                    metavar='\b',
                     help="If no mean provided, use flowfield provided.",
                     action="store_true")
 args = parser.parse_args()
