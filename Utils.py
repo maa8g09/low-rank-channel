@@ -337,8 +337,8 @@ def write_approximated_ASC(flowField, output_directory, rank):
 #                    ikz = flowField.Mz[mz]
 #                    print(str(mx) + "\t\t" + str(mz))
 
-                    tmpReal = flowField.ff[nd, mx, ny, mz].real
-                    tmpImag = flowField.ff[nd, mx, ny, mz].imag
+                    tmpReal = flowField.velocityField[nd, mx, ny, mz].real
+                    tmpImag = flowField.velocityField[nd, mx, ny, mz].imag
 
                     output = '(' + format( tmpReal, '.16f') + ', ' + format( tmpImag, '.16f') + ')'
 
