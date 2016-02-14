@@ -388,20 +388,11 @@ def get_state_vectors(ffg, alpha, beta, vel_profile):
 
 def get_scalars(u_hat, resolvent_modes, cq, rank):
 
-
-
-
-
-
-
-
-
-
     #========================================================================
     # Projecting with the required amount of column vectors==================
     #========================================================================
-    vel_modes = np.asmatrix(vel_modes) # vel_modes have already been mutltiplied by the clencurt quadrature
-    psi = vel_modes[: , :rank] # column vectors
+    resolvent_modes = np.asmatrix(resolvent_modes) # vel_modes have already been mutltiplied by the clencurt quadrature
+    psi = resolvent_modes[: , :rank] # column vectors
 
     # Get the complex conjugate of the modes.
     psi_star = psi.H
@@ -412,7 +403,7 @@ def get_scalars(u_hat, resolvent_modes, cq, rank):
     # Convert from array to matrix for multiplication later
     u_hat = np.asmatrix(u_hat).T
 
-    chi = psi_star * u_hat
+    chi = psi_star * cq * u_hat
 
     return chi
     
