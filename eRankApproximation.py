@@ -135,7 +135,7 @@ else:
                                        var2['c'],
                                        var2['theta'])
 
-ffmean = ffClass.FlowField(ffmean, var['ff'], "sp")
+    ffmean = ffClass.FlowField(ffmean, var['ff'], "sp")
 
 
 ####################################################################################################
