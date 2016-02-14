@@ -54,7 +54,11 @@ parser.add_argument("-m",
                     metavar='\b',
                     help="(S,P) Mean ascii file. (Prefix with full directory)",
                     required=True)
-
+parser.add_argument("-0",
+                    "--NoMean",
+                    metavar='\b',
+                    help="",
+                    action="store_true")
 args = parser.parse_args()
 
 
@@ -111,23 +115,28 @@ ffcf = ffClass.FlowFieldChannelFlow(var['Nd'],
                                     var['ff'],
                                     "sp")
 
+turb_mean = []
+if args.NoMean:
+    print("No Mean specified.")
+    ffmean = ffcf
 
-# Read velocity profile
-turb_mean = ut.read_Vel_Profile(args.TurbMeanProfile)
+else:
+    # Read velocity profile
+    turb_mean = ut.read_Vel_Profile(args.TurbMeanProfile)
 
-# Read mean asc file
-tmp = args.MeanFile.find("uMean")
-meanDir = args.MeanFile[:tmp]
-var = ut.read_ASC_SP(meanDir, "uMean")
-ffmean = ffClass.FlowFieldGeometry(var2['bf'],
-                                   var2['wp'],
-                                   var2['Nd'],
-                                   var2['Nx'],
-                                   var2['Ny'],
-                                   var2['Nz'],
-                                   var2['Re'],
-                                   var2['c'],
-                                   var2['theta'])
+    # Read mean asc file
+    tmp = args.MeanFile.find("uMean")
+    meanDir = args.MeanFile[:tmp]
+    var = ut.read_ASC_SP(meanDir, "uMean")
+    ffmean = ffClass.FlowFieldGeometry(var2['bf'],
+                                       var2['wp'],
+                                       var2['Nd'],
+                                       var2['Nx'],
+                                       var2['Ny'],
+                                       var2['Nz'],
+                                       var2['Re'],
+                                       var2['c'],
+                                       var2['theta'])
 
 ffmean = ffClass.FlowField(ffmean, var['ff'], "sp")
 
