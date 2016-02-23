@@ -103,39 +103,45 @@ parser.add_argument("-ff",
                     action='store_true')
 args = parser.parse_args()
 
-####################################################################################################
-# Pass these variables to the FlowField class to construct an instance of the geometry
-flowFieldGeometry = ffClass.FlowFieldGeometry(args.Baseflow,
-                                              args.Wavepacket,
-                                              args.Nd,
-                                              args.Nx,
-                                              args.Ny,
-                                              args.Nz,
-                                              args.Reynolds,
-                                              args.Wavespeed,
-                                              args.theta)
 
-####################################################################################################
+#================================================================
+# Construct an instance of the FlowFieldGeometry class
+#================================================================
+ffg = ffClass.FlowFieldGeometry(args.Baseflow,
+                                args.Wavepacket,
+                                args.Nd,
+                                args.Nx,
+                                args.Ny,
+                                args.Nz,
+                                args.Reynolds,
+                                args.Wavespeed,
+                                args.theta)
+
+
+#================================================================
 # Make the correct directory to store the flow field in
+#================================================================
 if args.Iteration:
     print(args.Iteration)
     ut.print_ResolventSubHeader()
-    output_directory = ut.make_FlowField_output_directory_wIteration(args.Directory, flowFieldGeometry, date, args.Iteration)
+    output_directory = ut.make_FlowField_output_directory_wIteration(args.Directory, ffg, date, args.Iteration)
 else:
     ut.print_ResolventHeader()
     ut.print_ResolventSubHeader()
-    output_directory = ut.make_FlowField_output_directory(args.Directory, flowFieldGeometry, date)
+    output_directory = ut.make_FlowField_output_directory(args.Directory, ffg, date)
 
 
-####################################################################################################
-# Pass the FlowField class to main_resolvent (this is where the flow field is generated)
-vff = cr.resolvent_formulation(flowFieldGeometry)
-ff = ffClass.FlowField(flowFieldGeometry, vff, "pp")
-####################################################################################################
+#================================================================
+# Generate flow field using resolvent formulation
+#================================================================
+vff, y = cr.resolvent_formulation(ffg)
+ff = ffClass.FlowField(ffg, vff, "pp")
+ff.set_y(y)
+
+
+#================================================================
 # Save flow field to output_directory
-if args.SaveDAT:
-    ut.write_DAT(ff, output_directory, "u0")
-
+#================================================================
 if args.SaveASC:
     ut.write_ASC(ff, output_directory, "u0")
     ut.write_GEOM(ff, output_directory, "u0")
@@ -143,12 +149,20 @@ if args.SaveASC:
     if args.SaveFF:
         ut.write_FF(output_directory, "u0")
 
+if args.SaveDAT:
+    ut.write_DAT(ff, output_directory, "u0")
+
 #if args.saveHDF5:
-#    ut.writeHDF5(ff, flowFieldGeometry, output_directory)
+#    ut.writeHDF5(ff, ffg, output_directory)
 
 # Save details of the flow field in a file called u0_details.txt
 ut.write_Details(ff, output_directory, "u0")
 
 print("\nThe flow field has been stored at")
 print(output_directory)
+
+
+#================================================================
+# End of file
+#================================================================
 ut.print_EndMessage()

@@ -241,6 +241,8 @@ def read_Output_DNS(fileName, T0, T1):
      Uparab*h/nu == 2400
              CFL == 0.0220104
     '''
+
+
     file = open(fileName, 'r')
 
     data = {}
@@ -256,7 +258,6 @@ def read_Output_DNS(fileName, T0, T1):
             print("Reading...")
 
         else:
-
             if values[0] == 't':
                 if values[2] != '-nan' or values[2] != 'nan' or values[2] != 'done!':
                     data['t'].append(float(values[2]))
@@ -281,8 +282,8 @@ def read_Output_DNS(fileName, T0, T1):
 #    data['dissip(u+U)'] = np.asarray(data['dissip(u+U)'])
 #    data['CFL']         = np.asarray(data['CFL'])
 
-    T0 = T0*10 +1
-    T1 = T1*10 +1
+    T0 = T0*2 +1
+    T1 = T1*2 +1
 
     data['t']         = data['t'][T0:T1]
     data['L2Norm(u)'] = data['L2Norm(u)'][T0:T1]
@@ -455,7 +456,7 @@ def write_DAT(ff, output_directory, fileName):
     file = open(output_directory + fileName, "w")
 
     title   = 'TITLE= "Initial flow field at Re = ' + str(ff.Re) + '"\n'
-    columns = 'VARIABLES = "X", "Y", "Z", "U"\n'#, "V", "W"\n'
+    columns = 'VARIABLES = "X", "Y", "Z", "U", "V", "W"\n'
     zones   = 'ZONE I=' + str(int(ff.Nx)) + ', J=' + str(int(ff.Ny)) + ', K=' + str(int(ff.Nz)) + ', DATAPACKING=POINT\n'
 #    zones   = 'ZONE I=' + str(int(ff.Nx)) + ', J=' + str(int(ff.Ny)) + ', DATAPACKING=POINT\n'
 
@@ -470,8 +471,8 @@ def write_DAT(ff, output_directory, fileName):
                 string += format(ff.y[ny], '.2f') + ' '
                 string += format(ff.z[nz], '.2f') + ' '
                 string += format(ff.velocityField[0, nx, ny, nz], '.16f') + ' '
-#                string += format(ff.velocityField[1, nx, ny, nz], '.16f') + ' '
-#                string += format(ff.velocityField[2, nx, ny, nz], '.16f')
+                string += format(ff.velocityField[1, nx, ny, nz], '.16f') + ' '
+                string += format(ff.velocityField[2, nx, ny, nz], '.16f')
 
                 file.write(string+'\n')
 
@@ -529,7 +530,11 @@ def write_GEOM(flowField, output_directory, fileName):
 def write_Symms_File(directory, fileName, N, symStrAry):
     """
     The FieldSymmetry uses ASCII input-output. The storage format is
-    s sx sy sz ax az
+    c sx sy sz ax az
+
+    where
+    
+    (c sx sy sz ax az) [u, v, w](x, y, z)  →  c [sx u, sy v, sz w](sx x + ax Lx, sy y, sz z + az Lz)
     """
 
     file = open(directory + fileName, "w")

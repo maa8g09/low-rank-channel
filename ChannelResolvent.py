@@ -19,7 +19,7 @@ def resolvent_formulation(ffg):
         modes_streamwise = fund_alpha * ffg.Mx
         modes_spanwise   = fund_beta * ffg.Mz
 
-        text01='alpha:'+ str(fund_alpha)+ '\tbeta:'+ str(fund_beta)+ '\tamplitude:'+ str(ffg.chi_tilde[i])
+        text01='alpha:'+ str(fund_alpha)+ '\t\tbeta:'+ str(fund_beta)+ '\t\tamplitude:'+ str(ffg.chi_tilde[i])
         
         print(text01)
         print('kx = mx * alpha\tkz = mz * beta')
@@ -34,7 +34,7 @@ def resolvent_formulation(ffg):
                     if alpha == 0 or beta == 0:
                         continue
 
-                    text02 ='(mx)kx: ('+str(ffg.Mx[ia])+') '+ str(alpha) + '\t\t'
+                    text02 ='(mx)kx: ('+str(ffg.Mx[ia])+') '+ str(alpha) + '\t'
                     text02+='(mz)kz: ('+str(ffg.Mz[ib])+') '+ str(beta)
                     print(text02)
 
@@ -43,12 +43,28 @@ def resolvent_formulation(ffg):
                     y_cheb = state_vecs['y_cheb_full']
 
                     vel_modes, singular_values, forcing_modes = np.linalg.svd(state_vecs['H'])
+                    
                     Tests.SVDNorm(vel_modes, singular_values, forcing_modes, state_vecs['H'])
                     Tests.orthogonality(vel_modes)
                     Tests.orthogonality(forcing_modes)
 
                     # Non-weighted resolvent modes (physical velocity modes)
                     resolvent_modes = np.linalg.solve(state_vecs['cq'], vel_modes)
+                    
+                    # Fix phase of first non-zero point based on critical layer
+                    phase_shift = np.zeros((resolvent_modes[0,:].shape[1], resolvent_modes[0,:].shape[1]), dtype=np.complex128)
+                    if ffg.c < 1.0:
+                        inds = Tests.indices(state_vecs['U'], lambda x: x > ffg.c)
+                        ind0 = inds[0]
+#                        ind1 = inds[-1] # We don't need this point, because using the first point handles multiplying both sides of the channel wall-normal co-ordinates
+                    else:
+                        ind0 = np.floor(ffg.modes/2)
+
+                    phase_shift_tmp = np.exp(-1j * np.angle(resolvent_modes[ind0,:]))
+                    np.fill_diagonal(phase_shift, phase_shift_tmp)
+                    resolvent_modes *= phase_shift
+
+                    # Test the divergence
                     Tests.divergence(resolvent_modes, alpha, beta, ffg.modes, state_vecs['D1'])
                     resolvent_modes = np.asmatrix(resolvent_modes)
 
@@ -165,6 +181,22 @@ def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
             resolvent_modes = np.linalg.solve(state_vecs['cq'], vel_modes)
             Tests.divergence(resolvent_modes, alpha, beta, ffcf.modes, state_vecs['D1'])
             Tests.orthogonality(vel_modes)
+            
+            # Non-weighted resolvent modes (physical velocity modes)
+            resolvent_modes = np.linalg.solve(state_vecs['cq'], vel_modes)
+            
+            # Fix phase of first non-zero point based on critical layer
+            phase_shift = np.zeros((resolvent_modes[0,:].shape[1], resolvent_modes[0,:].shape[1]), dtype=np.complex128)
+            if ffcf.c < 1.0:
+                inds = Tests.indices(state_vecs['U'], lambda x: x > ffg.c)
+                ind0 = inds[0]
+#                        ind1 = inds[-1] # We don't need this point, because using the first point handles multiplying both sides of the channel wall-normal co-ordinates
+            else:
+                ind0 = np.floor(ffcf.modes/2)
+
+            phase_shift_tmp = np.exp(-1j * np.angle(resolvent_modes[ind0,:]))
+            np.fill_diagonal(phase_shift, phase_shift_tmp)
+            resolvent_modes *= phase_shift
 
             # chi  = singular_values * eta
             chi = get_scalars(ffcf.velocityField[mx, :, mz], resolvent_modes, state_vecs['cq'], rank)
@@ -381,6 +413,7 @@ def get_state_vectors(ffg, alpha, beta, vel_profile):
     state_vecs['y_cheb'] = y_cheb
     state_vecs['y_cheb_full'] = y_cheb_full
     state_vecs['D1'] = D1
+    state_vecs['U'] = np.diag(U)
     
     return state_vecs
 

@@ -35,11 +35,13 @@ class FlowFieldGeometry(object):
         lamda_x = 2.0*np.pi / kx[0]
         lamda_z = 2.0*np.pi / kz[0]
         required_Lx = 4.0 * np.pi
-        required_Lz = 3.0 * np.pi
+        required_Lz = 2.0 * np.pi / 3
+#        required_Lx = lamda_x
+#        required_Lz = lamda_z
         cx = required_Lx / lamda_x
         cz = required_Lz / lamda_z
-        self.Lx = cx * lamda_x # Length is 4pi
-        self.Lz = cz * lamda_z 
+        self.Lx = cx * lamda_x # Length is 4pi (twice the streamwise wavelength)
+        self.Lz = cz * lamda_z # Length is 2pi/3 (twice the spanwise wavelength)
 
         # Stationary nodes along each axis__________________________________________________________
         # X axis

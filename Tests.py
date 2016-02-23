@@ -9,8 +9,8 @@ def SVDNorm(U, S, V, A):
         ut.error(err)
         
     return 0
-    
-    
+
+
 def divergence(resolvent_modes, alpha, beta, m, D1):
     divgnce = 1.0j*alpha*resolvent_modes[0:m, 0] + np.dot(D1, resolvent_modes[m:2*m, 0]) + 1.0j*beta*resolvent_modes[2*m:3*m, 0]
     div_norm = np.linalg.norm(divgnce)
@@ -20,7 +20,8 @@ def divergence(resolvent_modes, alpha, beta, m, D1):
         ut.error(err)
     
     return 0
-    
+
+
 def orthogonality(A):
     B = A * A.H
     I = np.eye(B.shape[0])
@@ -30,4 +31,8 @@ def orthogonality(A):
         err = 'Resolvent modes are not orthogonal, norm is ' + str(C_norm)
         ut.error(err)
     
-    
+    return 0
+
+
+def indices(a, func):
+    return [i for (i, val) in enumerate(a) if func(val)]
