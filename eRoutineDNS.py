@@ -214,9 +214,9 @@ for i in range(0, len(directories)):
         ut.write_Symms_File(case_directory, symmsFile, 2, ['1 1 1 1 0.0 0.0',   # e
                                                            '1 1 1 -1 0.5 0.0']) # sigma_z tau_x
 
-    elif symmsFileName == "s_tw2_sigma_z_tau_xz":
+    elif symmsFileName == "s_tw2_sigma_y_tau_x":
         ut.write_Symms_File(case_directory, symmsFile, 2, ['1 1 1 1 0.0 0.0',   # e
-                                                           '1 1 -1 1 0.5 0.5']) # sigma_z tau_xz
+                                                           '1 1 -1 1 0.5 0.0']) # sigma_y tau_x
 
     elif symmsFileName == "s_po":
         ut.write_Symms_File(case_directory, symmsFile, 4, ['1 1 1 1 0.0 0.0',   # e
