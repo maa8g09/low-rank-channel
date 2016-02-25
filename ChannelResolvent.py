@@ -188,7 +188,7 @@ def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
             # Fix phase of first non-zero point based on critical layer
             phase_shift = np.zeros((resolvent_modes[0,:].shape[1], resolvent_modes[0,:].shape[1]), dtype=np.complex128)
             if ffcf.c < 1.0:
-                inds = Tests.indices(state_vecs['U'], lambda x: x > ffg.c)
+                inds = Tests.indices(state_vecs['U'], lambda x: x > ffcf.c)
                 ind0 = inds[0]
 #                        ind1 = inds[-1] # We don't need this point, because using the first point handles multiplying both sides of the channel wall-normal co-ordinates
             else:
