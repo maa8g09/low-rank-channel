@@ -30,7 +30,7 @@ parser = argparse.ArgumentParser(description="Plot flow field.")
 parser.add_argument("-f",
                     "--File",
                     metavar='\b',
-                    help="File to approximate",
+                    help="File to plot",
                     required=True)
 parser.add_argument("-i",
                     "--VelComponent",
@@ -105,6 +105,8 @@ ffg = ffClass.FlowFieldGeometry(var2['bf'],
                                 var2['theta'])
 
 ff = ffClass.FlowField(ffg, var['ff'], "pp")
+
+
 i = args.VelComponent
 n = args.SpatialComponent
 m = n+1
