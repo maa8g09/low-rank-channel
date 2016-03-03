@@ -131,6 +131,7 @@ n = args.SpatialComponent
 
 #### Spatial component check 
 if n == 0:
+    
     if os.path.exists(x_directory):
         print("\nThis directory already exists:\t" + str(x_directory))
         command = "rm -rf " + x_directory
@@ -138,13 +139,27 @@ if n == 0:
         print("Making:\t\t" + str(x_directory))
         os.mkdir(x_directory)
 
+
     print("\nPlotting some awesome contourplots in x direction")
+    
+    vl_max = np.amax(ff.velocityField[i, :, :, :])
+    vl_min = np.amin(ff.velocityField[i, :, :, :])
+    
     for j in range(0, ff.Nx):
-        ut.plot_Contour(x_directory, str(args.File[:-3]), ff.z, ff.y, ff.velocityField[i, j, :, :], format(ff.x[j], '.2f'), ":", ":", ff.Re, str(j), "-", "-", ff.velocityField[m, j, :, :], ff.velocityField[p, j, :, :], "z", "y", velName)
+        ut.plot_Contour(x_directory, str(args.File[:-3]), 
+                        ff.z, ff.y, ff.velocityField[i, j, :, :], 
+                        format(ff.x[j], '.2f'), ":", ":", 
+                        ff.Re, 
+                        str(j),  "-", "-",
+                        ff.velocityField[m, j, :, :], 
+                        ff.velocityField[p, j, :, :], 
+                        "z", "y", velName,
+                        vl_max, vl_min)
         print(j)
 
 
 elif n == 1:
+    
     if os.path.exists(y_directory):
         print("\nThis directory already exists:\t" + str(y_directory))
         command = "rm -rf " + y_directory
@@ -152,12 +167,26 @@ elif n == 1:
         print("Making:\t\t" + str(y_directory))
         os.mkdir(y_directory)
 
+
     print("\nPlotting some awesome contourplots in y direction")
+    
+    vl_max = np.amax(ff.velocityField[i, :, :, :])
+    vl_min = np.amin(ff.velocityField[i, :, :, :])
+    
     for j in range(0, ff.Ny):
-        ut.plot_Contour(y_directory, str(args.File[:-3]), ff.z, ff.x, ff.velocityField[i, :, j, :], ":", format(ff.y[j], '.2f'), ":", ff.Re, "-", str(j), "-", ff.velocityField[m, :, j, :], ff.velocityField[p, :, j, :], "z", "x", velName)
+        ut.plot_Contour(y_directory, str(args.File[:-3]), 
+                        ff.z, ff.x, ff.velocityField[i, :, j, :], 
+                        ":", format(ff.y[j], '.2f'), ":", 
+                        ff.Re, 
+                        "-", str(j), "-", 
+                        ff.velocityField[m, :, j, :], 
+                        ff.velocityField[p, :, j, :], 
+                        "z", "x", velName,
+                        vl_max, vl_min)
         print(j)
 
 elif n == 2:
+    
     if os.path.exists(z_directory):
         print("\nThis directory already exists:\t" + str(z_directory))
         command = "rm -rf " + z_directory
@@ -165,9 +194,22 @@ elif n == 2:
         print("Making:\t\t" + str(z_directory))
         os.mkdir(z_directory)
 
+
     print("\nPlotting some awesome contourplots in z direction")
+    
+    vl_max = np.amax(ff.velocityField[i, :, :, :].T)
+    vl_min = np.amin(ff.velocityField[i, :, :, :].T)
+    
     for j in range(0, ff.Nz):
-        ut.plot_Contour(z_directory, str(args.File[:-3]), ff.x, ff.y, ff.velocityField[i, :, :, j].T, ":", ":", format(ff.z[j], '.2f'), ff.Re, "-", "-", str(j), ff.velocityField[m, :, :, j].T, ff.velocityField[p, :, :, j].T, "x", "y", velName)
+        ut.plot_Contour(z_directory, str(args.File[:-3]), 
+                        ff.x, ff.y, ff.velocityField[i, :, :, j].T, 
+                        ":", ":", format(ff.z[j], '.2f'), 
+                        ff.Re, 
+                        "-", "-", str(j), 
+                        ff.velocityField[m, :, :, j].T, 
+                        ff.velocityField[p, :, :, j].T, 
+                        "x", "y", velName,
+                        vl_max, vl_min)
         print(j)
 
 

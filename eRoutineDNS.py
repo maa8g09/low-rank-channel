@@ -393,8 +393,8 @@ for i in range(0, len(directories)):
     # Plot Convergence  
     #------------------------------------------------
     command = "\nePlotConvergenceDNS.py"
-    command+= " -T0 " + str(t_start)
-    command+= " -T1 " + str(t_end)
+    command+= " -T0 " + str(int(t_start))
+    command+= " -T1 " + str(int(t_end))
     command+= " -f "  + str(output_file)
     print(command + "\n")
     os.system(command)
@@ -412,7 +412,8 @@ for i in range(0, len(directories)):
 
     command = "\nePlotRecurrence.py"
     command+= " -d "  + rec_dir
-    command+= " -T0 " + str(rec_T0)
+#    command+= " -T0 " + str(rec_T0)
+    command+= " -T0 " + str(t_start) # from zero
     command+= " -T1 " + str(rec_T1)
     command+= " -t "  + str(rec_Tmax)
     command+= " -kx " + str(rec_kx)

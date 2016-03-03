@@ -585,7 +585,7 @@ def plot_Contour(output_directory, fileName,
                  nxCoordStr, nyCoordStr, nzCoordStr,
                  xAxisVel, yAxisVel,
                  xAxisName, yAxisName, 
-                 velName):
+                 velName, VL_max, VL_min):
 
     xticks = np.linspace(xAxis[0], xAxis[-1], 4)
     yticks = np.linspace(yAxis[0], yAxis[-1], 5)
@@ -593,27 +593,37 @@ def plot_Contour(output_directory, fileName,
     x, y = np.meshgrid(xAxis, yAxis)
     v_min = np.amin(data)
     v_max = np.amax(data)
-    v = np.linspace(v_min, v_max, 301, endpoint=True)
-    ticks_at = [v_min, 0, v_max]
+    v = np.linspace(VL_min, VL_max, 21, endpoint=True)
+    ticks_at = [VL_min, v_min, 0, v_max, VL_max]
+#    print(ticks_at)
     origin = 'lower'
 
-    my_dpi = 96
-    figx = abs(xAxis[0] - xAxis[-1]) * 400.0
-    figy = abs(yAxis[0] - yAxis[-1]) * 200.0
+    my_dpi = 150
+    figx = abs(xAxis[0] - xAxis[-1]) * 300.0
+    figy = abs(yAxis[0] - yAxis[-1]) * 150.0
     fig = plt.figure(figsize=(figx/my_dpi, figy/my_dpi), dpi=my_dpi)
+#    fig = plt.figure(dpi=my_dpi)
     CS = plt.contourf(x, 
                       y, 
                       data, 
                       v,
-                      cmap=cm.jet,
+                      cmap=cm.seismic,
                       origin=origin)
 
-    plt.quiver(x,
-               y,
-               xAxisVel,
-               yAxisVel,
-               color='k'
-               )
+    if xAxisName == "x" and yAxisName == "y":
+        plt.quiver(x, y,
+                   xAxisVel,
+                   yAxisVel,
+                   color='k',
+                   scale=1.5
+                   )
+    else:
+        plt.quiver(x, y,
+                   xAxisVel,
+                   yAxisVel,
+                   color='k'
+                   )
+
 
     plt.xlabel(xAxisName)
     plt.ylabel(yAxisName)
@@ -631,7 +641,7 @@ def plot_Contour(output_directory, fileName,
     plt.yticks(yticks)#, fontsize = 15)
 
     fileName = output_directory + fileName + "_" + velName + "_x" + nxCoordStr + "_y" + nyCoordStr + "_z" + nzCoordStr + ".png"
-    plt.savefig(fileName, dpi=96)
+    plt.savefig(fileName, bbox_inches='tight', dpi=96)
     plt.close(fig)
 
     return 0
@@ -662,7 +672,7 @@ def plot_Vel_Profile(output_directory, fileName, vel_profile, y,
                      xAxisName, yAxisName):
 
     my_dpi = 96
-    plt.figure(figsize=(400/my_dpi, 800/my_dpi), dpi=my_dpi)
+    plt.figure(figsize=(450/my_dpi, 800/my_dpi), dpi=my_dpi)
     plt.plot(vel_profile, y, 'k-')
     plt.xlabel(xAxisName)
     plt.ylabel(yAxisName)

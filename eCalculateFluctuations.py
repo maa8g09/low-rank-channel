@@ -19,7 +19,7 @@ parser.add_argument("-f",
 parser.add_argument("-d",
                     "--Directory",
                     metavar='\b',
-                    help="Directory where the details file is.",
+                    help="Directory where the initial condition 'u0' details file is.",
                     required=True)
 
 ut.print_Start_Bar()

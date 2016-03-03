@@ -53,5 +53,5 @@ def main(wp, Nd, Nx, Ny, Nz, Re, c, th, bf, d, asc, dat, hdf5):
 asc = True
 dat = True
 hdf = False
-main("KB", 3, 35, 35, 35, 1200.0, 0.666666666666667, 0.0, "lam", "/home/arslan/Documents/work/channelflow-related/symmetry_scans/s_eq", asc, dat, hdf)
+main("KB", 3, 10, 22, 10, 1200.0, 0.666666666666667, 0.0, "lam", "/home/arslan/Documents/work/channelflow-related/symmetry_scans/s_eq", asc, dat, hdf)
 # NX MUST EQUAL NZ

@@ -42,14 +42,16 @@ def resolvent_formulation(ffg):
                     state_vecs['y_cheb_full'] = np.squeeze(np.asarray(state_vecs['y_cheb_full']))
                     y_cheb = state_vecs['y_cheb_full']
 
-                    vel_modes, singular_values, forcing_modes = np.linalg.svd(state_vecs['H'])
+                    vel_modes, singular_values, forcing_modes_h = np.linalg.svd(state_vecs['H'])
                     
-                    Tests.SVDNorm(vel_modes, singular_values, forcing_modes, state_vecs['H'])
+                    Tests.SVDNorm(vel_modes, singular_values, forcing_modes_h, state_vecs['H'])
                     Tests.orthogonality(vel_modes)
-                    Tests.orthogonality(forcing_modes)
+                    Tests.orthogonality(forcing_modes_h)
 
                     # Non-weighted resolvent modes (physical velocity modes)
                     resolvent_modes = np.linalg.solve(state_vecs['cq'], vel_modes)
+                    # Non-weighted forcing modes (physical forcing modes)
+                    unweighted_forcing_modes = np.linalg.solve(state_vecs['cq'], forcing_modes_h.conjugate().T)
                     
                     # Fix phase of first non-zero point based on critical layer
                     phase_shift = np.zeros((resolvent_modes[0,:].shape[1], resolvent_modes[0,:].shape[1]), dtype=np.complex128)
@@ -63,6 +65,16 @@ def resolvent_formulation(ffg):
                     phase_shift_tmp = np.exp(-1j * np.angle(resolvent_modes[ind0,:]))
                     np.fill_diagonal(phase_shift, phase_shift_tmp)
                     resolvent_modes *= phase_shift
+
+# Alternative:
+#                     # Non-weighted forcing modes (physical forcing modes)
+#                    unweighted_forcing_modes = np.linalg.solve(state_vecs['cq'], forcing_modes_h.conjugate().T)
+#                    unweighted_forcing_modes *= phase_shift
+#                    unweighted_H = np.linalg.inv(state_vecs['cq']) * state_vecs['H'] * state_vecs['cq']
+#                    unweighted_vel_modes = unweighted_H * unweighted_forcing_modes * np.diag(1.0/singular_values)
+#                    
+#                    delta_r = unweighted_vel_modes.real - resolvent_modes.real
+#                    delta_i = unweighted_vel_modes.imag - resolvent_modes.imag
 
                     # Test the divergence
                     Tests.divergence(resolvent_modes, alpha, beta, ffg.modes, state_vecs['D1'])
