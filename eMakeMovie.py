@@ -51,6 +51,11 @@ parser.add_argument("-d",
                     metavar='\b',
                     help="Directory where u0_Details.txt is kept.",
                     required=True)
+parser.add_argument("-avg",
+                    "--Avergaed",
+                    metavar='\b',
+                    help="Plot averaged flow field?.",
+                    required=True)
 
 args = parser.parse_args()
 
@@ -86,6 +91,9 @@ movie_directory = pwd2 + "movie_" + str(args.T0) + "-" + str(args.T1) + "_" + no
 
 for t in range(0, time_range):
     time_unit = int(movie_time[t])
+    # If spatially averaged?
+    # change the command.
+    
     command = "ePlotSlice.py"
     command+= " -d " + str(args.Directory)
     command+= " -o " + movie_directory
