@@ -585,7 +585,8 @@ def plot_Contour(output_directory, fileName,
                  nxCoordStr, nyCoordStr, nzCoordStr,
                  xAxisVel, yAxisVel,
                  xAxisName, yAxisName, 
-                 velName, VL_max, VL_min):
+                 velName, VL_max, VL_min,
+                 quiv):
 
     xticks = np.linspace(xAxis[0], xAxis[-1], 4)
     yticks = np.linspace(yAxis[0], yAxis[-1], 5)
@@ -610,19 +611,27 @@ def plot_Contour(output_directory, fileName,
                       cmap=cm.seismic,
                       origin=origin)
 
-    if xAxisName == "x" and yAxisName == "y":
+    if quiv:
         plt.quiver(x, y,
-                   xAxisVel,
-                   yAxisVel,
-                   color='k',
-                   scale=1.5
-                   )
-    else:
-        plt.quiver(x, y,
-                   xAxisVel,
-                   yAxisVel,
-                   color='k'
-                   )
+           xAxisVel,
+           yAxisVel,
+           color='k'
+           )
+                   
+
+#    if xAxisName == "x" and yAxisName == "y":
+#        plt.quiver(x, y,
+#                   xAxisVel,
+#                   yAxisVel,
+#                   color='k',
+#                   scale=1.5
+#                   )
+#    else:
+#        plt.quiver(x, y,
+#                   xAxisVel,
+#                   yAxisVel,
+#                   color='k'
+#                   )
 
 
     plt.xlabel(xAxisName)

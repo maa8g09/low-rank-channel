@@ -28,49 +28,41 @@ date = time.strftime("%Y_%m_%d")
 # Parse the command line arguments (flag parameters)
 #ut.print_ResolventHeader()
 #ut.print_ResolventSubHeader()
-parser = argparse.ArgumentParser(description="Plot flow field slice at time given. This should be executed from the drectory where the flow fields are saved.")
+parser = argparse.ArgumentParser(description="Plot flow field slice at time given. \nThis should be executed from the directory where the flow fields are saved.")
 parser.add_argument("-t",
                     "--Time",
                     metavar='\b',
                     help="File to plot at time t.",
                     required=True,
                     type=int)
-
 parser.add_argument("-i",
                     "--VelComponent",
                     metavar='\b',
                     help="Velocity component to plot (integers i.e. 0 = u, ...)",
                     required=True,
                     type=int)
-
 parser.add_argument("-n",
-                    "--SpatialComponent",
+                    "--SpatialNorm",
                     metavar='\b',
                     help="Spatial direction to plot in (integers i.e. 0 = x, ...),\nE.g. selecting 0 will plot yz planes.",
                     required=True,
                     type=int)
-
-parser.add_argument("-n",
-                    "--SpatialComponent",
-                    metavar='\b',
-                    help="Spatial direction to plot in (integers i.e. 0 = x, ...),\nE.g. selecting 0 will plot yz planes.",
-                    required=True,
-                    type=int)
-
 parser.add_argument("-coord",
                     "--Coordinate",
                     metavar='\b',
                     help="Spatial co-ordinate of normal plane.",
                     required=True,
-                    type=int)
-
-
+                    type=float)
 parser.add_argument("-d",
                     "--Directory",
                     metavar='\b',
                     help="Directory where u0_Details.txt is kept.",
                     required=True)
-
+parser.add_argument("-o",
+                    "--OutputDirectory",
+                    metavar='\b',
+                    help="Directory where slices are output."
+                    )
 args = parser.parse_args()
 
 
@@ -141,7 +133,12 @@ ff = ffClass.FlowField(ffg, var['ff'], "pp")
 #================================================================
 # This is where the image gets saved.
 #================================================================
-slice_directory = output_directory + "slices/"
+slice_directory = ""
+if str(args.OutputDirectory):
+    slice_directory = args.OutputDirectory
+
+else:
+    slice_directory = output_directory + "slices/"
 
 if os.path.exists(slice_directory):
     print("\nThis directory already exists:\t" + str(slice_directory))
@@ -154,7 +151,7 @@ if not os.path.exists(slice_directory):
 
 
 i = args.VelComponent
-n = args.SpatialComponent
+n = args.SpatialNorm
 m = n+1
 p = n-1
 
@@ -175,10 +172,10 @@ elif i==2:
 ffdata = np.zeros((ff.Nx, ff.Ny, ff.Nz))
 ffdata = ff.velocityField[i, :, :, :]
 
-n = args.SpatialComponent
+n = args.SpatialNorm
 
 #### Spatial component check 
-fileName = "u" + str(args.Time)
+fileName = "u" + str(args.Time).zfill(5)
 if n == 0:
 
     print("\nPlotting some awesome contourplots in x direction at co-ordinate: " + str(args.Coordinate))
@@ -186,8 +183,8 @@ if n == 0:
     coords = Tests.indices(ff.x, lambda m: m > float(args.Coordinate))
     x_coord = coords[0]
 
-    vl_max = np.amax(ff.velocityField[i, x_coord, :, :])
-    vl_min = np.amin(ff.velocityField[i, x_coord, :, :])
+    vl_max = np.amax(ff.velocityField[i, :, :, :])
+    vl_min = np.amin(ff.velocityField[i, :, :, :])
 
     ut.plot_Contour(slice_directory, fileName, 
                     ff.z, ff.y, ff.velocityField[i, x_coord, :, :], 
@@ -197,7 +194,7 @@ if n == 0:
                     ff.velocityField[m, x_coord, :, :], 
                     ff.velocityField[p, x_coord, :, :], 
                     "z", "y", velName,
-                    vl_max, vl_min)
+                    vl_max, vl_min, True)
 
 
 elif n == 1:
@@ -205,10 +202,10 @@ elif n == 1:
     print("\nPlotting some awesome contourplots in y direction at co-ordinate: " + str(args.Coordinate))
     
     coords = Tests.indices(ff.y, lambda m: m > float(args.Coordinate))
-    y_coord = coords[0]
+    y_coord = coords[-1]
 
-    vl_max = np.amax(ff.velocityField[i, :, y_coord, :])
-    vl_min = np.amin(ff.velocityField[i, :, y_coord, :])
+    vl_max = np.amax(ff.velocityField[i, :, :, :])
+    vl_min = np.amin(ff.velocityField[i, :, :, :])
     
     ut.plot_Contour(slice_directory, fileName, 
                     ff.z, ff.x, ff.velocityField[i, :, y_coord, :], 
@@ -218,7 +215,7 @@ elif n == 1:
                     ff.velocityField[m, :, y_coord, :], 
                     ff.velocityField[p, :, y_coord, :], 
                     "z", "x", velName,
-                    vl_max, vl_min)
+                    vl_max, vl_min, True)
 
 elif n == 2:
 
@@ -227,8 +224,8 @@ elif n == 2:
     coords = Tests.indices(ff.z, lambda m: m > float(args.Coordinate))
     z_coord = coords[0]
 
-    vl_max = np.amax(ff.velocityField[i, :, :, z_coord].T)
-    vl_min = np.amin(ff.velocityField[i, :, :, z_coord].T)
+    vl_max = np.amax(ff.velocityField[i, :, :, :].T)
+    vl_min = np.amin(ff.velocityField[i, :, :, :].T)
 
     ut.plot_Contour(slice_directory, fileName, 
                     ff.x, ff.y, ff.velocityField[i, :, :, z_coord].T, 
@@ -238,13 +235,13 @@ elif n == 2:
                     ff.velocityField[m, :, :, z_coord].T, 
                     ff.velocityField[p, :, :, z_coord].T, 
                     "x", "y", velName,
-                    vl_max, vl_min)
+                    vl_max, vl_min, False)
 
 
 
 # Remove the temporary directory
 os.chdir(output_directory)
 command = "rm -rf " + tmp_directory
-os.system(tmp_directory)
+os.system(command)
 
 ut.print_EndMessage()

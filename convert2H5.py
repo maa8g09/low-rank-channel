@@ -22,11 +22,11 @@ if directory[-1] != "/":
 files = [fi for fi in os.listdir(directory) if os.path.isfile(os.path.join(directory,fi))]
 files = sorted(files)
 print('\nConverting...')
-for k in files:
-    k = str(k)
-    if k[0] == "u" and k[-3:] == ".ff":
-        file_ff = k
-        file_h5 = k[:-3]
+for file in files:
+    file = str(file)
+    if file[0] == "u" and file[-3:] == ".ff":
+        file_ff = file
+        file_h5 = file[:-3]
         
         command = "\nfieldconvert " + file_ff + " " + file_h5
         print(command)

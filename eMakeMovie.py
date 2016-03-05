@@ -1,34 +1,33 @@
 #!/usr/bin/env python
 
-# This is an executable file that should be run from the command line.
-# The command line arguments determine the type of flow field created.
-
-
-## Need to add all the usual things about yourself. Name, Institute etc.
-
-## This file should be run from the directory where the 
-
 import argparse
-import time
 import os
 import numpy as np
+
 import Utils as ut
-import FlowField as ffClass
 
-# Project flow field. 
-# this should work by taking a flow field and a rank and retrning a rank-approximated flowfield 
-# for you to use. 
+from images2gif import writeGif
+from PIL import Image
+from time import time 
 
-
-date = time.strftime("%Y_%m_%d")
 
 ####################################################################################################
 # Parse the command line arguments (flag parameters)
 #ut.print_ResolventHeader()
 #ut.print_ResolventSubHeader()
-parser = argparse.ArgumentParser(description="Make Movie using slices specified, between time range specified.\nThis program should be run from the directory where the flow fields are saved.")
-
-
+parser = argparse.ArgumentParser(description="Plot flow field slice at time given. \nThis should be executed from the directory where the flow fields are saved.")
+parser.add_argument("-T0",
+                    "--T0",
+                    metavar='\b',
+                    help="Start movie at T0.",
+                    required=True,
+                    type=int)
+parser.add_argument("-T1",
+                    "--T1",
+                    metavar='\b',
+                    help="End movie at T1.",
+                    required=True,
+                    type=int)
 parser.add_argument("-i",
                     "--VelComponent",
                     metavar='\b',
@@ -36,57 +35,79 @@ parser.add_argument("-i",
                     required=True,
                     type=int)
 parser.add_argument("-n",
-                    "--SpatialComponent",
+                    "--SpatialNorm",
                     metavar='\b',
-                    help="Spatial direction of normal (integers i.e. 0 = x, ...),\nE.g. selecting 0 will plot yz planes.",
+                    help="Spatial direction to plot in (integers i.e. 0 = x, ...),\nE.g. selecting 0 will plot yz planes.",
                     required=True,
                     type=int)
+parser.add_argument("-coord",
+                    "--Coordinate",
+                    metavar='\b',
+                    help="Spatial co-ordinate of normal plane.",
+                    required=True,
+                    type=float)
 parser.add_argument("-d",
                     "--Directory",
                     metavar='\b',
                     help="Directory where u0_Details.txt is kept.",
                     required=True)
-parser.add_argument("-T0",
-                    "--T0",
-                    metavar='\b',
-                    help="Plotting start time unit.",
-                    required=True,
-                    type=int)
-parser.add_argument("-T1",
-                    "--T1",
-                    metavar='\b',
-                    help="Plotting end time unit.",
-                    required=False,
-                    type=int)
 
 args = parser.parse_args()
 
+time_range = int(args.T1) - int(args.T0) + 1
+movie_time = np.linspace(int(args.T0), int(args.T1), time_range)
 
-output_directory = os.getcwd()
-if output_directory[-1] != '/':
-    output_directory += '/'
-
-
-T0 = str(args.T0)
-if args.T1:
-    T1 = ""
-else:
-    T1 = str(args.T1)
-    
-movie_directory = output_directory + "movie_" + T0 + "-" + T1 + "/"
+# The directory should be the data-X/ folder.
+pwd = os.getcwd()
+if pwd[-1] != '/':
+    pwd += '/'
 
 
-# List all files in this directory,
-# Then we make sure that they are within the range specified.
-# If yes, then plot and save
-var2= ut.read_Details(dns_data_directory[:dns_data_directory.find("data")], "u0")
-ffg = ffClass.FlowFieldGeometry(var2['bf'],
-                                var2['wp'],
-                                var2['Nd'],
-                                var2['Nx'],
-                                var2['Ny'],
-                                var2['Nz'],
-                                var2['Re'],
-                                var2['c'],
-                                var2['theta'])
+pwd2 = pwd[:pwd.find("data")]
+if pwd2[-1] != '/':
+    pwd2 += '/'
+
+normal = ""
+if args.SpatialNorm == 0:
+    normal = "x"
+elif args.SpatialNorm == 1:
+    normal = "y"
+elif args.SpatialNorm == 2:
+    normal = "z"
+vel = ""
+if args.VelComponent == 0:
+    vel = "u"
+elif args.VelComponent == 1:
+    vel = "v"
+elif args.VelComponent == 2:
+    vel = "w"
+
+movie_directory = pwd2 + "movie_" + str(args.T0) + "-" + str(args.T1) + "_" + normal + str(args.Coordinate) + "_" + vel + "/"
+
+for t in range(0, time_range):
+    time_unit = int(movie_time[t])
+    command = "ePlotSlice.py"
+    command+= " -d " + str(args.Directory)
+    command+= " -o " + movie_directory
+    command+= " -coord " + str(args.Coordinate)
+    command+= " -n " + str(args.SpatialNorm)
+    command+= " -i " + str(args.VelComponent)
+    command+= " -t " + str(time_unit)
+    print("")
+    print(command)
+    print("")
+    os.system(command)
+
+os.chdir(movie_directory)
+#slices = sorted((fn for fn in os.listdir(movie_directory) if fn.endswith('.png')))
+#
+#images = [Image.open(str(movie_directory) + fn) for fn in slices]
+#
+#runningtime = 10.0
+#runningtime = 5.0
+#fileName = movie_directory + "movie_" + str(args.T0) + "-" + str(args.T1) + ".gif"
+#writeGif(fileName, images, duration=runningtime, dither=1, nq = 1)
+fileName = movie_directory + "movie_" + str(args.T0) + "-" + str(args.T1) + ".gif"
+command = "convert -delay 50 *.png " + fileName
+os.system(command)
 

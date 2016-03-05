@@ -205,22 +205,18 @@ for i in range(0, len(directories)):
     symmsFile = symmsFileName + ".asc"
 
     if symmsFileName == "s_eq":
-        ut.write_Symms_File(case_directory, symmsFile, 4, ['1 1 1 1 0.0 0.0',   # e
-                                                           '1 1 1 -1 0.5 0.0',  # sigma_z tau_x
+        ut.write_Symms_File(case_directory, symmsFile, 4, ['1 1 1 -1 0.5 0.0',  # sigma_z tau_x
                                                            '1 1 -1 1 0.0 0.5',  # sigma_y tau_z
                                                            '1 1 -1 -1 0.5 0.5']) # sigma_yz tau_xz
 
     elif symmsFileName == "s_tw1_sigma_z_tau_x":
-        ut.write_Symms_File(case_directory, symmsFile, 2, ['1 1 1 1 0.0 0.0',   # e
-                                                           '1 1 1 -1 0.5 0.0']) # sigma_z tau_x
+        ut.write_Symms_File(case_directory, symmsFile, 2, ['1 1 1 -1 0.5 0.0']) # sigma_z tau_x
 
     elif symmsFileName == "s_tw2_sigma_y_tau_x":
-        ut.write_Symms_File(case_directory, symmsFile, 2, ['1 1 1 1 0.0 0.0',   # e
-                                                           '1 1 -1 1 0.5 0.0']) # sigma_y tau_x
+        ut.write_Symms_File(case_directory, symmsFile, 2, ['1 1 -1 1 0.5 0.0']) # sigma_y tau_x
 
     elif symmsFileName == "s_po":
-        ut.write_Symms_File(case_directory, symmsFile, 4, ['1 1 1 1 0.0 0.0',   # e
-                                                           '1 1 1 1 0.5 0.0',   # tau_x
+        ut.write_Symms_File(case_directory, symmsFile, 4, ['1 1 1 1 0.5 0.0',   # tau_x
                                                            '1 1 1 1 0.0 0.5',   # tau_z
                                                            '1 1 1 1 0.5 0.5'])  # tau_xz
 
