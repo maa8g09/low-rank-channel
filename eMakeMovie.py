@@ -86,7 +86,7 @@ elif args.VelComponent == 1:
 elif args.VelComponent == 2:
     vel = "w"
 
-movie_directory = pwd2 + "movie_" + str(args.T0) + "-" + str(args.T1) + "_" + normal + str(args.Coordinate) + "_" + vel + "/"
+movie_directory = pwd2 + "movie_" + str(args.T0) + "-" + str(args.T1) + "_" + normal + str(args.Coordinate) + "_" + vel
 
 for t in range(0, time_range):
     time_unit = int(movie_time[t])
@@ -95,9 +95,11 @@ for t in range(0, time_range):
     command = ""
     if args.SpatiallyAveraged:
         command+= "ePlotSpatialAverage.py"
+        movie_directory += "_avgd/"
     else:
         command+= "ePlotSlice.py"
         command+= " -coord " + str(args.Coordinate)
+        movie_directory += "/"
 
     command+= " -d " + str(args.Directory)
     command+= " -o " + movie_directory
@@ -108,6 +110,7 @@ for t in range(0, time_range):
     print(command)
     print("")
     os.system(command)
+
 
 os.chdir(movie_directory)
 #slices = sorted((fn for fn in os.listdir(movie_directory) if fn.endswith('.png')))
