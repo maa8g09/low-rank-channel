@@ -111,6 +111,7 @@ for t in range(0, time_range):
 
 if args.SpatiallyAveraged:
     command = "mv " + movie_directory + " " + pwd2 + "movie_" + str(args.T0) + "-" + str(args.T1) + "_" + normal + str(args.Coordinate) + "_" + vel + "_avgd/"
+    movie_directory = pwd2 + "movie_" + str(args.T0) + "-" + str(args.T1) + "_" + normal + str(args.Coordinate) + "_" + vel + "_avgd/"
     os.system(command)
 
 os.chdir(movie_directory)
@@ -125,4 +126,7 @@ os.chdir(movie_directory)
 fileName = movie_directory + "movie_" + str(args.T0) + "-" + str(args.T1) + ".gif"
 command = "convert -delay 50 *.png " + fileName
 os.system(command)
+
+# convert -coalesce animation.gif frames%04d.png
+# ffmpeg -r 10 -i frames%04d.png -vcodec mjpeg -y movie.mp4
 
