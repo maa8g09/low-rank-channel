@@ -123,10 +123,16 @@ os.chdir(movie_directory)
 #runningtime = 5.0
 #fileName = movie_directory + "movie_" + str(args.T0) + "-" + str(args.T1) + ".gif"
 #writeGif(fileName, images, duration=runningtime, dither=1, nq = 1)
-fileName = movie_directory + "movie_" + str(args.T0) + "-" + str(args.T1) + ".gif"
+fileName = movie_directory + "movie_" + str(args.T0) + "-" + str(args.T1)
 command = "convert -delay 50 *.png " + fileName
 os.system(command)
 
-# convert -coalesce animation.gif frames%04d.png
-# ffmpeg -r 10 -i frames%04d.png -vcodec mjpeg -y movie.mp4
+command = "convert -coalesce " + fileName + ".gif frames%04d.png"
+os.system(command)
+command = "ffmpeg -r 10 -i frames%04d.png -vcodec mjpeg -y " + fileName + ".mp4"
+os.system(command)
+command = "rm frame*"
+os.system(command)
 
+
+ut.print_EndMessage()
