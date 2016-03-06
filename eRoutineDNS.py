@@ -196,6 +196,7 @@ for i in range(0, len(directories)):
     if case_directory[-1] != '/':
         case_directory += '/'
 
+    os.chdir(case_directory)
 
     #------------------------------------------------
     # Define symmetries file
@@ -388,6 +389,7 @@ for i in range(0, len(directories)):
     #------------------------------------------------
     # Plot Convergence  
     #------------------------------------------------
+    os.chdir(case_directory)
     command = "\nePlotConvergenceDNS.py"
     command+= " -T0 " + str(int(t_start))
     command+= " -T1 " + str(int(t_end))
@@ -416,6 +418,25 @@ for i in range(0, len(directories)):
     command+= " -kz " + str(rec_kz)
     print(command + "\n")
     os.system(command)
+
+
+    #------------------------------------------------
+    # Make movie of the DNS
+    #------------------------------------------------
+    os.chdir(output_dir)
+    coord = 0.0
+    vel = int(coord)
+    for nd in range(0, 3):
+        command = "eMakeMovie.py"
+        command+= " -d " + case_directory
+        command+= " -coord " + str(coord)
+        command+= " -i " + str(vel)
+        command += " -T0 " + str(t_start)
+        command += " -T1 " + str(t_end)
+        command+= " -n " + str(nd)
+        command+= " -a " # Make sure we are looking at the spatial average.
+        print(command + "\n")
+        os.system(command)
 
 
     #------------------------------------------------

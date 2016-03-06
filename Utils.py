@@ -600,9 +600,16 @@ def plot_Contour(output_directory, fileName,
     origin = 'lower'
 
     my_dpi = 150
-    figx = abs(xAxis[0] - xAxis[-1]) * 300.0
-    figy = abs(yAxis[0] - yAxis[-1]) * 150.0
+    if xAxisName == "z" and yAxisName == "y":
+        figx = abs(xAxis[0] - xAxis[-1]) * 600.0
+        figy = abs(yAxis[0] - yAxis[-1]) * 600.0
+    else:
+        figx = abs(xAxis[0] - xAxis[-1]) * 300.0
+        figy = abs(yAxis[0] - yAxis[-1]) * 150.0
+
     fig = plt.figure(figsize=(figx/my_dpi, figy/my_dpi), dpi=my_dpi)
+
+
 #    fig = plt.figure(dpi=my_dpi)
     CS = plt.contourf(x, 
                       y, 
