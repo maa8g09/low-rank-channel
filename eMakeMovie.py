@@ -124,7 +124,7 @@ os.chdir(movie_directory)
 #fileName = movie_directory + "movie_" + str(args.T0) + "-" + str(args.T1) + ".gif"
 #writeGif(fileName, images, duration=runningtime, dither=1, nq = 1)
 fileName = movie_directory + "movie_" + str(args.T0) + "-" + str(args.T1)
-command = "convert -delay 50 *.png " + fileName
+command = "convert -delay 50 *.png " + fileName + ".gif"
 os.system(command)
 
 command = "convert -coalesce " + fileName + ".gif frames%04d.png"

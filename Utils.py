@@ -603,9 +603,12 @@ def plot_Contour(output_directory, fileName,
     if xAxisName == "z" and yAxisName == "y":
         figx = abs(xAxis[0] - xAxis[-1]) * 600.0
         figy = abs(yAxis[0] - yAxis[-1]) * 600.0
-    else:
-        figx = abs(xAxis[0] - xAxis[-1]) * 300.0
-        figy = abs(yAxis[0] - yAxis[-1]) * 150.0
+    elif xAxisName == "z" and yAxisName == "x":
+        figx = abs(xAxis[0] - xAxis[-1]) * 450.0
+        figy = abs(yAxis[0] - yAxis[-1]) * 225.0
+    elif xAxisName == "x" and yAxisName == "y":
+        figx = abs(xAxis[0] - xAxis[-1]) * 400.0
+        figy = abs(yAxis[0] - yAxis[-1]) * 200.0
 
     fig = plt.figure(figsize=(figx/my_dpi, figy/my_dpi), dpi=my_dpi)
 
