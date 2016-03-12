@@ -598,6 +598,11 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
     if diff >= 1e-12:
         ut.error("FFT and IFFT went wrong...")
 
+
+    #### Subtract the mean
+    full_approx_U -= original_mean.real
+    ffcf.set_ff(full_approx_U.real, "pp")
+    
 #
 #    #================================================================
 #    #### Rearrange
