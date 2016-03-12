@@ -1,7 +1,13 @@
 import numpy as np
+
 import PseudoSpectralMethods as ps
 import Tests
+import Utils as ut
 
+from scipy.sparse.linalg import svds
+from numpy.linalg import svd
+
+import sys
 
 def resolvent_formulation(ffg):
     
@@ -57,8 +63,14 @@ def resolvent_formulation(ffg):
                     phase_shift = np.zeros((resolvent_modes[0,:].shape[1], resolvent_modes[0,:].shape[1]), dtype=np.complex128)
                     if ffg.c < 1.0:
                         inds = Tests.indices(state_vecs['U'], lambda x: x > ffg.c)
-                        ind0 = inds[0]
-#                        ind1 = inds[-1] # We don't need this point, because using the first point handles multiplying both sides of the channel wall-normal co-ordinates
+                        if len(inds) > 0:
+                            ind0 = inds[0]
+                            # ind1 = inds[-1]
+                            # Don't need this point, because using the 
+                            # first point multiplies both sides of the channel in 
+                            # the wall-normal direction.
+                        elif len(inds) == 0: # Use centreline
+                            ind0 = ffg.Ny / 2 + 1
                     else:
                         ind0 = np.floor(ffg.modes/2)
 
@@ -109,8 +121,8 @@ def resolvent_formulation(ffg):
 #        generated_ff[:, :,         1:ffg.Ny-1, :]   = tmp2[:, :,          0:ffg.modes, :].real
 #        generated_ff[:, :,  ffg.Ny+1:ffg.Ny*2-1, :] = tmp2[:, :,  ffg.modes:ffg.modes*2, :].real
 #        generated_ff[:, :,2*ffg.Ny+1:ffg.Ny*3-1, :] = tmp2[:, :,2*ffg.modes:ffg.modes*3, :].real
-    y_cheb = np.asarray(y_cheb)
-    y_cheb = np.squeeze(y_cheb)
+#    y_cheb = np.asarray(y_cheb)
+    y_cheb = np.squeeze(np.asarray(y_cheb))
     
     # My way of re-arranging...
     if ffg.baseflow == "lam":
@@ -157,52 +169,107 @@ def resolvent_formulation(ffg):
 
 
 
-def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
+def resolvent_approximation(ffcf, rank, turb_mean_profile, ffmean):
 
-    kx = ffcf.Mx * ffcf.alpha      # list of wavenumbers to use (modes multiplied by fundamental alpha)
-    kz = ffcf.Mz * ffcf.beta       # list of wavenumbers to use (modes multiplied by fundamental beta)
-    
-    # Ny = num of modes when approximating    
+    #================================================================
+    # Create arrays of Fourier modes to use
+    # (modes multiplied with fundamental wavenumbers)
+    #================================================================
+    kx = ffcf.Mx * ffcf.alpha
+    kz = ffcf.Mz * ffcf.beta
+
+    #================================================================
+    # Add 2 to the amount of wall-normal points to be able to use 
+    # chebyshev nodes. Since the wall-points are omitted in the calculation
+    # of the transfer function, H.
+    #
+    # This is done so that all of the wall-normal nodes are used. (including at teh wall)
+    #
+    # Ny = num of modes when approximating (2 more than original)
+    #================================================================
     Ny_orig = ffcf.Ny
     ffcf.set_Ny(Ny_orig+2)
 
+    #================================================================
+    # Ensure valid rank is specified
+    #================================================================
     rank = min(rank, 3*ffcf.modes)
     ffcf.set_rank(rank)
 
+    #================================================================
+    # Initialize empty 4D array to store approximated velocity field
+    #================================================================
     u_hat_approx  = np.zeros((len(kx), 3*Ny_orig, len(kz)), dtype=np.complex128)
 
+    #================================================================
+    # Loop through wavenumbers 
+    #================================================================
     for mx in range(0, len(ffcf.Mx)):
         alpha = kx[mx]
-
 
         for mz in range(0, len(ffcf.Mz)):
             beta  = kz[mz]
 
             if alpha == 0 or beta == 0:
-                # Make sure that the mean is copied over to the approximation
+                #------------------------------------------------
+                # Set the zero wavenumbers to equal the mean profile
+                #------------------------------------------------
                 u_hat_approx[mx, :, mz] = ffmean.velocityField[mx, :, mz]
+                
+                # Start the loop again
                 continue
 
-            state_vecs = get_state_vectors(ffcf, alpha, beta, turb_profile)
-            state_vecs['y_cheb_full'] = np.squeeze(np.asarray(state_vecs['y_cheb_full']))
-            
-            vel_modes, singular_values, forcing_modes = np.linalg.svd(state_vecs['H'])
-            Tests.SVDNorm(vel_modes, singular_values, forcing_modes, state_vecs['H'])
-            
-            # Non-weighted resolvent modes
+            text02 ='(mx)kx: ('+str(ffcf.Mx[mx])+') '+ str(alpha) + '\t'
+            text02+='(mz)kz: ('+str(ffcf.Mz[mz])+') '+ str(beta)
+            print(text02)
+
+            #------------------------------------------------
+            # Calculate the resolvent (R_A) and 
+            # transfer function (H)
+            #------------------------------------------------
+            state_vecs = get_state_vectors(ffcf, alpha, beta, turb_mean_profile)
+
+            #------------------------------------------------
+            # Perform SVD (Singular Value Decomposition)
+            #------------------------------------------------
+            vel_modes, singular_values, forcing_modes = svds(state_vecs['H'], rank)
+            vel_modes = np.asmatrix(vel_modes)
+            #------------------------------------------------
+            # Check it all went smoothly...
+            #------------------------------------------------
+#            Tests.SVDNorm(vel_modes, singular_values, forcing_modes, state_vecs['H'])
+
+            #------------------------------------------------
+            # Retrieve physical resolvent modes (non-grid-weighted)
+            #------------------------------------------------
             resolvent_modes = np.linalg.solve(state_vecs['cq'], vel_modes)
-            Tests.divergence(resolvent_modes, alpha, beta, ffcf.modes, state_vecs['D1'])
-            Tests.orthogonality(vel_modes)
-            
-            # Non-weighted resolvent modes (physical velocity modes)
-            resolvent_modes = np.linalg.solve(state_vecs['cq'], vel_modes)
-            
-            # Fix phase of first non-zero point based on critical layer
-            phase_shift = np.zeros((resolvent_modes[0,:].shape[1], resolvent_modes[0,:].shape[1]), dtype=np.complex128)
+
+            #------------------------------------------------
+            # Check that the divergence criteria is satisfied
+            #------------------------------------------------
+#            Tests.divergence(resolvent_modes, alpha, beta, ffcf.modes, state_vecs['D1'])
+
+            #------------------------------------------------
+            # Check that the weighted resovlent 
+            # and forcing modes are orthogonal.
+            #------------------------------------------------
+#            Tests.orthogonality(vel_modes)
+#            Tests.orthogonality(forcing_modes.T)
+
+            #------------------------------------------------
+            # Fix phase of resolvent modes based on critical layer
+            #------------------------------------------------
+            phase_shift = np.zeros((resolvent_modes.shape[1], resolvent_modes.shape[1]), dtype=np.complex128)
             if ffcf.c < 1.0:
                 inds = Tests.indices(state_vecs['U'], lambda x: x > ffcf.c)
-                ind0 = inds[0]
-#                        ind1 = inds[-1] # We don't need this point, because using the first point handles multiplying both sides of the channel wall-normal co-ordinates
+                if len(inds) > 0:
+                    ind0 = inds[0]
+                    # ind1 = inds[-1]
+                    # Don't need this point, because using the 
+                    # first point multiplies both sides of the channel in 
+                    # the wall-normal direction.
+                elif len(inds) == 0: # Use centreline
+                    ind0 = ffcf.Ny / 2 + 1
             else:
                 ind0 = np.floor(ffcf.modes/2)
 
@@ -210,46 +277,52 @@ def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
             np.fill_diagonal(phase_shift, phase_shift_tmp)
             resolvent_modes *= phase_shift
 
+            #------------------------------------------------
+            # Project resolvent modes to get amplitude 
+            # coefficients, chi, defined as
             # chi  = singular_values * eta
+            #------------------------------------------------
             chi = get_scalars(ffcf.velocityField[mx, :, mz], resolvent_modes, state_vecs['cq'], rank)
-            chi = np.asarray(chi)
-            chi = np.asmatrix(chi)
-            print('chi shape')
-            print(chi.shape)
-            
-            u_tilde_approx = vel_modes[:,:rank] * chi
-
-            result = np.asmatrix(ffcf.velocityField[mx, :, mz]).T - u_tilde_approx
-            result = np.linalg.norm(result)
-
-#            text03='|| u_original - u_approx || = ' + str(result)
-#            print(text03)
-
-            u_hat_approx[mx, :, mz] = np.squeeze(np.asarray(u_tilde_approx))
+#            chi = np.asarray(chi)
+            chi = np.asmatrix(np.asarray(chi))
+       
+            #------------------------------------------------
+            # Calculate approximate flow field.
+            #------------------------------------------------
+            u_hat_approx[mx, :, mz] = np.squeeze(np.asarray(vel_modes[:,:rank] * chi))
 
 
+    #================================================================
+    # Print difference in full and approximated velocity fields
+    #================================================================
     diff = np.abs(ffcf.velocityField - u_hat_approx)
     diff = np.linalg.norm(diff)
-#    text01 = '\n|| u_original || =' + format(np.linalg.norm(ffcf.ff), '.8f')
-#    text02 = '\n || u_approx ||  =' + format(np.linalg.norm(u_hat_approx), '.8f')
     text03 = '\n|| u_original - u_approx || = '+str(diff)+'\n'
-#    print(text01)
-#    print(text02)
     print(text03)
+
     diff_orig = np.linalg.norm(ffcf.velocityField)
     diff_aprx = np.linalg.norm(u_hat_approx)
     diff = diff_orig - diff_aprx
     text02='\n|| u_original || - || u_approx || = '+str(diff)+'\n'
     print(text02)
 
-    ffcf.set_Ny(Ny_orig) # take away 2 from the value of Ny set at the start of this method.
-    # this was done so that all of the wall-normal units are used.
-    
-#    # Rearranging using numpy reshape
-#    u_hat_approx = u_hat_approx.reshape((ffcf.Nd, len(ffcf.Mx), ffcf.Ny, len(ffcf.Mz)))
 
-    # My way of re-arranging...
-    U_hat = np.zeros((ffcf.Nd, ffcf.Nx, ffcf.Ny, ffcf.Nz), dtype=np.complex128)
+    #================================================================
+    # Reset Ny
+    #================================================================
+    # Take away 2 from the value of Ny set at the start of this method.    
+    ffcf.set_Ny(Ny_orig) 
+
+
+    #================================================================
+    # Rearranging using numpy reshape
+    #================================================================
+    # u_hat_approx = u_hat_approx.reshape((ffcf.Nd, len(ffcf.Mx), ffcf.Ny, len(ffcf.Mz)))
+
+    #================================================================
+    # My way of re-arranging
+    #================================================================
+    U_hat = np.zeros((ffcf.Nd, len(ffcf.Mx), ffcf.Ny, len(ffcf.Mz)), dtype=np.complex128)
     U_hat_u = u_hat_approx[:,         0:ffcf.Ny  , :]
     U_hat_v = u_hat_approx[:,   ffcf.Ny:2*ffcf.Ny, :]
     U_hat_w = u_hat_approx[:, 2*ffcf.Ny:3*ffcf.Ny, :]
@@ -265,9 +338,298 @@ def resolvent_approximation(ffcf, rank, turb_profile, ffmean):
                     elif i == 2: # w direction
                         U_hat[i, mx, ny, mz] = U_hat_w[mx, ny, mz]
 
-    ffcf.set_ff(U_hat)
+    ffcf.set_ff(U_hat, "sp")
 
     return ffcf
+
+
+
+
+def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
+    print("\nUsing the new approximation method...")
+
+
+    #================================================================
+    #### Store the original flowfields in physical form for use at the end.
+    #================================================================
+    original_U = ffcf.velocityField
+    original_u = original_U[0, :, :, :].real
+    original_v = original_U[1, :, :, :].real
+    original_w = original_U[2, :, :, :].real
+    original_mean = ffmean.velocityField
+
+    # FFT test
+    ffcf.make_xz_spectral()
+    ffcf.make_xz_physical()
+
+    diff = np.linalg.norm(original_U.real - ffcf.velocityField.real)
+    if diff >= 1e-12:
+        ut.error("FFT and IFFT went wrong...")
+
+    #================================================================
+    #### Remove the wall boundaries
+    #================================================================
+    print("\nRemoving the xz-plane at y=1 and y=-1,\nso that the chebyshev nodes can be used to construct the transfer function.")
+    modified_U = np.zeros((ffcf.Nd, ffcf.Nx, ffcf.modes, ffcf.Nz))
+    modified_U = ffcf.velocityField[:, :, 1:-1, :]
+    ffcf.set_ff(modified_U.real, "pp")
+    diff = np.linalg.norm(modified_U - ffcf.velocityField)
+    if diff >= 1e-12:
+        ut.error("The modified flow field has not been set correctly in the flow field class")
+
+    modified_mean = np.zeros((ffcf.Nd, ffcf.Nx, ffcf.modes, ffcf.Nz))
+    modified_mean = ffmean.velocityField[:, :, 1:-1, :]
+    ffmean.set_ff(modified_mean.real, "pp")
+    diff = np.linalg.norm(modified_mean - ffmean.velocityField)
+    if diff >= 1e-12:
+        ut.error("The modified mean flow field has not been set correctly in the flow field class")
+
+    #================================================================
+    #### Fourier transform the flow fields in xz directions
+    #================================================================
+    print("\nFFT instantaneous and turbu_mean flow fields")
+    ffcf.make_xz_spectral()
+    ffmean.make_xz_spectral()
+
+    #================================================================
+    #### Concatenate the flowfields so that they are stacked uvw in the wall-normal direction
+    #================================================================
+    spectral_U = np.concatenate((ffcf.velocityField[0, :, :, :],
+                                 ffcf.velocityField[1, :, :, :],
+                                 ffcf.velocityField[2, :, :, :]),
+                                 axis=1)
+
+    spectral_mean = np.concatenate((ffmean.velocityField[0, :, :, :],
+                                    ffmean.velocityField[1, :, :, :],
+                                    ffmean.velocityField[2, :, :, :]),
+                                    axis=1)
+
+    #================================================================
+    #### Create arrays of Fourier modes to use
+    # (modes multiplied with fundamental wavenumbers)
+    #================================================================
+    kx = ffcf.Mx * ffcf.alpha
+    kz = ffcf.Mz * ffcf.beta
+
+    #================================================================
+    #### Ensure valid rank is specified
+    #================================================================
+    rank = min(rank, 3*ffcf.modes)
+    ffcf.set_rank(rank)
+
+    #================================================================
+    #### Initialize empty 3D array to store approximated velocity field
+    #================================================================
+    u_hat_approx  = np.zeros((len(kx), 3*ffcf.modes, len(kz)), dtype=np.complex128)
+
+    #================================================================
+    #### Store the amplitude coefficients per streamwise Fourier mode
+    #================================================================
+    alpha_beta_chi = np.zeros((len(kx), len(kz), rank))
+
+    #================================================================
+    #### Loop through wavenumbers 
+    #================================================================
+    for mx in range(0, len(ffcf.Mx)):
+        alpha = kx[mx]
+        text02 ='\n(mx)kx: ('+str(ffcf.Mx[mx])+') '+ str(alpha)
+        print(text02)
+
+        for mz in range(0, len(ffcf.Mz)):
+            beta  = kz[mz]
+
+            sys.stdout.write(" "+ str(beta))
+            sys.stdout.flush()
+
+            if alpha == 0 or beta == 0:
+                #------------------------------------------------
+                #### Set the zero Fourier modes to equal the mean flow
+                #------------------------------------------------
+                u_hat_approx[mx, :, mz] = spectral_mean[mx, :, mz]
+                # uvw of approximation at the zero Fourier modes equals the 
+                # uvw of mean at the zero Fourier modes
+                
+                # Start the loop again
+                continue
+
+            #------------------------------------------------
+            #### Calculate the resolvent (R_A) and transfer function (H)
+            #------------------------------------------------
+            state_vecs = get_state_vectors(ffcf, alpha, beta, turb_mean_profile[1:-1])
+
+            #------------------------------------------------
+            #### Perform SVD
+            #------------------------------------------------
+            if sparse:
+                vel_modes, singular_values, forcing_modes = svds(state_vecs['H'], rank)
+            else:
+                vel_modes, singular_values, forcing_modes = svd(state_vecs['H'], rank)
+
+            vel_modes = np.asmatrix(vel_modes)
+            #------------------------------------------------
+            #### Check SVD
+            #------------------------------------------------
+            if not sparse:
+                Tests.SVDNorm(vel_modes, singular_values, forcing_modes, state_vecs['H'])
+
+            #------------------------------------------------
+            #### Retrieve non-grid-weighted resolvent modes (physical modes)
+            #------------------------------------------------
+            resolvent_modes = np.linalg.solve(state_vecs['cq'], vel_modes)
+
+            #------------------------------------------------
+            #### Check that the divergence criteria is satisfied
+            #------------------------------------------------
+            if not sparse:
+                Tests.divergence(resolvent_modes, alpha, beta, ffcf.modes, state_vecs['D1'])
+
+            #------------------------------------------------
+            #### Check that the weighted resovlent and forcing modes are orthogonal.
+            #------------------------------------------------
+            if not sparse:
+                Tests.orthogonality(vel_modes)
+#            Tests.orthogonality(forcing_modes.T)
+
+            #------------------------------------------------
+            #### Fix phase of resolvent modes based on critical layer or centreline
+            #------------------------------------------------
+            phase_shift = np.zeros((resolvent_modes.shape[1], resolvent_modes.shape[1]), dtype=np.complex128)
+            if ffcf.c < 1.0:
+                inds = Tests.indices(state_vecs['U'], lambda x: x > ffcf.c)
+                if len(inds) > 0:
+                    ind0 = inds[0]
+                elif len(inds) == 0: # Use centreline
+                    ind0 = ffcf.Ny / 2 + 1
+            else:
+                ind0 = np.floor(ffcf.modes/2)
+
+            phase_shift_tmp = np.exp(-1j * np.angle(resolvent_modes[ind0,:]))
+            np.fill_diagonal(phase_shift, phase_shift_tmp)
+            resolvent_modes *= phase_shift
+
+            #------------------------------------------------
+            #### Project resolvent modes to get amplitude coefficients
+            # denoted chi, defined as
+            # chi  = singular_values * eta
+            #------------------------------------------------
+            # Initialize the scalars vector
+            chi = np.zeros((rank, 1), dtype=np.complex128)      
+            # Projection
+            chi = resolvent_modes[: , :rank].H * state_vecs['cq'].H * state_vecs['cq'] * np.asmatrix(spectral_U[mx, :, mz]).T 
+
+            alpha_beta_chi[mx, mz, :] = np.squeeze(np.asarray(np.abs(chi)))
+
+            #------------------------------------------------
+            #### Calculate approximate flow field
+            #------------------------------------------------
+            tmp =  np.linalg.inv(state_vecs['cq']) * state_vecs['cq'] * resolvent_modes[:,:rank] * chi
+
+            # tmp in this case is w*u_spectral
+            orig = np.asmatrix(spectral_U[mx, :, mz]).T
+            diff = np.linalg.norm(tmp - orig)
+            u_hat_approx[mx, :, mz] = np.squeeze(np.asarray(tmp))
+
+
+
+    print("\nFinished approximating.\n")
+
+
+    #================================================================
+    # Print difference in full and approximated velocity fields
+    #================================================================
+#    diff = spectral_U - u_hat_approx
+    diff = np.linalg.norm(spectral_U - u_hat_approx)
+    text03 = '\n|| u_original - u_approx || = '+str(diff)
+    print(text03)
+
+    diff_orig = np.linalg.norm(spectral_U)
+    diff_aprx = np.linalg.norm(u_hat_approx)
+    diff = diff_orig - diff_aprx
+    text02='\n|| u_original || - || u_approx || = '+str(diff)+'\n'
+    print(text02)
+
+
+    #================================================================
+    #### Inverse Fourier transform the approximated flow field in xz directions
+    #================================================================
+    print("Inverse FFT of approximated flow field")
+    u_hat_approx = u_hat_approx.reshape((ffcf.Nd, len(ffcf.Mx), ffcf.modes, len(ffcf.Mz)))
+    ffcf.set_ff(u_hat_approx, "sp")
+    diff = np.linalg.norm(u_hat_approx - ffcf.velocityField)
+    if diff >= 1e-12:
+        ut.error("The approximated flow field has not been set correctly in the flow field class")
+    ffcf.make_xz_physical()
+    print("Approximated flow field state:", ffcf.state)
+
+
+    #================================================================
+    #### Add wall boundaries
+    #================================================================
+    approx_U = ffcf.velocityField
+    approx_u = np.concatenate((original_U[0,:,:1,:].real,
+                               approx_U[0, :, :, :].real,
+                               original_U[0,:,-1:,:].real),
+                               axis=1)
+    diff = np.linalg.norm(approx_u.real - original_u.real)
+
+    approx_v = np.concatenate((original_U[1,:,:1,:].real,
+                               approx_U[1, :, :, :].real,
+                               original_U[1,:,-1:,:].real),
+                               axis=1)
+    diff = np.linalg.norm(approx_v.real - original_v.real)
+    approx_w = np.concatenate((original_U[2,:,:1,:].real,
+                               approx_U[2, :, :, :].real,
+                               original_U[2,:,-1:,:].real),
+                               axis=1)
+    diff = np.linalg.norm(approx_w.real - original_w.real)
+    full_approx_U = original_U.real
+    full_approx_U[0,:,:,:] = approx_u.real
+    full_approx_U[1,:,:,:] = approx_v.real
+    full_approx_U[2,:,:,:] = approx_w.real
+
+    ffcf.set_ff(full_approx_U.real, "pp")
+    tmp = ffcf.velocityField
+    
+    # FFT test
+    ffcf.make_xz_spectral()
+    ffcf.make_xz_physical()
+
+    diff = np.linalg.norm(original_U.real - ffcf.velocityField.real)
+    if diff >= 1e-12:
+        ut.error("FFT and IFFT went wrong...")
+
+#
+#    #================================================================
+#    #### Rearrange
+#    #================================================================
+#    u_hat = np.zeros((ffcf.Nd, len(ffcf.Mx), ffcf.Ny, len(ffcf.Mz)), dtype=np.complex128)
+#    u_hat_u = u_hat_approx[:,            0:ffcf.modes  , :]
+#    u_hat_v = u_hat_approx[:,   ffcf.modes:ffcf.modes*2, :]
+#    u_hat_w = u_hat_approx[:, 2*ffcf.modes:ffcf.modes*3, :]
+#
+#    print("Adding boundaries")
+#    for i in range(0, ffcf.Nd):
+#        for mx in range(0, len(ffcf.Mx)):
+#            for ny in range(0, ffcf.Ny):
+#                for mz in range(0, len(ffcf.Mz)):
+#                    endpoint = ffcf.Ny - 1
+#                    if ny == 0 or ny == endpoint: # wall-points
+#                            u_hat[i, mx, ny, mz] = ffcf.velocityField[i, mx, ny, mz]
+#
+#                    else: # rest of domain
+#                        if i == 0: # u 
+#                            u_hat[i, mx, ny, mz] = u_hat_u[mx, ny-1, mz]
+#                        elif i == 1: # v 
+#                            u_hat[i, mx, ny, mz] = u_hat_v[mx, ny-1, mz]
+#                        elif i == 2: # w 
+#                            u_hat[i, mx, ny, mz] = u_hat_w[mx, ny-1, mz]
+
+
+
+
+    return ffcf, alpha_beta_chi
+
+
 
 
 
@@ -368,6 +730,9 @@ def get_state_vectors(ffg, alpha, beta, vel_profile):
         d2U_dy2 = 0.0
 
     # pg 60 Schmid Henningson eqns 3.29 and 3.30
+#    print("vp shape:\t", len(vel_profile))
+#    print("U shape:\t", U.shape)
+#    print("Lap len:\t", Lap.shape)
     SQ_operator = ((Lap/ffg.Re) - (1.0j * alpha * U))
     C_operator  = -1.0j*beta*dU_dy
     
@@ -429,26 +794,3 @@ def get_state_vectors(ffg, alpha, beta, vel_profile):
     
     return state_vecs
 
-
-
-def get_scalars(u_hat, resolvent_modes, cq, rank):
-
-    #========================================================================
-    # Projecting with the required amount of column vectors==================
-    #========================================================================
-    resolvent_modes = np.asmatrix(resolvent_modes) # vel_modes have already been mutltiplied by the clencurt quadrature
-    psi = resolvent_modes[: , :rank] # column vectors
-
-    # Get the complex conjugate of the modes.
-    psi_star = psi.H
-
-    # Initialize the scalars vector (shape = Nd*Ny, long vector for u, v, w)
-    chi = np.zeros((rank, 1), dtype=np.complex128)
-
-    # Convert from array to matrix for multiplication later
-    u_hat = np.asmatrix(u_hat).T
-
-    chi = psi_star * cq * u_hat
-
-    return chi
-    

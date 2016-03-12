@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 
-# This is an executable file that should be run from the command line.
-# The command line arguments determine the type of flow field created.
-
-
-## Need to add all the usual things about yourself. Name, Institute etc.
-
-## This file should be run from the directory where the 
-
 import argparse
 import time
 import os
@@ -16,9 +8,9 @@ import Utils as ut
 import FlowField as ffClass
 import ChannelResolvent as cr
 
+# Project flow field
 
-# Project flow field. 
-# this should work by taking a flow field and a rank and retrning a rank-approximated flowfield 
+# This file works by taking a flow field and a rank and returning a rank-approximated flowfield 
 # for you to use. 
 
 date = time.strftime("%Y_%m_%d")
@@ -27,7 +19,7 @@ date = time.strftime("%Y_%m_%d")
 # Parse the command line arguments (flag parameters)
 #ut.print_ResolventHeader()
 #ut.print_ResolventSubHeader()
-parser = argparse.ArgumentParser(description="Project modes onto a flow field in order to yield a rank approximation of the velocity field.")
+parser = argparse.ArgumentParser(description="Project modes onto a velocity field to get a rank approximation.")
 parser.add_argument("-f",
                     "--File",
                     metavar='\b',
@@ -45,22 +37,19 @@ parser.add_argument("-d",
                     help="Directory where u0_Details.txt is kept.",
                     required=True)
 parser.add_argument("-v",
-                    "--TurbMeanProfile",
+                    "--MeanProfile",
                     metavar='\b',
                     help="Turbulent mean velocity profile. (Prefix with full directory)")
-parser.add_argument("-m",
-                    "--MeanFile",
-                    metavar='\b',
-                    help="(S,P) Mean ascii file. (Prefix with full directory)")
-parser.add_argument("-0",
-                    "--NoMean",
-                    help="If no mean provided, use flowfield provided.",
-                    action="store_true")
+parser.add_argument("-s",
+                    "--Sparse",
+                    help="Use sparse SVD algorithm.",
+                    action='store_true')
 args = parser.parse_args()
 
 
-####################################################################################################
-# Create a temporary folder in which to do all the magic in
+#================================================================
+# Create a temporary folder
+#================================================================
 parent_directory = os.getcwd()
 
 if parent_directory[-1] != "/":
@@ -82,71 +71,142 @@ if not os.path.exists(temp_rank_folder):
 os.chdir(temp_rank_folder)
 
 
-####################################################################################################
-# Convert the binary flow field parsed in, to ascii
-command = "field2ascii -p ../" + str(args.File) + " " + str(args.File)[:-3]
-os.system(command)
+#================================================================
+# Check file type
+#================================================================
+if args.File[-3:] == ".h5": # H5 file type
+    #------------------------------------------------
+    # Read H5 file
+    #------------------------------------------------
+    print("HDF5 file given.")
+    #------------------------------------------------
+    # Initialize instance of flow field class (Ati's class)
+    #------------------------------------------------
+
+    #------------------------------------------------
+    # Fourier transform the velocity field
+    #------------------------------------------------
+
+    # (Ati has written a make_spectral method which you can use.)
 
 
-####################################################################################################
-# Read and store the spectral file.
-var = ut.read_ASC_SP(temp_rank_folder, str(args.File)[:-3])
 
-details_directory = args.Directory
-if details_directory[-1] != "/":
-    details_directory += "/"
+elif args.File[-3:] == ".ff": # channelflow binary file type
+    print("\nA channelflow binary file given...")
+    #------------------------------------------------
+    # Convert the binary file to ascii
+    #------------------------------------------------
+    command = "field2ascii -p ../" + str(args.File) + " " + str(args.File)[:-3]
+    print(command)
+    os.system(command)
 
-var2 = ut.read_Details(details_directory, str(args.File)[:-3])
+    #------------------------------------------------
+    # Read physical ascii file
+    #------------------------------------------------
+    var = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-3])
+    
+    details_directory = args.Directory
+    if details_directory[-1] != "/":
+        details_directory += "/"
+    
+    var2 = ut.read_Details(details_directory, "u0")
+    
+    #------------------------------------------------
+    # Initialize an instance of FlowField class
+    #------------------------------------------------
+    ffcf = ffClass.FlowFieldChannelFlow2(var['Nd'],
+                                        var['Nx'],var['Ny'],var['Nz'],
+                                        var['Lx'],var['Lz'],
+                                        var['alpha'],var['beta'],
+                                        var2['c'],var2['bf'],var2['Re'],
+                                        var['ff'],
+                                        "pp")
 
-ffcf = ffClass.FlowFieldChannelFlow(var['Nd'],
-                                    var['Nx'],
-                                    var['Ny'],
-                                    var['Nz'],
-                                    var['Lx'],
-                                    var['Lz'],
-                                    var['alpha'],
-                                    var['beta'],
-                                    var2['c'],
-                                    var2['bf'],
-                                    var2['Re'],
-                                    var['ff'],
-                                    "sp")
+else: # No file type given.
+    ut.error("Invalid file given.")
 
-turb_mean = []
-if args.NoMean:
-    print("No Mean specified.")
-    ffmean = ffcf
+
+
+
+
+#================================================================
+# Check mean file
+#================================================================
+turb_mean_profile = []
+if args.MeanProfile:
+    #------------------------------------------------
+    # Read velocity profile
+    #------------------------------------------------
+    turb_deviation_profile = ut.read_Vel_Profile(args.MeanProfile)
+#    print(turb_deviation_profile)
+    # Laminar base flow profile
+    lam = 1.0 - ffcf.y**2.0
+
+    # Add turbulent deviation profile to the parabolic laminar base flow profile
+    turb_mean_profile = turb_deviation_profile + lam
+#    turb_mean_profile = turb_deviation_profile
+#    print(turb_mean_profile)
+
+    #------------------------------------------------
+    # Construct 4D array of turb profile
+    #------------------------------------------------
+    turb_mean = ut.make_mean_ff_pp(turb_mean_profile, ffcf.Nd, ffcf.Nx, ffcf.Nz)
+
+    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
+    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
+    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
+    # Test the fourtier transform:
+#    testMean = ffcf
+#    testMean.set_ff(turb_mean, "pp")
+#    test_directory = temp_rank_folder
+#    ut.write_ASC(testMean, test_directory, "mean")
+#    ut.write_GEOM(testMean, test_directory, "mean")
+#    ut.write_FF(test_directory, "mean")
+#    os.chdir(test_directory)
+#    command = "rm *.asc *.geom"
+#    # Convert to ascii...
+#    command = "field2ascii -p mean.ff mean"
+#    os.system(command)
+#    # Read the sp file
+#    testMean_ff = ut.read_ASC_SP(test_directory, "mean")
+#    os.chdir(temp_rank_folder)
+    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
+    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
+    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
+
+    #------------------------------------------------
+    # Initialize mean instance FlowField class
+    #------------------------------------------------
+    ffmean = ffClass.FlowFieldChannelFlow2(var['Nd'],
+                                        var['Nx'],var['Ny'],var['Nz'],
+                                        var['Lx'],var['Lz'],
+                                        var['alpha'],var['beta'],
+                                        var2['c'],var2['bf'],var2['Re'],
+                                        turb_mean,
+                                        "pp")
+    ffmean.set_ff(turb_mean, "pp")
 
 else:
-    # Read velocity profile
-    turb_mean = ut.read_Vel_Profile(args.TurbMeanProfile)
-
-    # Read mean asc file
-    tmp = args.MeanFile.find("uMean")
-    meanDir = args.MeanFile[:tmp]
-    var = ut.read_ASC_SP(meanDir, "uMean")
-    ffmean = ffClass.FlowFieldGeometry(var2['bf'],
-                                       var2['wp'],
-                                       var2['Nd'],
-                                       var2['Nx'],
-                                       var2['Ny'],
-                                       var2['Nz'],
-                                       var2['Re'],
-                                       var2['c'],
-                                       var2['theta'])
-
-    ffmean = ffClass.FlowField(ffmean, var['ff'], "sp")
+    #------------------------------------------------
+    # Use original file as the mean
+    #------------------------------------------------
+    ffmean = ffcf
 
 
-####################################################################################################
-# Constrct an approximation.
-ffcf = cr.resolvent_approximation(ffcf, args.Rank, turb_mean, ffmean)
+#================================================================
+# Approximate the file w/regards to specified rank
+#================================================================
+print("\nStarting approximation...\n")
+ffcf, alpha_beta_chi = cr.resolvent_approximation2(ffcf, args.Rank, turb_mean_profile, ffmean, args.Sparse)
+# The flow field that is saved in the instance is (s,p)
+print("State of approximated field.")
+print(ffcf.state)
 
 
-####################################################################################################
-# Write new velocity field to disk as ascii.
-
-os.chdir(parent_directory)      # Go up one directory
+#================================================================
+# Create a folder to store the approximated velocity field in
+#================================================================
+os.chdir(parent_directory) # Go up one directory
 rank_folder = args.File[:-3]+"_rank_" + str(ffcf.rank) + "/"
 rank_folder = parent_directory + rank_folder
 
@@ -163,25 +223,57 @@ if not os.path.exists(rank_folder):
 os.chdir(rank_folder)
 
 
-####################################################################################################
-# Save the ascii file here
-sp_ASC_fileName = ut.write_approximated_ASC(ffcf, rank_folder, ffcf.rank)
+#================================================================
+# Save flow field to file
+#================================================================
+# Check file type
+if args.File[-3:] == ".h5":
+    #------------------------------------------------
+    # Inverse Fourier transform the velocity field
+    #------------------------------------------------
+    print("Inverse Fourier transform the velocity field.")
+    #------------------------------------------------
+    # Write the file to disk in H5 format
+    #------------------------------------------------
 
 
-####################################################################################################
-# Convert ascii to binary flowfield.
-print(os.getcwd())
-approximationFileName = args.File[:-3]+"_rank_"+str(ffcf.rank)
-command = "ascii2field -p false -ge ../rank-temp/" + str(args.File)[:-3] + ".geom " + sp_ASC_fileName + " " + approximationFileName
-print(command)
-os.system(command)
+elif args.File[-3:] == ".ff":
+    
+#    #------------------------------------------------
+#    # Write spectral ascii file
+#    #------------------------------------------------
+#    sp_ASC_fileName = ut.write_approximated_ASC(ffcf, rank_folder, ffcf.rank)
+#    
+#    #------------------------------------------------
+#    # Convert ascii to binary flowfield
+#    #------------------------------------------------
+#    print(os.getcwd())
+#    approximationFileName = args.File[:-3]+"_rank_"+str(ffcf.rank)
+#    command = "ascii2field -p false -ge ../rank-temp/" + str(args.File)[:-3] + ".geom " + sp_ASC_fileName + " " + approximationFileName
+#    print(command)
+#    os.system(command)
 
+    #------------------------------------------------
+    # Write physical ascii file
+    #------------------------------------------------
+    fileName = args.File[:-3] + "_rnk_" + str(ffcf.rank)
+    ut.write_ASC(ffcf, rank_folder, fileName)
+    command = "ascii2field -p false -ge ../rank-temp/" + str(args.File)[:-3] + ".geom " + fileName + ".asc " + fileName
+    print(command)
+    os.system(command)
+    
+    #------------------------------------------------
+    # Write amplitude coefficients for each Fourier mode combination
+    #------------------------------------------------
+    fileName = args.File[:-3] + "_coeffs"
+    ut.write_amplitude_coefficients(ffcf, rank_folder, fileName, alpha_beta_chi)
 
-####################################################################################################
-# Delete the ascii files
-os.system("rm *.asc")
-os.chdir(parent_directory)
-command = "rm -rf " + temp_rank_folder
-os.system(command)
+    #------------------------------------------------
+    # Remove ascii file and temporary folder
+    #------------------------------------------------
+#    os.system("rm *.asc")
+    os.chdir(parent_directory)
+    command = "rm -rf " + temp_rank_folder
+    os.system(command)
 
 print("Done!")

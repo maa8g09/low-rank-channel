@@ -3,7 +3,10 @@ import Utils as ut
 
 
 def SVDNorm(U, S, V, A):
-    if np.linalg.norm(np.dot( np.dot(U, np.diag(S)), V) - A) >= 1e-10:
+#    print("")
+#    print(np.linalg.norm(np.dot( np.dot(U, np.diag(S)), V) - A))
+#    print("\n\n")
+    if np.linalg.norm(np.dot( np.dot(U, np.diag(S)), V) - A) >= 1e-9:
         nrm = str(np.linalg.norm(np.dot( np.dot(U, np.diag(S)), V) - A))
         err = 'Something went wrong with the SVD, norm is ' + str(nrm)
         ut.error(err)

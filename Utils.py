@@ -51,6 +51,15 @@ def make_FlowField_output_directory_wIteration(output_directory, flowFieldGeomet
     return output_directory
 
 
+def make_mean_ff_pp(turb_mean, Nd, Nx, Nz):
+    ff = np.zeros((Nd, Nx, len(turb_mean), Nz))
+    for nx in range(0, Nx):
+        for nz in range(0, Nz):
+            ff[0, nx, :, nz] = turb_mean
+    
+    return ff
+
+
 def read_ASC_PP(directory, fileName):
 
     var = read_GEOM(directory, fileName)
@@ -63,7 +72,7 @@ def read_ASC_PP(directory, fileName):
                   var['Nx'],
                   var['Ny'],
                   var['Nz']),
-                  dtype=np.float128)
+                  dtype=np.complex128)
 
     for i, line in enumerate(file):
         values = line.split()
@@ -318,6 +327,38 @@ def read_Vel_Profile(fileName):
     return aray
 
 
+def write_amplitude_coefficients(flowField, output_directory, fileName, abc_array):
+    
+    csv_file = open(output_directory + fileName + ".csv", "w")
+        
+    title = "Alpha, |Chi| @ each Beta\n"
+    csv_file.write(title)
+    
+
+    kx = flowField.Mx * flowField.alpha
+    kz = flowField.Mz * flowField.beta
+    
+    entry = "\t"
+    for b in range(0, len(flowField.Mz)):            
+        beta = kz[b]
+        entry += str(beta) + "\t"
+
+    csv_file.write(entry + "\n")
+
+    for a in range(0, len(flowField.Mx)):
+        alpha = kx[a]
+        entry = str(alpha) + ":\t" 
+        for b in range(0, len(flowField.Mz)):
+            tmp  = abc_array[a, b, :][0]
+            entry += format(tmp, ".3f") + "\t"
+
+        csv_file.write(entry + "\n")
+
+    csv_file.close()
+
+    return 0
+
+
 def write_approximated_ASC(flowField, output_directory, rank):
 
     fileName = "u_rank.asc"
@@ -388,7 +429,7 @@ def write_ASC(flowField, output_directory, fileName):
         for ny in range(0, flowField.Ny):
             for nz in range(0, flowField.Nz):
                 for nd in range(0, flowField.Nd):
-                    tmp = flowField.velocityField[nd, nx, ny, nz]
+                    tmp = flowField.velocityField[nd, nx, ny, nz].real
                     tmp = format(tmp, '.16f')
                     file.write(tmp + "\n")
 

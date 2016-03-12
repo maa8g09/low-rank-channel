@@ -134,11 +134,13 @@ ff = ffClass.FlowField(ffg, var['ff'], "pp")
 # This is where the image gets saved.
 #================================================================
 slice_directory = ""
-if str(args.OutputDirectory):
+if str(args.OutputDirectory) != "None":
+    print(str(args.OutputDirectory))
     slice_directory = args.OutputDirectory
 
 else:
     slice_directory = output_directory + "slices/"
+    print("\n\n Hello \n\n")
 
 if os.path.exists(slice_directory):
     print("\nThis directory already exists:\t" + str(slice_directory))

@@ -108,7 +108,7 @@ if not os.path.exists(mean_directory):
     os.mkdir(mean_directory)
 
 fileName = "uMean_" + str(args.T0) + "-" + str(args.T1)
-ut.write_ASC(ff, mean_directory, fileName)
+ut.write_ASC(ff, mean_directory, fileName + "_pp")
 ut.write_GEOM(ff, mean_directory, fileName)
 ut.write_Details(ff, mean_directory, fileName)
 ut.write_FF(mean_directory, fileName)
@@ -117,7 +117,7 @@ ut.write_FF(mean_directory, fileName)
 #================================================================
 #### Write the mean profile in wall-normal direction
 #================================================================
-ut.write_Vel_Profile(vel_profiles['U'], mean_directory, "turbulent_mean_U")
+ut.write_Vel_Profile(vel_profiles['u'], mean_directory, "turbulent_mean_U")
 
 
 #================================================================

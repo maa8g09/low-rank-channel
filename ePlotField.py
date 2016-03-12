@@ -156,7 +156,7 @@ if n == 0:
                         ff.velocityField[m, j, :, :], 
                         ff.velocityField[p, j, :, :], 
                         "z", "y", velName,
-                        vl_max, vl_min)
+                        vl_max, vl_min, True)
         print(j)
 
 
@@ -184,7 +184,7 @@ elif n == 1:
                         ff.velocityField[m, :, j, :], 
                         ff.velocityField[p, :, j, :], 
                         "z", "x", velName,
-                        vl_max, vl_min)
+                        vl_max, vl_min, True)
         print(j)
 
 elif n == 2:
@@ -211,7 +211,7 @@ elif n == 2:
                         ff.velocityField[m, :, :, j].T, 
                         ff.velocityField[p, :, :, j].T, 
                         "x", "y", velName,
-                        vl_max, vl_min)
+                        vl_max, vl_min, True)
         print(j)
 
 
