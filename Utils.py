@@ -338,7 +338,7 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
     if flowField.Nx % 2 == 0:
         # even Nx
         Mx_shifted = list(flowField.Mx[flowField.Nx/2+1:])
-        Mx_shifted.append(list(flowField.Mx[:flowField.Nx/2])
+        Mx_shifted.append(list(flowField.Mx[:flowField.Nx/2]))
     
     else:
         # odd Nx
