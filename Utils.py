@@ -344,7 +344,7 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
         # odd Nx
         Mx_shifted = list(flowField.Mx[(flowField.Nx+1)/2:])
         Mx_shifted.append(flowField.Mx[:(flowField.Nx-1)/2])
-
+    print(Mx_shifted)
     Mz_shifted = []
     if flowField.Nz % 2 == 0:
         # even Nz
@@ -356,6 +356,7 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
         Mz_shifted = list(flowField.Mz[(flowField.Nz+1)/2:])
         Mz_shifted.append(flowField.Mz[:(flowField.Nz-1)/2])
 
+    print(Mz_shifted)
     kx = np.asarray(Mx_shifted) * flowField.alpha
     kz = np.asarray(Mz_shifted) * flowField.beta
 
