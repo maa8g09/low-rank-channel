@@ -245,7 +245,7 @@ elif args.File[-3:] == ".ff":
     #------------------------------------------------
     # Write amplitude coefficients for each Fourier mode combination
     #------------------------------------------------
-    fileName = args.File[:-3] + "_coeffs"
+    fileName = args.File[:-3] + "_rnk_" + str(ffcf.rank) + "_coeffs"
     ut.write_amplitude_coefficients(ffcf, rank_folder, fileName, alpha_beta_chi)
 
     #------------------------------------------------
