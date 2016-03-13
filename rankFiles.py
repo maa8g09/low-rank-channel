@@ -25,6 +25,7 @@ for file in files:
         command+=" -v turbdeviation.txt"
         command+=" -f " + file
         command+=" -r " + str(args.Rank)
+        command+=" -s"
         print("")
         print(command)
         print("")
