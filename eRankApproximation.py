@@ -170,7 +170,13 @@ else:
     #------------------------------------------------
     # Use original file as the mean
     #------------------------------------------------
-    ffmean = ffcf
+    ffmean = ffClass.FlowFieldChannelFlow2( var['Nd'],
+                                            var['Nx'],var['Ny'],var['Nz'],
+                                            var['Lx'],var['Lz'],
+                                            var['alpha'],var['beta'],
+                                            var2['c'],var2['bf'],var2['Re'],
+                                            var['ff'],
+                                            "pp")
 
 
 #================================================================
