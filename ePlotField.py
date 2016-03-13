@@ -92,7 +92,7 @@ details_directory = args.Directory
 if details_directory[-1] != "/":
     details_directory += "/"
 
-var2= ut.read_Details(details_directory, str(args.File[:-3]))
+var2= ut.read_Details(details_directory, "u0")
 
 ffg = ffClass.FlowFieldGeometry(var2['bf'],
                                 var2['wp'],
