@@ -446,6 +446,8 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
                 #### Set the zero Fourier modes to equal the mean flow
                 #------------------------------------------------
                 if len(turb_mean_profile) == 0:
+                    len(u_hat_approx[mx, :, mz])
+                    len(spectral_U[mx, :, mz])
                     u_hat_approx[mx, :, mz] = spectral_U[mx, :, mz]
                 elif len(turb_mean_profile) != 0:
                     u_hat_approx[mx, :, mz] = spectral_mean[mx, :, mz]
