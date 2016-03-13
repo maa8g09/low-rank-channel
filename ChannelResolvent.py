@@ -608,8 +608,13 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
 
 
     #### Subtract the mean
-    full_approx_U -= original_mean.real
-    ffcf.set_ff(full_approx_U.real, "pp")
+    if len(turb_mean_profile) == 0:
+        print("No mean given")
+        ffcf.set_ff(full_approx_U.real, "pp")
+    elif len(turb_mean_profile) != 0:
+        print("Mean given")
+        full_approx_U -= original_mean.real
+        ffcf.set_ff(full_approx_U.real, "pp")
 
 #
 #    #================================================================
