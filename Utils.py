@@ -375,7 +375,7 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
             mz = Mz_shifted[mz]
             tmp  = abc_array[mx, mz, :][0]
             entry += format(tmp, ".4f") + "\t"
-
+            
         csv_file.write(entry + "\n")
 
     csv_file.close()
