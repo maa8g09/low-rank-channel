@@ -337,27 +337,27 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
     Mx_shifted = []
     if flowField.Nx % 2 == 0:
         # even Nx
-        Mx_shifted = flowField.Mx[flowField.Nx/2+1:]
+        Mx_shifted = flowField.Mx[flowField.Nx/2+1:].tolist()
         Mx_shifted.append(flowField.Mx[:flowField.Nx/2])
     
     else:
         # odd Nx
-        Mx_shifted = flowField.Mx[(flowField.Nx+1)/2:]
+        Mx_shifted = flowField.Mx[(flowField.Nx+1)/2:].tolist()
         Mx_shifted.append(flowField.Mx[:(flowField.Nx-1)/2])
 
     Mz_shifted = []
     if flowField.Nz % 2 == 0:
         # even Nz
-        Mz_shifted = flowField.Mz[flowField.Nz/2+1:]
+        Mz_shifted = flowField.Mz[flowField.Nz/2+1:].tolist()
         Mz_shifted.append(flowField.Mz[:flowField.Nz/2])
     
     else:
         # odd Nz
-        Mz_shifted = flowField.Mz[(flowField.Nz+1)/2:]
+        Mz_shifted = flowField.Mz[(flowField.Nz+1)/2:].tolist()
         Mz_shifted.append(flowField.Mz[:(flowField.Nz-1)/2])
 
-    kx = Mx_shifted * flowField.alpha
-    kz = Mz_shifted * flowField.beta
+    kx = np.asarray(Mx_shifted) * flowField.alpha
+    kz = np.asarray(Mz_shifted) * flowField.beta
 
     entry = "\t"
     for mz in range(0, len(flowField.Mz)):            
