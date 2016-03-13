@@ -447,8 +447,8 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
                 #------------------------------------------------
                 if len(turb_mean_profile) == 0:
                     print("No mean given")
-                    len(u_hat_approx[mx, :, mz])
-                    len(spectral_U[mx, :, mz])
+                    print(len(u_hat_approx[mx, :, mz]))
+                    print(len(spectral_U[mx, :, mz]))
                     u_hat_approx[mx, :, mz] = spectral_U[mx, :, mz]
                 elif len(turb_mean_profile) != 0:
                     print("Mean given")
