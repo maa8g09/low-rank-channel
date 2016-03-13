@@ -488,7 +488,7 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
             #------------------------------------------------
             if not sparse:
                 Tests.orthogonality(vel_modes)
-#            Tests.orthogonality(forcing_modes.T)
+                Tests.orthogonality(forcing_modes.T)
 
             #------------------------------------------------
             #### Fix phase of resolvent modes based on critical layer or centreline
@@ -516,15 +516,16 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
             chi = np.zeros((rank, 1), dtype=np.complex128)      
             # Projection
             chi = resolvent_modes[: , :rank].H * state_vecs['cq'].H * state_vecs['cq'] * np.asmatrix(spectral_U[mx, :, mz]).T 
-
+            # Store the absolute value of the coefficients
             alpha_beta_chi[mx, mz, :] = np.squeeze(np.asarray(np.linalg.norm(chi)))
 
             #------------------------------------------------
             #### Calculate approximate flow field
             #------------------------------------------------
+            # w * u_hat = w * psi * chi
+            #     u_hat = [inv(w) * w ]* psi * chi
+            #     u_hat = psi * chi
             tmp =  np.linalg.inv(state_vecs['cq']) * state_vecs['cq'] * resolvent_modes[:,:rank] * chi
-
-            # tmp in this case is w*u_spectral
             orig = np.asmatrix(spectral_U[mx, :, mz]).T
             diff = np.linalg.norm(tmp - orig)
             u_hat_approx[mx, :, mz] = np.squeeze(np.asarray(tmp))

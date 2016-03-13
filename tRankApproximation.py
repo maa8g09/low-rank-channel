@@ -246,10 +246,11 @@ def main(File, Rank, Directory, MeanProfile, sparse):
 
 
 
-os.chdir("/home/arslan/Desktop/ati-modes-copy/modes/B/kz2/ff_files")
 dirc = "/home/arslan/Desktop/ati-modes-copy/modes/B/kz2/ff_files"
+dirc = "/Users/arslan/Desktop/ati-modes-copy/modes/B/kz2/ff_files"
+os.chdir(dirc)
 main("mode-00.ff", 
-     2, 
+     218, 
      dirc, 
      dirc + "/turbdeviation.txt",
      True)
