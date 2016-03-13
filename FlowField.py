@@ -217,15 +217,11 @@ class FlowFieldChannelFlow2(object):
 
     def make_xz_spectral(self):
         self.velocityField = np.fft.fft(self.velocityField, axis=3)
-#        self.velocityField = np.fft.fftshift(self.velocityField)
         self.velocityField = np.fft.fft(self.velocityField, axis=1)
-#        self.velocityField = np.fft.fftshift(self.velocityField)
         self.state = "sp"
         # shift the flow field 
 
     def make_xz_physical(self):
-#        self.velocityField = np.fft.ifftshift(self.velocityField)
         self.velocityField = np.fft.ifft(self.velocityField, axis=1)
-#        self.velocityField = np.fft.ifftshift(self.velocityField)
         self.velocityField = np.fft.ifft(self.velocityField, axis=3)
         self.state = "pp"

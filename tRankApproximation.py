@@ -11,7 +11,7 @@ import ChannelResolvent as cr
 
 def main(File, Rank, Directory, MeanProfile, sparse):
     #================================================================
-    # Create a temporary folder
+    #### Create a temporary folder
     #================================================================
     parent_directory = os.getcwd()
     
@@ -35,7 +35,7 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     
     
     #================================================================
-    # Check file type
+    #### Check file type
     #================================================================
     if File[-3:] == ".h5": # H5 file type
         #------------------------------------------------
@@ -78,12 +78,12 @@ def main(File, Rank, Directory, MeanProfile, sparse):
         # Initialize an instance of FlowField class
         #------------------------------------------------
         ffcf = ffClass.FlowFieldChannelFlow2(var['Nd'],
-                                            var['Nx'],var['Ny'],var['Nz'],
-                                            var['Lx'],var['Lz'],
-                                            var['alpha'],var['beta'],
-                                            var2['c'],var2['bf'],var2['Re'],
-                                            var['ff'],
-                                            "pp")
+                                             var['Nx'],var['Ny'],var['Nz'],
+                                             var['Lx'],var['Lz'],
+                                             var['alpha'],var['beta'],
+                                             var2['c'],var2['bf'],var2['Re'],
+                                             var['ff'],
+                                             "pp")
     
     else: # No file type given.
         ut.error("Invalid file given.")
@@ -93,23 +93,25 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     
     
     #================================================================
-    # Check mean file
+    #### Check mean file
     #================================================================
     turb_mean_profile = []
     if MeanProfile:
         #------------------------------------------------
         # Read velocity profile
         #------------------------------------------------
-        turb_deviation_profile = ut.read_Vel_Profile(MeanProfile)
-    #    print(turb_deviation_profile)
-        # Laminar base flow profile
-        lam = 1.0 - ffcf.y**2.0
+        turb_deviation_profile = ut.read_Vel_Profile(parent_directory, MeanProfile)
+        if str(MeanProfile).find("mean") == -1:
+            print("Turbulent deviation profile given.\nAdding Laminar profile to it.")
+            # Laminar profile
+            lam = 1.0 - ffcf.y**2.0
+            # Add turbulent deviation profile to the parabolic laminar base flow profile
+            turb_mean_profile = turb_deviation_profile + lam
     
-        # Add turbulent deviation profile to the parabolic laminar base flow profile
-    #    turb_mean_profile = turb_deviation_profile + lam
-        turb_mean_profile = turb_deviation_profile
-    #    print(turb_mean_profile)
-    
+        elif str(MeanProfile).find("mean") != -1:
+            print("Turbulent mean profile given.")
+            turb_mean_profile = turb_deviation_profile
+
         #------------------------------------------------
         # Construct 4D array of turb profile
         #------------------------------------------------

@@ -39,7 +39,7 @@ parser.add_argument("-d",
 parser.add_argument("-v",
                     "--MeanProfile",
                     metavar='\b',
-                    help="Turbulent mean velocity profile. (Prefix with full directory)")
+                    help="Turbulent mean velocity profile. Keep in same directory as file.")
 parser.add_argument("-s",
                     "--Sparse",
                     help="Use sparse SVD algorithm.",
@@ -137,53 +137,33 @@ if args.MeanProfile:
     #------------------------------------------------
     # Read velocity profile
     #------------------------------------------------
-    turb_deviation_profile = ut.read_Vel_Profile(args.MeanProfile)
-#    print(turb_deviation_profile)
-    # Laminar base flow profile
-    lam = 1.0 - ffcf.y**2.0
+    turb_deviation_profile = ut.read_Vel_Profile(parent_directory, args.MeanProfile)
+    if str(args.MeanProfile).find("mean") == -1:
+        print("Turbulent deviation profile given.\nAdding Laminar profile to it.")
+        # Laminar profile
+        lam = 1.0 - ffcf.y**2.0
+        # Add turbulent deviation profile to the parabolic laminar base flow profile
+        turb_mean_profile = turb_deviation_profile + lam
 
-    # Add turbulent deviation profile to the parabolic laminar base flow profile
-    turb_mean_profile = turb_deviation_profile + lam
-#    turb_mean_profile = turb_deviation_profile
-#    print(turb_mean_profile)
+    elif str(args.MeanProfile).find("mean") != -1:
+        print("Turbulent mean profile given.")
+        turb_mean_profile = turb_deviation_profile
 
     #------------------------------------------------
     # Construct 4D array of turb profile
     #------------------------------------------------
     turb_mean = ut.make_mean_ff_pp(turb_mean_profile, ffcf.Nd, ffcf.Nx, ffcf.Nz)
 
-    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
-    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
-    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
-    # Test the fourtier transform:
-#    testMean = ffcf
-#    testMean.set_ff(turb_mean, "pp")
-#    test_directory = temp_rank_folder
-#    ut.write_ASC(testMean, test_directory, "mean")
-#    ut.write_GEOM(testMean, test_directory, "mean")
-#    ut.write_FF(test_directory, "mean")
-#    os.chdir(test_directory)
-#    command = "rm *.asc *.geom"
-#    # Convert to ascii...
-#    command = "field2ascii -p mean.ff mean"
-#    os.system(command)
-#    # Read the sp file
-#    testMean_ff = ut.read_ASC_SP(test_directory, "mean")
-#    os.chdir(temp_rank_folder)
-    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
-    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
-    # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
-
     #------------------------------------------------
     # Initialize mean instance FlowField class
     #------------------------------------------------
-    ffmean = ffClass.FlowFieldChannelFlow2(var['Nd'],
-                                        var['Nx'],var['Ny'],var['Nz'],
-                                        var['Lx'],var['Lz'],
-                                        var['alpha'],var['beta'],
-                                        var2['c'],var2['bf'],var2['Re'],
-                                        turb_mean,
-                                        "pp")
+    ffmean = ffClass.FlowFieldChannelFlow2( var['Nd'],
+                                            var['Nx'],var['Ny'],var['Nz'],
+                                            var['Lx'],var['Lz'],
+                                            var['alpha'],var['beta'],
+                                            var2['c'],var2['bf'],var2['Re'],
+                                            turb_mean,
+                                            "pp")
     ffmean.set_ff(turb_mean, "pp")
 
 else:

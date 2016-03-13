@@ -517,7 +517,7 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
             # Projection
             chi = resolvent_modes[: , :rank].H * state_vecs['cq'].H * state_vecs['cq'] * np.asmatrix(spectral_U[mx, :, mz]).T 
 
-            alpha_beta_chi[mx, mz, :] = np.squeeze(np.asarray(np.abs(chi)))
+            alpha_beta_chi[mx, mz, :] = np.squeeze(np.asarray(np.linalg.norm(chi)))
 
             #------------------------------------------------
             #### Calculate approximate flow field

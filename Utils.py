@@ -56,7 +56,6 @@ def make_mean_ff_pp(turb_mean, Nd, Nx, Nz):
     for nx in range(0, Nx):
         for nz in range(0, Nz):
             ff[0, nx, :, nz] = turb_mean
-    
     return ff
 
 
@@ -314,8 +313,8 @@ def read_Grid(directory, fileName):
     return aray
 
 
-def read_Vel_Profile(fileName):
-    file = open(fileName, 'r')
+def read_Vel_Profile(directory, fileName):
+    file = open(directory + fileName, 'r')
     aray = []
 
     for j, line in enumerate(file):
@@ -334,23 +333,45 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
     title = "Alpha, |Chi| @ each Beta\n"
     csv_file.write(title)
     
-
-    kx = flowField.Mx * flowField.alpha
-    kz = flowField.Mz * flowField.beta
+    # Rearrange the modes so that they go from -max:max with zero in the middle
+    Mx_shifted = []
+    if flowField.Nx % 2 == 0:
+        # even Nx
+        Mx_shifted = flowField.Mx[flowField.Nx/2+1:]
+        Mx_shifted.append(flowField.Mx[:flowField.Nx/2])
     
+    else:
+        # odd Nx
+        Mx_shifted = flowField.Mx[(flowField.Nx+1)/2:]
+        Mx_shifted.append(flowField.Mx[:(flowField.Nx-1)/2])
+
+    Mz_shifted = []
+    if flowField.Nz % 2 == 0:
+        # even Nz
+        Mz_shifted = flowField.Mz[flowField.Nz/2+1:]
+        Mz_shifted.append(flowField.Mz[:flowField.Nz/2])
+    
+    else:
+        # odd Nz
+        Mz_shifted = flowField.Mz[(flowField.Nz+1)/2:]
+        Mz_shifted.append(flowField.Mz[:(flowField.Nz-1)/2])
+
+    kx = Mx_shifted * flowField.alpha
+    kz = Mz_shifted * flowField.beta
+
     entry = "\t"
-    for b in range(0, len(flowField.Mz)):            
-        beta = kz[b]
+    for mz in range(0, len(flowField.Mz)):            
+        beta = kz[mz]
         entry += str(beta) + "\t"
 
     csv_file.write(entry + "\n")
 
-    for a in range(0, len(flowField.Mx)):
-        alpha = kx[a]
+    for mx in range(0, len(flowField.Mx)):
+        alpha = kx[mx]
         entry = str(alpha) + ":\t" 
-        for b in range(0, len(flowField.Mz)):
-            tmp  = abc_array[a, b, :][0]
-            entry += format(tmp, ".3f") + "\t"
+        for mz in range(0, len(flowField.Mz)):
+            tmp  = abc_array[mx, mz, :][0]
+            entry += format(tmp, ".4f") + "\t"
 
         csv_file.write(entry + "\n")
 
