@@ -10,13 +10,13 @@ parser = argparse.ArgumentParser(description="Calculate mean velocity field of c
 parser.add_argument("-T0",
                     "--T0",
                     metavar='\b',
-                    help="Plotting start time unit.",
+                    help="Calculate mean from time unit.",
                     required=True,
                     type=int)
 parser.add_argument("-T1",
                     "--T1",
                     metavar='\b',
-                    help="Plotting end time unit.",
+                    help="Calculate mean till time unit.",
                     required=True,
                     type=int)
 
@@ -61,9 +61,9 @@ if not os.path.exists(tmp_directory):
 
 
 #================================================================
-#### Construct a FlowField object for the mean (read the u0_Details file)
+#### Construct a FlowField object for the temporal mean (read the u0_Details file)
 #================================================================
-var = ut.calculate_Mean(dns_data_directory, tmp_directory, args.T0, args.T1)
+var = ut.calculate_Temporal_Mean(dns_data_directory, tmp_directory, args.T0, args.T1)
 var2= ut.read_Details(dns_data_directory[:dns_data_directory.find("data")], "u0")
 ffg = ffClass.FlowFieldGeometry(var2['bf'],
                                 var2['wp'],
@@ -76,7 +76,6 @@ ffg = ffClass.FlowFieldGeometry(var2['bf'],
                                 var2['theta'])
                                 
 ff_t = ffClass.FlowField(ffg, var['ff'], "pp")
-
 
 #================================================================
 #### Calculate velocity profiles U, u, v, w
@@ -93,7 +92,7 @@ for nx in range(0, ffg.Nx):
         spatial_mean[1, nx, :, nz] = vel_profiles['v']
         spatial_mean[2, nx, :, nz] = vel_profiles['w']
 
-ff = ffClass.FlowField(ffg, spatial_mean, "pp")
+ff_ts = ffClass.FlowField(ffg, spatial_mean, "pp")
 
 
 #================================================================
@@ -108,16 +107,16 @@ if not os.path.exists(mean_directory):
     os.mkdir(mean_directory)
 
 fileName = "uMean_" + str(args.T0) + "-" + str(args.T1)
-ut.write_ASC(ff, mean_directory, fileName + "_pp")
-ut.write_GEOM(ff, mean_directory, fileName)
-ut.write_Details(ff, mean_directory, fileName)
+ut.write_ASC(ff_ts, mean_directory, fileName)
+ut.write_GEOM(ff_ts, mean_directory, fileName)
+ut.write_Details(ff_ts, mean_directory, fileName)
 ut.write_FF(mean_directory, fileName)
 
 
 #================================================================
 #### Write the mean profile in wall-normal direction
 #================================================================
-ut.write_Vel_Profile(vel_profiles['u'], mean_directory, "turbulent_mean_U")
+ut.write_Vel_Profile(vel_profiles['u'], mean_directory, "turbulent_mean")
 
 
 #================================================================
@@ -132,8 +131,8 @@ ut.plot_Vel_Profile(mean_directory, fileName, vel_profiles['v'], vel_profiles['y
 fileName = "uMean_" + str(args.T0) + "-" + str(args.T1) + "-w"
 ut.plot_Vel_Profile(mean_directory, fileName, vel_profiles['w'], vel_profiles['y'], "w", "y")
 
-fileName = "uMean_" + str(args.T0) + "-" + str(args.T1) + "-U"
-ut.plot_Vel_Profile(mean_directory, fileName, vel_profiles['U'], vel_profiles['y'], "U", "y")
+#fileName = "uMean_" + str(args.T0) + "-" + str(args.T1) + "-U"
+#ut.plot_Vel_Profile(mean_directory, fileName, vel_profiles['U'], vel_profiles['y'], "U", "y")
 
 
 #================================================================

@@ -48,7 +48,7 @@ args = parser.parse_args()
 
 
 #================================================================
-# Create a temporary folder
+#### Create a temporary folder
 #================================================================
 parent_directory = os.getcwd()
 
@@ -72,19 +72,19 @@ os.chdir(temp_rank_folder)
 
 
 #================================================================
-# Check file type
+#### Check file type
 #================================================================
 if args.File[-3:] == ".h5": # H5 file type
     #------------------------------------------------
-    # Read H5 file
+    #### Read H5 file
     #------------------------------------------------
     print("HDF5 file given.")
     #------------------------------------------------
-    # Initialize instance of flow field class (Ati's class)
+    #### Initialize instance of flow field class (Ati's class)
     #------------------------------------------------
 
     #------------------------------------------------
-    # Fourier transform the velocity field
+    #### Fourier transform the velocity field
     #------------------------------------------------
 
     # (Ati has written a make_spectral method which you can use.)
@@ -94,14 +94,14 @@ if args.File[-3:] == ".h5": # H5 file type
 elif args.File[-3:] == ".ff": # channelflow binary file type
     print("\nA channelflow binary file given...")
     #------------------------------------------------
-    # Convert the binary file to ascii
+    #### Convert the binary file to ascii
     #------------------------------------------------
     command = "field2ascii -p ../" + str(args.File) + " " + str(args.File)[:-3]
     print(command)
     os.system(command)
 
     #------------------------------------------------
-    # Read physical ascii file
+    #### Read physical ascii file
     #------------------------------------------------
     var = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-3])
     
@@ -112,15 +112,15 @@ elif args.File[-3:] == ".ff": # channelflow binary file type
     var2 = ut.read_Details(details_directory, "u0")
     
     #------------------------------------------------
-    # Initialize an instance of FlowField class
+    #### Initialize an instance of FlowField class (Fluctuations)
     #------------------------------------------------
-    ffcf = ffClass.FlowFieldChannelFlow2(var['Nd'],
-                                        var['Nx'],var['Ny'],var['Nz'],
-                                        var['Lx'],var['Lz'],
-                                        var['alpha'],var['beta'],
-                                        var2['c'],var2['bf'],var2['Re'],
-                                        var['ff'],
-                                        "pp")
+    ffcf_flucs = ffClass.FlowFieldChannelFlow2( var['Nd'],
+                                                var['Nx'],var['Ny'],var['Nz'],
+                                                var['Lx'],var['Lz'],
+                                                var['alpha'],var['beta'],
+                                                var2['c'],var2['bf'],var2['Re'],
+                                                var['ff'],
+                                                "pp")
 
 else: # No file type given.
     ut.error("Invalid file given.")
@@ -130,18 +130,18 @@ else: # No file type given.
 
 
 #================================================================
-# Check mean file
+#### Check mean file
 #================================================================
 turb_mean_profile = []
 if args.MeanProfile:
     #------------------------------------------------
-    # Read velocity profile
+    #### Read velocity profile
     #------------------------------------------------
     turb_deviation_profile = ut.read_Vel_Profile(parent_directory, args.MeanProfile)
     if str(args.MeanProfile).find("mean") == -1:
         print("Turbulent deviation profile given.\nAdding Laminar profile to it.")
         # Laminar profile
-        lam = 1.0 - ffcf.y**2.0
+        lam = 1.0 - ffcf_flucs.y**2.0
         # Add turbulent deviation profile to the parabolic laminar base flow profile
         turb_mean_profile = turb_deviation_profile + lam
 
@@ -150,12 +150,12 @@ if args.MeanProfile:
         turb_mean_profile = turb_deviation_profile
 
     #------------------------------------------------
-    # Construct 4D array of turb profile
+    #### Construct 4D array of turb profile
     #------------------------------------------------
-    turb_mean = ut.make_mean_ff_pp(turb_mean_profile, ffcf.Nd, ffcf.Nx, ffcf.Nz)
+    turb_mean = ut.make_mean_ff_pp(turb_mean_profile, ffcf_flucs.Nd, ffcf_flucs.Nx, ffcf_flucs.Nz)
 
     #------------------------------------------------
-    # Initialize mean instance FlowField class
+    #### Initialize mean instance FlowField class
     #------------------------------------------------
     ffmean = ffClass.FlowFieldChannelFlow2( var['Nd'],
                                             var['Nx'],var['Ny'],var['Nz'],
@@ -165,10 +165,17 @@ if args.MeanProfile:
                                             turb_mean,
                                             "pp")
     ffmean.set_ff(turb_mean, "pp")
-
+    instantaneous_field = turb_mean + var['ff']
+    ffcf = ffClass.FlowFieldChannelFlow2(var['Nd'],
+                                        var['Nx'],var['Ny'],var['Nz'],
+                                        var['Lx'],var['Lz'],
+                                        var['alpha'],var['beta'],
+                                        var2['c'],var2['bf'],var2['Re'],
+                                        instantaneous_field,
+                                        "pp")
 else:
     #------------------------------------------------
-    # Use original file as the mean
+    #### Use original file as the mean
     #------------------------------------------------
     ffmean = ffClass.FlowFieldChannelFlow2( var['Nd'],
                                             var['Nx'],var['Ny'],var['Nz'],
@@ -180,7 +187,7 @@ else:
 
 
 #================================================================
-# Approximate the file w/regards to specified rank
+#### Approximate the file w/regards to specified rank
 #================================================================
 print("\nStarting approximation...\n")
 ffcf, alpha_beta_chi = cr.resolvent_approximation2(ffcf, args.Rank, turb_mean_profile, ffmean, args.Sparse)
@@ -190,7 +197,7 @@ print(ffcf.state)
 
 
 #================================================================
-# Create a folder to store the approximated velocity field in
+#### Create a folder to store the approximated velocity field in
 #================================================================
 os.chdir(parent_directory) # Go up one directory
 rank_folder = args.File[:-3]+"_rank_" + str(ffcf.rank) + "/"
@@ -210,28 +217,28 @@ os.chdir(rank_folder)
 
 
 #================================================================
-# Save flow field to file
+#### Save flow field to file
 #================================================================
 # Check file type
 if args.File[-3:] == ".h5":
     #------------------------------------------------
-    # Inverse Fourier transform the velocity field
+    #### Inverse Fourier transform the velocity field
     #------------------------------------------------
     print("Inverse Fourier transform the velocity field.")
     #------------------------------------------------
-    # Write the file to disk in H5 format
+    #### Write the file to disk in H5 format
     #------------------------------------------------
 
 
 elif args.File[-3:] == ".ff":
     
 #    #------------------------------------------------
-#    # Write spectral ascii file
+#    #### Write spectral ascii file
 #    #------------------------------------------------
 #    sp_ASC_fileName = ut.write_approximated_ASC(ffcf, rank_folder, ffcf.rank)
 #    
 #    #------------------------------------------------
-#    # Convert ascii to binary flowfield
+#    #### Convert ascii to binary flowfield
 #    #------------------------------------------------
 #    print(os.getcwd())
 #    approximationFileName = args.File[:-3]+"_rank_"+str(ffcf.rank)
@@ -240,7 +247,7 @@ elif args.File[-3:] == ".ff":
 #    os.system(command)
 
     #------------------------------------------------
-    # Write physical ascii file
+    #### Write physical ascii file
     #------------------------------------------------
     fileName = args.File[:-3] + "_rnk_" + str(ffcf.rank)
     ut.write_ASC(ffcf, rank_folder, fileName)
@@ -249,13 +256,13 @@ elif args.File[-3:] == ".ff":
     os.system(command)
     
     #------------------------------------------------
-    # Write amplitude coefficients for each Fourier mode combination
+    #### Write amplitude coefficients for each Fourier mode combination
     #------------------------------------------------
     fileName = args.File[:-3] + "_rnk_" + str(ffcf.rank) + "_coeffs"
     ut.write_amplitude_coefficients(ffcf, rank_folder, fileName, alpha_beta_chi)
 
     #------------------------------------------------
-    # Remove ascii file and temporary folder
+    #### Remove ascii file and temporary folder
     #------------------------------------------------
 #    os.system("rm *.asc")
     os.chdir(parent_directory)

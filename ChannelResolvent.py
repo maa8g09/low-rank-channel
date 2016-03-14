@@ -446,12 +446,12 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
                 #### Set the zero Fourier modes to equal the mean flow
                 #------------------------------------------------
                 if len(turb_mean_profile) == 0:
-                    print("No mean given")
-                    print(len(u_hat_approx[mx, :, mz]))
-                    print(len(spectral_U[mx, :, mz]))
+#                    print("No mean given")
+#                    print(len(u_hat_approx[mx, :, mz]))
+#                    print(len(spectral_U[mx, :, mz]))
                     u_hat_approx[mx, :, mz] = spectral_U[mx, :, mz]
                 elif len(turb_mean_profile) != 0:
-                    print("Mean given")
+#                    print("Mean given")
                     u_hat_approx[mx, :, mz] = spectral_mean[mx, :, mz]
                 # uvw of approximation at the zero Fourier modes equals the 
                 # uvw of mean at the zero Fourier modes
@@ -607,16 +607,17 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
         ut.error("FFT and IFFT went wrong...")
 
 
-    #### Subtract the mean
+    #### Subtract the mean to recover the fluctuations...
     if len(turb_mean_profile) == 0:
         print("No mean given")
         ffcf.set_ff(full_approx_U.real, "pp")
+
     elif len(turb_mean_profile) != 0:
         print("Mean given")
         full_approx_U -= original_mean.real
         ffcf.set_ff(full_approx_U.real, "pp")
 
-#
+
 #    #================================================================
 #    #### Rearrange
 #    #================================================================

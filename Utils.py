@@ -330,7 +330,7 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
     
     csv_file = open(output_directory + fileName + ".csv", "w")
         
-    title = "Alpha, |Chi| @ each Beta\n"
+    title = "|chi| @ each (mx, mz)\n"
     csv_file.write(title)
     
     # Rearrange the modes so that they go from -max:max with zero in the middle
@@ -339,38 +339,35 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
         # even Nx
         Mx_shifted = list(flowField.Mx[flowField.Nx/2+1:])
         Mx_shifted.extend(list(flowField.Mx[:flowField.Nx/2+1]))
-    
     else:
         # odd Nx
         Mx_shifted = list(flowField.Mx[(flowField.Nx+1)/2:])
         Mx_shifted.extend(list(flowField.Mx[:(flowField.Nx-1)/2+1]))
-#    print(Mx_shifted)
+
     Mz_shifted = []
     if flowField.Nz % 2 == 0:
         # even Nz
         Mz_shifted = list(flowField.Mz[flowField.Nz/2+1:])
         Mz_shifted.extend(list(flowField.Mz[:flowField.Nz/2+1]))
-    
     else:
         # odd Nz
         Mz_shifted = list(flowField.Mz[(flowField.Nz+1)/2:])
         Mz_shifted.extend(list(flowField.Mz[:(flowField.Nz-1)/2+1]))
 
-#    print(Mz_shifted)
     kx = np.asarray(Mx_shifted) * flowField.alpha
     kz = np.asarray(Mz_shifted) * flowField.beta
 
     entry = "\t"
     for mz in range(0, len(flowField.Mz)):            
         beta = kz[mz]
-        entry += str(beta) + "\t"
+        entry += str(flowField.Mz[mz]) + "\t"
 
     csv_file.write(entry + "\n")
 
     for mx in range(0, len(flowField.Mx)):
         alpha = kx[mx]
         mx = int(Mx_shifted[mx])
-        entry = str(alpha) + ":\t" 
+        entry = str(flowField.Mx[mx]) + ":\t" 
         for mz in range(0, len(flowField.Mz)):
             mz = Mz_shifted[mz]
             tmp  = abc_array[mx, mz, :][0]
@@ -772,18 +769,23 @@ def calculate_Difference(ff1, ff2): # 4D velocity fields
 
     return delta
 
-def calculate_Mean(dns_data_directory, tmp_directory, T0, T1):
+def calculate_Temporal_Mean(dns_data_directory, tmp_directory, T0, T1):
 
+    #================================================================
     #### Change into the tmp directory
+    #================================================================
     os.chdir(tmp_directory)
+    print("\nCurrently in: " + tmp_directory)
 
-    print("Currently in: " + tmp_directory)
-    
-    # range = T0:T1
+    #================================================================
+    #### Construct time range to loop through
+    #================================================================
     TSteps = T1 - T0 + 1
     TRange = np.linspace(T0, T1, TSteps)
 
-    # Read geometry file to make empty array to store cumulative data
+    #================================================================
+    #### Read initial condition geometry file to make empty array to store cumulative data
+    #================================================================
     var = read_GEOM(dns_data_directory[:dns_data_directory.find("data")], "u0")
     mean_ff = np.zeros((var['Nd'],
                         var['Nx'],
@@ -791,10 +793,11 @@ def calculate_Mean(dns_data_directory, tmp_directory, T0, T1):
                         var['Nz']),
                         dtype=np.float128)
 
+    #================================================================
     #### Loop DNS data directory
-    # Loop through all files in the DNS data folder (avoiding couette.args)
+    #================================================================
+    # Loop through all binary files in the DNS data folder
     files = [fi for fi in os.listdir(dns_data_directory) if os.path.isfile(os.path.join(dns_data_directory,fi))]
-
     files = sorted(files)
 
     for k in files:
@@ -811,30 +814,29 @@ def calculate_Mean(dns_data_directory, tmp_directory, T0, T1):
                 bool_in_range = True
 
             if bool_in_range or bool_start_pt or bool_end_pt:
-
-                # if the file is within the range specified
+                #------------------------------------------------
+                #### If file is within the range specified
+                #------------------------------------------------
                 if timeUnit in TRange:
-
+                    #------------------------------------------------
                     # convert ff into ascii in the temporary folder
+                    #------------------------------------------------
                     # (remember we are in the temporary folder within the data directory)
                     command = "field2ascii -p ../" + k + " " + k[:-3]
                     os.system(command)
-
-                    # read the ascii file and add it to the flowField vector
+                    # read the ascii file and add it to the 4D mean flow field array
                     var = read_ASC_PP(tmp_directory, k[:-3])
                     mean_ff += var['ff']
-
                     # remove contents of temporary folder
                     command = "rm -rf *.asc *.geom"
                     os.system(command)
 
-
-
-    # divide the cumulative by the number of steps to get mean
+    #================================================================
+    #### Divide the cumulative by the length of time range
+    #================================================================
     mean_ff = (1.0 / TSteps) * mean_ff
-
+    print("Calculated temporal mean")
     var['ff'] = mean_ff
-
     return var
 
 
@@ -863,7 +865,6 @@ def calculate_Vel_Profiles(ff):
     var['u'] = vel_profile[0, :]
     var['v'] = vel_profile[1, :]
     var['w'] = vel_profile[2, :]
-    var['U'] = np.sqrt(var['u']**2 + var['v']**2 + var['w']**2)
     var['y'] = np.linspace(-1.0, 1.0, ff.Ny)
 
     return var
