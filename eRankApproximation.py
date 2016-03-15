@@ -98,7 +98,8 @@ if args.File[-3:] == ".h5": # H5 file type
     #### Rename ASCII to have a _pp at the end to read.
     #------------------------------------------------
     command = "mv " + str(args.File)[:-3] + ".asc " + str(args.File)[:-3] + "_pp.asc"
-
+    print(command)
+    os.system(command)
 
 elif args.File[-3:] == ".ff": # channelflow binary file type
     print("\nA channelflow binary file given...")
