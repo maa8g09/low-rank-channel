@@ -79,16 +79,25 @@ if args.File[-3:] == ".h5": # H5 file type
     #### Read H5 file
     #------------------------------------------------
     print("HDF5 file given.")
-    #------------------------------------------------
-    #### Initialize instance of flow field class (Ati's class)
-    #------------------------------------------------
 
     #------------------------------------------------
-    #### Fourier transform the velocity field
+    #### Convert it to binary flow field
     #------------------------------------------------
+    command = "fieldconvert ../" + str(args.File) + " ../" + str(args.File)[:-3] + ".ff"
+    print(command)
+    os.system(command)
 
-    # (Ati has written a make_spectral method which you can use.)
+    #------------------------------------------------
+    #### Convert binary to ASCII
+    #------------------------------------------------
+    command = "field2ascii -p ../" + str(args.File)[:-3] + ".ff " + str(args.File)[:-3]
+    print(command)
+    os.system(command)
 
+    #------------------------------------------------
+    #### Rename ASCII to have a _pp at the end to read.
+    #------------------------------------------------
+    command = "mv " + str(args.File)[:-3] + ".asc " + str(args.File)[:-3] + "_pp.asc"
 
 
 elif args.File[-3:] == ".ff": # channelflow binary file type
@@ -100,32 +109,33 @@ elif args.File[-3:] == ".ff": # channelflow binary file type
     print(command)
     os.system(command)
 
-    #------------------------------------------------
-    #### Read physical ascii file
-    #------------------------------------------------
-    var = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-3])
-    
-    details_directory = args.Directory
-    if details_directory[-1] != "/":
-        details_directory += "/"
-    
-    var2 = ut.read_Details(details_directory, "u0")
-    
-    #------------------------------------------------
-    #### Initialize an instance of FlowField class (Fluctuations)
-    #------------------------------------------------
-    ffcf_flucs = ffClass.FlowFieldChannelFlow2( var['Nd'],
-                                                var['Nx'],var['Ny'],var['Nz'],
-                                                var['Lx'],var['Lz'],
-                                                var['alpha'],var['beta'],
-                                                var2['c'],var2['bf'],var2['Re'],
-                                                var['ff'],
-                                                "pp")
 
 else: # No file type given.
     ut.error("Invalid file given.")
 
 
+
+#================================================================
+#### Read physical ascii file
+#================================================================
+var = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-3])
+
+details_directory = args.Directory
+if details_directory[-1] != "/":
+    details_directory += "/"
+
+var2 = ut.read_Details(details_directory, "u0")
+
+#================================================================
+#### Initialize an instance of FlowField class (Fluctuations)
+#================================================================
+ffcf_flucs = ffClass.FlowFieldChannelFlow2( var['Nd'],
+                                            var['Nx'],var['Ny'],var['Nz'],
+                                            var['Lx'],var['Lz'],
+                                            var['alpha'],var['beta'],
+                                            var2['c'],var2['bf'],var2['Re'],
+                                            var['ff'],
+                                            "pp")
 
 
 
@@ -229,42 +239,41 @@ os.chdir(rank_folder)
 #================================================================
 #### Save flow field to file
 #================================================================
-# Check file type
+
+#================================================================
+#### Write physical ascii file
+#================================================================
+fileName = args.File[:-3] + "_rnk_" + str(approx_field.rank)
+ut.write_ASC(approx_field, rank_folder, fileName)
+command = "ascii2field -p false -ge ../rank-temp/" + str(args.File)[:-3] + ".geom " + fileName + ".asc " + fileName
+print(command)
+os.system(command)
+
+#================================================================
+#### Write amplitude coefficients for each Fourier mode combination
+#================================================================
+fileName = args.File[:-3] + "_rnk_" + str(approx_field.rank) + "_coeffs"
+ut.write_amplitude_coefficients(approx_field, rank_folder, fileName, alpha_beta_chi)
+#    ut.write_binary_array(alpha_beta_chi)
+
+#================================================================
+#### Remove ascii file and temporary folder
+#================================================================
+#    os.system("rm *.asc")
+os.chdir(parent_directory)
+command = "rm -rf " + temp_rank_folder
+os.system(command)
+
+
+#================================================================
+# For H5
+#================================================================
 if args.File[-3:] == ".h5":
-    #------------------------------------------------
-    #### Inverse Fourier transform the velocity field
-    #------------------------------------------------
-    print("Inverse Fourier transform the velocity field.")
     #------------------------------------------------
     #### Write the file to disk in H5 format
     #------------------------------------------------
-
-
-elif args.File[-3:] == ".ff":
-
-    #------------------------------------------------
-    #### Write physical ascii file
-    #------------------------------------------------
-    fileName = args.File[:-3] + "_rnk_" + str(approx_field.rank)
-    ut.write_ASC(approx_field, rank_folder, fileName)
-    command = "ascii2field -p false -ge ../rank-temp/" + str(args.File)[:-3] + ".geom " + fileName + ".asc " + fileName
+    command = "fieldconvert " + fileName + ".ff " + fileName + ".h5"
     print(command)
-    os.system(command)
-    
-    #------------------------------------------------
-    #### Write amplitude coefficients for each Fourier mode combination
-    #------------------------------------------------
-    fileName = args.File[:-3] + "_rnk_" + str(approx_field.rank) + "_coeffs"
-    ut.write_amplitude_coefficients(approx_field, rank_folder, fileName, alpha_beta_chi)
-#    ut.write_binary_array(alpha_beta_chi)
-
-
-    #------------------------------------------------
-    #### Remove ascii file and temporary folder
-    #------------------------------------------------
-#    os.system("rm *.asc")
-    os.chdir(parent_directory)
-    command = "rm -rf " + temp_rank_folder
     os.system(command)
 
 print("Done!")
