@@ -69,7 +69,7 @@ def read_ASC_channelflow(directory, fileName):
     full_field = [float(line.strip()) for line in file]
     file.close()
 
-    U = np.zeros((var['Nd'], var['Nx'], var['Ny'], var['Nz']), dtype=np.float128)
+    U = np.zeros((var['Nd'], var['Nx'], var['Ny'], var['Nz']), dtype=np.complex128)
 
     U[0,:,:,:] = np.asarray(full_field[0::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
     U[1,:,:,:] = np.asarray(full_field[1::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
