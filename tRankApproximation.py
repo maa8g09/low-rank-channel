@@ -6,7 +6,7 @@ import Utils as ut
 import FlowField as ffClass
 import ChannelResolvent as cr
 
-
+import numpy as np
 
 
 def main(File, Rank, Directory, MeanProfile, sparse):
@@ -57,14 +57,14 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     elif File[-3:] == ".ff": # channelflow binary file type
         print("\nA channelflow binary file given...")
         #------------------------------------------------
-        # Convert the binary file to ascii
+        #### Convert the binary file to ascii
         #------------------------------------------------
         command = "field2ascii -p ../" + str(File) + " " + str(File)[:-3]
         print(command)
         os.system(command)
     
         #------------------------------------------------
-        # Read physical ascii file
+        #### Read physical ascii file
         #------------------------------------------------
         var = ut.read_ASC_PP(temp_rank_folder, str(File)[:-3])
         
@@ -75,99 +75,141 @@ def main(File, Rank, Directory, MeanProfile, sparse):
         var2 = ut.read_Details(details_directory, "u0")
         
         #------------------------------------------------
-        # Initialize an instance of FlowField class
+        #### Initialize an instance of FlowField class (Fluctuations)
         #------------------------------------------------
-        ffcf = ffClass.FlowFieldChannelFlow2(var['Nd'],
-                                             var['Nx'],var['Ny'],var['Nz'],
-                                             var['Lx'],var['Lz'],
-                                             var['alpha'],var['beta'],
-                                             var2['c'],var2['bf'],var2['Re'],
-                                             var['ff'],
-                                             "pp")
-    
+        ffcf_flucs = ffClass.FlowFieldChannelFlow2( var['Nd'],
+                                                    var['Nx'],var['Ny'],var['Nz'],
+                                                    var['Lx'],var['Lz'],
+                                                    var['alpha'],var['beta'],
+                                                    var2['c'],var2['bf'],var2['Re'],
+                                                    var['ff'],
+                                                    "pp")
+
     else: # No file type given.
         ut.error("Invalid file given.")
     
-    
-    
-    
-    
+
     #================================================================
     #### Check mean file
     #================================================================
     turb_mean_profile = []
     if MeanProfile:
         #------------------------------------------------
-        # Read velocity profile
+        #### Read velocity profile
         #------------------------------------------------
         turb_deviation_profile = ut.read_Vel_Profile(parent_directory, MeanProfile)
         if str(MeanProfile).find("mean") == -1:
             print("Turbulent deviation profile given.\nAdding Laminar profile to it.")
             # Laminar profile
-            lam = 1.0 - ffcf.y**2.0
+            lam = 1.0 - ffcf_flucs.y**2.0
             # Add turbulent deviation profile to the parabolic laminar base flow profile
             turb_mean_profile = turb_deviation_profile + lam
     
         elif str(MeanProfile).find("mean") != -1:
             print("Turbulent mean profile given.")
             turb_mean_profile = turb_deviation_profile
-
-        #------------------------------------------------
-        # Construct 4D array of turb profile
-        #------------------------------------------------
-        turb_mean = ut.make_mean_ff_pp(turb_mean_profile, ffcf.Nd, ffcf.Nx, ffcf.Nz)
-    
-        # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
-        # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
-        # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
-        # Test the fourtier transform:
-    #    testMean = ffcf
-    #    testMean.set_ff(turb_mean, "pp")
-    #    test_directory = temp_rank_folder
-    #    ut.write_ASC(testMean, test_directory, "mean")
-    #    ut.write_GEOM(testMean, test_directory, "mean")
-    #    ut.write_FF(test_directory, "mean")
-    #    os.chdir(test_directory)
-    #    command = "rm *.asc *.geom"
-    #    # Convert to ascii...
-    #    command = "field2ascii -p mean.ff mean"
-    #    os.system(command)
-    #    # Read the sp file
-    #    testMean_ff = ut.read_ASC_SP(test_directory, "mean")
-    #    os.chdir(temp_rank_folder)
-        # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
-        # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
-        # + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + -
     
         #------------------------------------------------
-        # Initialize mean instance FlowField class
+        #### Construct 4D array of turb profile
         #------------------------------------------------
-        ffmean = ffClass.FlowFieldChannelFlow2(var['Nd'],
+        turb_mean = ut.make_mean_ff_pp(turb_mean_profile, ffcf_flucs.Nd, ffcf_flucs.Nx, ffcf_flucs.Nz)
+    
+        #------------------------------------------------
+        #### Initialize mean instance FlowField class
+        #------------------------------------------------
+        ffmean = ffClass.FlowFieldChannelFlow2( var['Nd'],
+                                                var['Nx'],var['Ny'],var['Nz'],
+                                                var['Lx'],var['Lz'],
+                                                var['alpha'],var['beta'],
+                                                var2['c'],var2['bf'],var2['Re'],
+                                                turb_mean,
+                                                "pp")
+        ffmean.set_ff(turb_mean, "pp")
+        instantaneous_field = turb_mean + var['ff']
+        ffcf = ffClass.FlowFieldChannelFlow2(var['Nd'],
                                             var['Nx'],var['Ny'],var['Nz'],
                                             var['Lx'],var['Lz'],
                                             var['alpha'],var['beta'],
                                             var2['c'],var2['bf'],var2['Re'],
-                                            turb_mean,
+                                            instantaneous_field,
                                             "pp")
-        ffmean.set_ff(turb_mean, "pp")
-    
     else:
         #------------------------------------------------
-        # Use original file as the mean
+        #### Use original file as the mean
         #------------------------------------------------
-        ffmean = ffcf
+        ffmean = ffClass.FlowFieldChannelFlow2( var['Nd'],
+                                                var['Nx'],var['Ny'],var['Nz'],
+                                                var['Lx'],var['Lz'],
+                                                var['alpha'],var['beta'],
+                                                var2['c'],var2['bf'],var2['Re'],
+                                                var['ff'],
+                                                "pp")
     
     
     #================================================================
     # Approximate the file w/regards to specified rank
     #================================================================
     print("\nStarting approximation...\n")
-    ffcf, alpha_beta_chi = cr.resolvent_approximation2(ffcf, Rank, turb_mean_profile, ffmean, sparse)
+    approximated_inst_ff, alpha_beta_chi = cr.resolvent_approximation2(ffcf, Rank, turb_mean_profile, ffmean, sparse)
     # The flow field that is saved in the instance is (s,p)
     print("State of approximated field.")
     print(ffcf.state)
     
     
+    if_u = instantaneous_field[0, :, :, :].real
+    if_v = instantaneous_field[1, :, :, :].real
+    if_w = instantaneous_field[2, :, :, :].real
+
+    af_u = approximated_inst_ff[0, :, :, :].real
+    af_v = approximated_inst_ff[1, :, :, :].real
+    af_w = approximated_inst_ff[2, :, :, :].real
+
+    # Original - New = fluctuations.
+    diff = instantaneous_field.real - approximated_inst_ff.real
+
+    diff_u = diff[0, :, :, :]
+    diff_v = diff[1, :, :, :]
+    diff_w = diff[2, :, :, :]
+
+    ndiff_u = np.linalg.norm(diff_u)
+    ndiff_v = np.linalg.norm(diff_v)
+    ndiff_w = np.linalg.norm(diff_w)
+
+    nodiff_u = np.linalg.norm(var['ff'][0, :, :, :].real)
+    nodiff_v = np.linalg.norm(var['ff'][1, :, :, :].real)
+    nodiff_w = np.linalg.norm(var['ff'][2, :, :, :].real)
+
+    flucs = approximated_inst_ff.real - turb_mean.real
+
+#    flucs_u = af_u - turb_mean[0, :, :, :].real
+#    flucs_v = af_v - turb_mean[1, :, :, :].real
+#    flucs_w = af_w - turb_mean[2, :, :, :].real
+#
+    orig_fu = if_u - turb_mean[0, :, :, :].real
+    orig_fv = if_v - turb_mean[1, :, :, :].real
+    orig_fw = if_w - turb_mean[2, :, :, :].real
+
+    
+    diff_na = np.linalg.norm(diff)
+    diff_no = np.linalg.norm(var['ff'].real)
+    flucs_diffs = var['ff'].real - diff
+    flucs_diffsu = flucs_diffs[0,:,:,:]
+    flucs_diffsv = flucs_diffs[1,:,:,:]
+    flucs_diffsw = flucs_diffs[2,:,:,:]
+    
+    flucs_diffs_n= np.linalg.norm(flucs_diffs)
+    
+    
+
+    approx_field = ffClass.FlowFieldChannelFlow2( var['Nd'],
+                                            var['Nx'],var['Ny'],var['Nz'],
+                                            var['Lx'],var['Lz'],
+                                            var['alpha'],var['beta'],
+                                            var2['c'],var2['bf'],var2['Re'],
+                                            diff,
+                                            "pp")
+
+
     #================================================================
     # Create a folder to store the approximated velocity field in
     #================================================================
@@ -222,7 +264,7 @@ def main(File, Rank, Directory, MeanProfile, sparse):
         # Write physical ascii file
         #------------------------------------------------
         fileName = File[:-3] + "_rnk_" + str(ffcf.rank)
-        ut.write_ASC(ffcf, rank_folder, fileName)
+        ut.write_ASC(approx_field, rank_folder, fileName)
         command = "ascii2field -p false -ge ../rank-temp/" + str(File)[:-3] + ".geom " + fileName + ".asc " + fileName
         print(command)
         os.system(command)
@@ -231,7 +273,7 @@ def main(File, Rank, Directory, MeanProfile, sparse):
         # Write amplitude coefficients for each Fourier mode combination
         #------------------------------------------------
         fileName = File[:-3] + "_coeffs"
-        ut.write_amplitude_coefficients(ffcf, rank_folder, fileName, alpha_beta_chi)
+        ut.write_amplitude_coefficients(approx_field, rank_folder, fileName, alpha_beta_chi)
     
         #------------------------------------------------
         # Remove ascii file and temporary folder
@@ -247,10 +289,10 @@ def main(File, Rank, Directory, MeanProfile, sparse):
 
 
 dirc = "/home/arslan/Desktop/ati-modes-copy/modes/B/kz2/ff_files"
-dirc = "/Users/arslan/Desktop/ati-modes-copy/modes/B/kz2/ff_files"
+#dirc = "/Users/arslan/Desktop/ati-modes-copy/modes/B/kz2/ff_files"
 os.chdir(dirc)
 main("mode-00.ff", 
-     218, 
+     2, 
      dirc, 
-     dirc + "/turbdeviation.txt",
+     "turbdeviation.txt",
      True)

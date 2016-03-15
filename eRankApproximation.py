@@ -165,6 +165,7 @@ if args.MeanProfile:
                                             turb_mean,
                                             "pp")
     ffmean.set_ff(turb_mean, "pp")
+
     instantaneous_field = turb_mean + var['ff']
     ffcf = ffClass.FlowFieldChannelFlow2(var['Nd'],
                                         var['Nx'],var['Ny'],var['Nz'],
@@ -190,17 +191,26 @@ else:
 #### Approximate the file w/regards to specified rank
 #================================================================
 print("\nStarting approximation...\n")
-ffcf, alpha_beta_chi = cr.resolvent_approximation2(ffcf, args.Rank, turb_mean_profile, ffmean, args.Sparse)
+approx_instantaneous_field, alpha_beta_chi = cr.resolvent_approximation2(ffcf, args.Rank, turb_mean_profile, ffmean, args.Sparse)
 # The flow field that is saved in the instance is (s,p)
 print("State of approximated field.")
 print(ffcf.state)
 
+approx_flucs = instantaneous_field.real - approx_instantaneous_field.real
+approx_field = ffClass.FlowFieldChannelFlow2(var['Nd'],
+                                             var['Nx'],var['Ny'],var['Nz'],
+                                             var['Lx'],var['Lz'],
+                                             var['alpha'],var['beta'],
+                                             var2['c'],var2['bf'],var2['Re'],
+                                             approx_flucs,
+                                             "pp")
+approx_field.set_rank(ffcf.rank)
 
 #================================================================
 #### Create a folder to store the approximated velocity field in
 #================================================================
 os.chdir(parent_directory) # Go up one directory
-rank_folder = args.File[:-3]+"_rank_" + str(ffcf.rank) + "/"
+rank_folder = args.File[:-3]+"_rank_" + str(approx_field.rank) + "/"
 rank_folder = parent_directory + rank_folder
 
 #if a rank directory does exist, delete it:
@@ -231,26 +241,12 @@ if args.File[-3:] == ".h5":
 
 
 elif args.File[-3:] == ".ff":
-    
-#    #------------------------------------------------
-#    #### Write spectral ascii file
-#    #------------------------------------------------
-#    sp_ASC_fileName = ut.write_approximated_ASC(ffcf, rank_folder, ffcf.rank)
-#    
-#    #------------------------------------------------
-#    #### Convert ascii to binary flowfield
-#    #------------------------------------------------
-#    print(os.getcwd())
-#    approximationFileName = args.File[:-3]+"_rank_"+str(ffcf.rank)
-#    command = "ascii2field -p false -ge ../rank-temp/" + str(args.File)[:-3] + ".geom " + sp_ASC_fileName + " " + approximationFileName
-#    print(command)
-#    os.system(command)
 
     #------------------------------------------------
     #### Write physical ascii file
     #------------------------------------------------
-    fileName = args.File[:-3] + "_rnk_" + str(ffcf.rank)
-    ut.write_ASC(ffcf, rank_folder, fileName)
+    fileName = args.File[:-3] + "_rnk_" + str(approx_field.rank)
+    ut.write_ASC(approx_field, rank_folder, fileName)
     command = "ascii2field -p false -ge ../rank-temp/" + str(args.File)[:-3] + ".geom " + fileName + ".asc " + fileName
     print(command)
     os.system(command)
@@ -258,8 +254,10 @@ elif args.File[-3:] == ".ff":
     #------------------------------------------------
     #### Write amplitude coefficients for each Fourier mode combination
     #------------------------------------------------
-    fileName = args.File[:-3] + "_rnk_" + str(ffcf.rank) + "_coeffs"
-    ut.write_amplitude_coefficients(ffcf, rank_folder, fileName, alpha_beta_chi)
+    fileName = args.File[:-3] + "_rnk_" + str(approx_field.rank) + "_coeffs"
+    ut.write_amplitude_coefficients(approx_field, rank_folder, fileName, alpha_beta_chi)
+#    ut.write_binary_array(alpha_beta_chi)
+
 
     #------------------------------------------------
     #### Remove ascii file and temporary folder

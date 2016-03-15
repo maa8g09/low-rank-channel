@@ -356,6 +356,7 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
     original_u = original_U[0, :, :, :].real
     original_v = original_U[1, :, :, :].real
     original_w = original_U[2, :, :, :].real
+    original_mean = ffmean.velocityField
 
     # FFT test
     ffcf.make_xz_spectral()
@@ -364,6 +365,10 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
     diff = np.linalg.norm(original_U.real - ffcf.velocityField.real)
     if diff >= 1e-12:
         ut.error("FFT and IFFT went wrong...")
+
+    original_f_u = original_u - ffmean.velocityField[0, :, :, :]
+    original_f_v = original_v - ffmean.velocityField[1, :, :, :]
+    original_f_w = original_w - ffmean.velocityField[2, :, :, :]
 
     #================================================================
     #### Remove the wall boundaries
@@ -559,51 +564,97 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
     #================================================================
     #### Inverse Fourier transform the approximated flow field in xz directions
     #================================================================
-    u_hat_approx = u_hat_approx.reshape((ffcf.Nd, len(ffcf.Mx), ffcf.modes, len(ffcf.Mz)))    
     print("Inverse FFT of approximated flow field")
-    u_hat_approx_pp = np.fft.ifft(u_hat_approx, axis=1)
-    u_hat_approx_pp = np.fft.ifft(u_hat_approx_pp, axis=3)
+    u_hat_approx = u_hat_approx.reshape((ffcf.Nd, len(ffcf.Mx), ffcf.modes, len(ffcf.Mz)))
+    ffcf.set_ff(u_hat_approx, "sp")
+    diff = np.linalg.norm(u_hat_approx - ffcf.velocityField)
+    if diff >= 1e-12:
+        ut.error("The approximated flow field has not been set correctly in the flow field class")
+    ffcf.make_xz_physical()
+    print("Approximated flow field state:", ffcf.state)
 
 
-    u_hat_approx_pp_u = u_hat_approx_pp[0, :, :, :].real
-    u_hat_approx_pp_v = u_hat_approx_pp[1, :, :, :].real
-    u_hat_approx_pp_w = u_hat_approx_pp[2, :, :, :].real
-
-    # IFFT the mean
-    ffmean.make_xz_physical()
-    
     #================================================================
     #### Add wall boundaries
     #================================================================
+    approx_U = ffcf.velocityField
     approx_u = np.concatenate((original_U[0,:,:1,:].real,
-                               u_hat_approx_pp_u.real,
+                               approx_U[0, :, :, :].real,
                                original_U[0,:,-1:,:].real),
                                axis=1)
     diff = np.linalg.norm(approx_u.real - original_u.real)
 
-
     approx_v = np.concatenate((original_U[1,:,:1,:].real,
-                               u_hat_approx_pp_v.real,
+                               approx_U[1, :, :, :].real,
                                original_U[1,:,-1:,:].real),
                                axis=1)
     diff = np.linalg.norm(approx_v.real - original_v.real)
-
-
     approx_w = np.concatenate((original_U[2,:,:1,:].real,
-                               u_hat_approx_pp_w.real,
+                               approx_U[2, :, :, :].real,
                                original_U[2,:,-1:,:].real),
                                axis=1)
-
     diff = np.linalg.norm(approx_w.real - original_w.real)
+    full_approx_U = original_U.real
+    full_approx_U[0,:,:,:] = approx_u.real
+    full_approx_U[1,:,:,:] = approx_v.real
+    full_approx_U[2,:,:,:] = approx_w.real
+
+    ffcf.set_ff(full_approx_U.real, "pp")
+    tmp = ffcf.velocityField
+    
+    # FFT test
+    ffcf.make_xz_spectral()
+    ffcf.make_xz_physical()
+
+    diff = np.linalg.norm(original_U.real - ffcf.velocityField.real)
+    if diff >= 1e-12:
+        ut.error("FFT and IFFT went wrong...")
+
+    #================================================================
+    #### Subtract the mean to recover the fluctuations
+    #================================================================
+    if len(turb_mean_profile) == 0:
+        print("No mean given")
+        ffcf.set_ff(full_approx_U.real, "pp")
+
+    elif len(turb_mean_profile) != 0:
+        print("Mean given")
+        full_approx_U -= original_mean.real
+        full_approx_u = full_approx_U[0, :, :, :]
+        full_approx_v = full_approx_U[1, :, :, :]
+        full_approx_w = full_approx_U[2, :, :, :]
+        ffcf.set_ff(full_approx_U.real, "pp")
 
 
-    full_approx_U = np.zeros((ffcf.Nd, ffcf.Nx, ffcf.Ny, ffcf.Nz), dtype=np.float128)
-    full_approx_U[0, :, :, :] = approx_u.real
-    full_approx_U[1, :, :, :] = approx_v.real
-    full_approx_U[2, :, :, :] = approx_w.real
+#    #================================================================
+#    #### Rearrange
+#    #================================================================
+#    u_hat = np.zeros((ffcf.Nd, len(ffcf.Mx), ffcf.Ny, len(ffcf.Mz)), dtype=np.complex128)
+#    u_hat_u = u_hat_approx[:,            0:ffcf.modes  , :]
+#    u_hat_v = u_hat_approx[:,   ffcf.modes:ffcf.modes*2, :]
+#    u_hat_w = u_hat_approx[:, 2*ffcf.modes:ffcf.modes*3, :]
+#
+#    print("Adding boundaries")
+#    for i in range(0, ffcf.Nd):
+#        for mx in range(0, len(ffcf.Mx)):
+#            for ny in range(0, ffcf.Ny):
+#                for mz in range(0, len(ffcf.Mz)):
+#                    endpoint = ffcf.Ny - 1
+#                    if ny == 0 or ny == endpoint: # wall-points
+#                            u_hat[i, mx, ny, mz] = ffcf.velocityField[i, mx, ny, mz]
+#
+#                    else: # rest of domain
+#                        if i == 0: # u 
+#                            u_hat[i, mx, ny, mz] = u_hat_u[mx, ny-1, mz]
+#                        elif i == 1: # v 
+#                            u_hat[i, mx, ny, mz] = u_hat_v[mx, ny-1, mz]
+#                        elif i == 2: # w 
+#                            u_hat[i, mx, ny, mz] = u_hat_w[mx, ny-1, mz]
 
 
-    return full_approx_U, alpha_beta_chi
+
+
+    return ffcf, alpha_beta_chi
 
 
 

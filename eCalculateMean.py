@@ -94,6 +94,7 @@ for nx in range(0, ffg.Nx):
 
 ff_ts = ffClass.FlowField(ffg, spatial_mean, "pp")
 
+# Add the laminar base flow to the velocity profiles to get a turbulent mean. Otherwise you are outputting deviation.
 
 #================================================================
 #### Write mean file to disc as ASC 
@@ -116,7 +117,7 @@ ut.write_FF(mean_directory, fileName)
 #================================================================
 #### Write the mean profile in wall-normal direction
 #================================================================
-ut.write_Vel_Profile(vel_profiles['u'], mean_directory, "turbulent_mean")
+ut.write_Vel_Profile(vel_profiles['u'], mean_directory, "turbulent_deviation")
 
 
 #================================================================

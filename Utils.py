@@ -328,12 +328,17 @@ def read_Vel_Profile(directory, fileName):
 
 def write_amplitude_coefficients(flowField, output_directory, fileName, abc_array):
     
+    #================================================================
+    #### Save CSV
+    #================================================================
     csv_file = open(output_directory + fileName + ".csv", "w")
         
     title = "|chi| @ each (mx, mz)\n"
     csv_file.write(title)
-    
-    # Rearrange the modes so that they go from -max:max with zero in the middle
+
+    #================================================================
+    #### Rearrange the modes so that they go from -max:max with zero in the middle
+    #================================================================
     Mx_shifted = []
     if flowField.Nx % 2 == 0:
         # even Nx
@@ -357,25 +362,73 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
     kx = np.asarray(Mx_shifted) * flowField.alpha
     kz = np.asarray(Mz_shifted) * flowField.beta
 
+    #================================================================
+    #### Write File
+    #================================================================
     entry = "\t"
     for mz in range(0, len(flowField.Mz)):            
         beta = kz[mz]
-        entry += str(flowField.Mz[mz]) + "\t"
+        # mz = int(Mz_shifted[mz])
+        entry += str(Mz_shifted[mz]) + "\t"
 
     csv_file.write(entry + "\n")
 
     for mx in range(0, len(flowField.Mx)):
-        alpha = kx[mx]
+#        alpha = kx[mx]
         mx = int(Mx_shifted[mx])
+
         entry = str(flowField.Mx[mx]) + ":\t" 
+        
         for mz in range(0, len(flowField.Mz)):
-            mz = Mz_shifted[mz]
+            mz = int(Mz_shifted[mz])
+            
             tmp  = abc_array[mx, mz, :][0]
             entry += format(tmp, ".4f") + "\t"
             
         csv_file.write(entry + "\n")
 
     csv_file.close()
+
+
+#    csv_file_2 = open(output_directory + fileName + "2.csv", "w")
+#
+#    #================================================================
+#    #### Write File
+#    #================================================================
+#    entry = "|chi| @ each (alpha)\n"
+#    csv_file_2.write(title)
+#
+#    entry = "kx\n"
+#    csv_file_2.write(entry)
+#
+#    entry = "\tm="+str(flowField.rank)+"\n"
+#    csv_file_2.write(entry)
+#
+#    halfway = flowField.Nx / 2
+#
+#    for mz in range(0, len(flowField.Mz)):
+#        beta = kz[mz]
+#        mz = int(Mz_shifted[mz])
+#        entry = "kz:"+str(beta) + "\n"
+#        csv_file_2.write(entry + "\n")
+#
+#        for mx in range(0, len(flowField.Mx)):
+#            alpha = kx[mx]
+#            mx = int(Mx_shifted[mx])
+#            entry = "+-"+ str(alpha) + ":\t" 
+#            
+#            mx_plus = halfway +1
+#            mx_minus= halfway -1
+#            
+#            entry += format(abc_array[mx_plus, mz, :][0], ".4f") + "\t" + format(abc_array[mx_minus, mz, :][0], ".4f")
+#            csv_file_2.write(entry + "\n")
+#
+#    csv_file_2.close()
+
+    #================================================================
+    #### Save HDF5 array with all the coefficients in it for every rank approximation.
+    #================================================================
+
 
     return 0
 
