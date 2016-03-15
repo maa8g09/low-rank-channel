@@ -649,7 +649,7 @@ def write_Symms_File(directory, fileName, N, symStrAry):
 
     where
     
-    (c sx sy sz ax az) [u, v, w](x, y, z)  →  c [sx u, sy v, sz w](sx x + ax Lx, sy y, sz z + az Lz)
+    (c sx sy sz ax az) [u, v, w](x, y, z)  =>  c [sx u, sy v, sz w](sx x + ax Lx, sy y, sz z + az Lz)
     """
 
     file = open(directory + fileName, "w")
