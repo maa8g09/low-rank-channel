@@ -94,12 +94,18 @@ if args.File[-3:] == ".h5": # H5 file type
     print(command)
     os.system(command)
 
+#    #------------------------------------------------
+#    #### Rename ASCII to have a _pp at the end to read.
+#    #------------------------------------------------
+#    command = "mv " + str(args.File)[:-3] + ".asc " + str(args.File)[:-3] + "_pp.asc"
+#    print(command)
+#    os.system(command)
+
     #------------------------------------------------
-    #### Rename ASCII to have a _pp at the end to read.
+    #### Read physical ascii file
     #------------------------------------------------
-    command = "mv " + str(args.File)[:-3] + ".asc " + str(args.File)[:-3] + "_pp.asc"
-    print(command)
-    os.system(command)
+    var = ut.read_ASC_channelflow(temp_rank_folder, str(args.File)[:-3])
+
 
 elif args.File[-3:] == ".ff": # channelflow binary file type
     print("\nA channelflow binary file given...")
@@ -110,16 +116,17 @@ elif args.File[-3:] == ".ff": # channelflow binary file type
     print(command)
     os.system(command)
 
+    #------------------------------------------------
+    #### Read physical ascii file
+    #------------------------------------------------
+    var = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-3])
+
+
 
 else: # No file type given.
     ut.error("Invalid file given.")
 
 
-
-#================================================================
-#### Read physical ascii file
-#================================================================
-var = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-3])
 
 details_directory = args.Directory
 if details_directory[-1] != "/":

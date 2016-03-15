@@ -59,6 +59,27 @@ def make_mean_ff_pp(turb_mean, Nd, Nx, Nz):
     return ff
 
 
+def read_ASC_channelflow(directory, fileName):
+
+    var = read_GEOM(directory, fileName)
+
+    file = directory + fileName + ".asc"
+    file = open(file, 'r')
+   
+    full_field = [float(line.strip()) for line in file]
+    file.close()
+
+    U = np.zeros((var['Nd'], var['Nx'], var['Ny'], var['Nz']), dtype=np.float128)
+
+    U[0,:,:,:] = np.asarray(full_field[0::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
+    U[1,:,:,:] = np.asarray(full_field[1::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
+    U[2,:,:,:] = np.asarray(full_field[2::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
+
+    var['ff'] = U.real
+
+    return var
+
+
 def read_ASC_PP(directory, fileName):
 
     var = read_GEOM(directory, fileName)
@@ -543,12 +564,12 @@ def write_Details(flowField, output_directory, fileName):
     file = open(output_directory + fileName, "w")
 
     output = "\nDetails of the velocity field generated:\n"
-    output+= "\nNd:\t\t" + str(flowField.Nd)
-    output+= "\nNx:\t\t" + str(flowField.Nx)
-    output+= "\nNy:\t\t" + str(flowField.Ny)
-    output+= "\nNz:\t\t" + str(flowField.Nz)
-    output+= "\nLx:\t\t" + str(flowField.Lx)
-    output+= "\nLz:\t\t" + str(flowField.Lz) + "\n"
+#    output+= "\nNd:\t\t" + str(flowField.Nd)
+#    output+= "\nNx:\t\t" + str(flowField.Nx)
+#    output+= "\nNy:\t\t" + str(flowField.Ny)
+#    output+= "\nNz:\t\t" + str(flowField.Nz)
+#    output+= "\nLx:\t\t" + str(flowField.Lx)
+#    output+= "\nLz:\t\t" + str(flowField.Lz) + "\n"
     output+= "\nRe:\t\t" + str(flowField.Re)
     output+= "\nc:\t\t"  + str(flowField.c) + "\n"
     output+= "\nwp:\t\t" + str(flowField.wavepacket)
