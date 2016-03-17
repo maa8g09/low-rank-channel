@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import time
@@ -269,6 +269,7 @@ if args.File[-3:] == ".h5":
     #------------------------------------------------
     #### Write the file to disk in H5 format
     #------------------------------------------------
+    fileName = args.File[:-3] + "_rnk_" + str(approx_field.rank)
     command = "fieldconvert " + fileName + ".ff " + fileName + ".h5"
     print(command)
     os.system(command)

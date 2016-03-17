@@ -465,7 +465,7 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
             #### Calculate the resolvent (R_A) and transfer function (H)
             #------------------------------------------------
             state_vecs = get_state_vectors(ffcf, alpha, beta, turb_mean_profile[1:-1])
-            print("Transfer function shape:")
+            print("\n\nTransfer function shape:")
             print(state_vecs['H'].shape)
             print("")
 
@@ -473,9 +473,10 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
             #### Perform SVD
             #------------------------------------------------
             if sparse:
-                vel_modes, singular_values, forcing_modes = svds(state_vecs['H'], rank)
+                #vel_modes, singular_values, forcing_modes = svds(state_vecs['H'], rank)
+                vel_modes, singular_values, forcing_modes = svd(state_vecs['H'], full_matrices=False)
             else:
-                vel_modes, singular_values, forcing_modes = svd(state_vecs['H'], rank)
+                vel_modes, singular_values, forcing_modes = svd(state_vecs['H'])
 
             vel_modes = np.asmatrix(vel_modes)
             #------------------------------------------------
