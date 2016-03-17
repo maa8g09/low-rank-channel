@@ -13,12 +13,11 @@ parser.add_argument("-d",
 args = parser.parse_args()
 
 pwd = args.Directory
-pwd = args.Directory
 if pwd[-1] != "/":
     pwd += "/"
 
 #### List all directories in directory passed in...
-dirs = [name for name in os.listdir(pwd) if os.path.isdir(os.path.join(pwd, name))]
+dirs = [directory for directory in os.listdir(pwd) if os.path.isdir(os.path.join(pwd, directory))]
 
 
 #### Loop through all directories
