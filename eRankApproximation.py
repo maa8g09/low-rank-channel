@@ -32,14 +32,14 @@ parser.add_argument("-r",
                     required=True,
                     type=int)
 parser.add_argument("-d",
-                    "--Directory",
+                    "--Details",
                     metavar='\b',
-                    help="Directory where u0_Details.txt is kept.",
+                    help="Details file with Re, c and bf info as .txt file. Keep in same directory as file to approximate.",
                     required=True)
 parser.add_argument("-v",
                     "--MeanProfile",
                     metavar='\b',
-                    help="Turbulent mean velocity profile. Keep in same directory as file.")
+                    help="Turbulent mean velocity profile as .txt file. Keep in same directory as file to approximate.")
 parser.add_argument("-s",
                     "--Sparse",
                     help="Use sparse SVD algorithm.",
@@ -75,9 +75,6 @@ os.chdir(temp_rank_folder)
 #### Check file type
 #================================================================
 if args.File[-3:] == ".h5": # H5 file type
-    #------------------------------------------------
-    #### Read H5 file
-    #------------------------------------------------
     print("HDF5 file given.")
 
     #------------------------------------------------
@@ -93,13 +90,6 @@ if args.File[-3:] == ".h5": # H5 file type
     command = "field2ascii -p ../" + str(args.File)[:-3] + ".ff " + str(args.File)[:-3]
     print(command)
     os.system(command)
-
-#    #------------------------------------------------
-#    #### Rename ASCII to have a _pp at the end to read.
-#    #------------------------------------------------
-#    command = "mv " + str(args.File)[:-3] + ".asc " + str(args.File)[:-3] + "_pp.asc"
-#    print(command)
-#    os.system(command)
 
     #------------------------------------------------
     #### Read physical ascii file
@@ -122,17 +112,12 @@ elif args.File[-3:] == ".ff": # channelflow binary file type
     var = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-3])
 
 
-
 else: # No file type given.
     ut.error("Invalid file given.")
 
 
+var2 = ut.read_Details(parent_directory, args.Details)
 
-details_directory = args.Directory
-if details_directory[-1] != "/":
-    details_directory += "/"
-
-var2 = ut.read_Details(details_directory, "u0")
 
 #================================================================
 #### Initialize an instance of FlowField class (Fluctuations)
@@ -253,6 +238,10 @@ os.chdir(rank_folder)
 #================================================================
 fileName = args.File[:-3] + "_rnk_" + str(approx_field.rank)
 ut.write_ASC(approx_field, rank_folder, fileName)
+
+#================================================================
+#### Write binary file
+#================================================================
 command = "ascii2field -p false -ge ../rank-temp/" + str(args.File)[:-3] + ".geom " + fileName + ".asc " + fileName
 print(command)
 os.system(command)

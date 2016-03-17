@@ -151,7 +151,7 @@ def read_ASC_SP(directory, fileName):
 
 
 def read_Details(directory, fileName):
-    file = directory + fileName + "_Details.txt"
+    file = directory + fileName
     file = open(file, 'r')
 
     var = {}
