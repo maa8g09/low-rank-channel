@@ -31,7 +31,7 @@ for directory in os.listdir(pwd):
 for directory in dirs:
     #### Change into directory
     os.chdir(directory)
-    print("\nChanged to", directory)
+    print("\nChanged to"+directory)
     #### List files in directory
     files = [fi for fi in os.listdir(directory) if os.path.isfile(os.path.join(directory,fi))]
     print('\nConverting...')
