@@ -242,7 +242,7 @@ ut.write_ASC(approx_field, rank_folder, fileName)
 #================================================================
 #### Write binary file
 #================================================================
-command = "ascii2field -p false -ge ../rank-temp/" + str(args.File)[:-3] + ".geom " + fileName + ".asc " + fileName
+command = "ascii2field -p false -ge ../rank-temp/" + str(args.File)[:-3] + ".geom " + fileName + ".asc " + fileName + ".ff"
 print(command)
 os.system(command)
 
@@ -252,15 +252,6 @@ os.system(command)
 fileName = args.File[:-3] + "_rnk_" + str(approx_field.rank) + "_coeffs"
 ut.write_amplitude_coefficients(approx_field, rank_folder, fileName, alpha_beta_chi)
 #    ut.write_binary_array(alpha_beta_chi)
-
-#================================================================
-#### Remove ascii file and temporary folder
-#================================================================
-#    os.system("rm *.asc")
-os.chdir(parent_directory)
-command = "rm -rf " + temp_rank_folder
-os.system(command)
-
 
 #================================================================
 # For H5
@@ -273,5 +264,17 @@ if args.File[-3:] == ".h5":
     command = "fieldconvert " + fileName + ".ff " + fileName + ".h5"
     print(command)
     os.system(command)
+    
+    os.chdir(parent_directory)
+    command = "rm *.ff"
+    os.system(command)
+
+#================================================================
+#### Remove ascii file and temporary folder
+#================================================================
+#    os.system("rm *.asc")
+os.chdir(parent_directory)
+command = "rm -rf " + temp_rank_folder
+os.system(command)
 
 print("Done!")
