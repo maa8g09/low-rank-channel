@@ -450,8 +450,11 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
 #                    print(len(spectral_U[mx, :, mz]))
                     u_hat_approx[mx, :, mz] = spectral_U[mx, :, mz]
                 elif len(turb_mean_profile) != 0:
-#                    print("Mean given")
+                    print("Mean given")
+                    print(len(u_hat_approx[mx, :, mz]))
+                    print(len(spectral_U[mx, :, mz]))
                     u_hat_approx[mx, :, mz] = spectral_mean[mx, :, mz]
+
                 # uvw of approximation at the zero Fourier modes equals the 
                 # uvw of mean at the zero Fourier modes
                 

@@ -75,7 +75,7 @@ def read_ASC_channelflow(directory, fileName):
     U[1,:,:,:] = np.asarray(full_field[1::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
     U[2,:,:,:] = np.asarray(full_field[2::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
 
-    var['ff'] = U.real
+    var['ff'] = U
 
     return var
 
