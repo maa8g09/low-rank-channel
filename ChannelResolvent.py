@@ -450,7 +450,7 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
 #                    print(len(spectral_U[mx, :, mz]))
                     u_hat_approx[mx, :, mz] = spectral_U[mx, :, mz]
                 elif len(turb_mean_profile) != 0:
-                    print("Mean given")
+#                    print("Mean given")
 #                    print(len(u_hat_approx[mx, :, mz]))
 #                    print(len(spectral_U[mx, :, mz]))
                     u_hat_approx[mx, :, mz] = spectral_mean[mx, :, mz]
@@ -465,6 +465,9 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
             #### Calculate the resolvent (R_A) and transfer function (H)
             #------------------------------------------------
             state_vecs = get_state_vectors(ffcf, alpha, beta, turb_mean_profile[1:-1])
+            print("Transfer function shape:")
+            print(state_vecs['H'].shape)
+            print("")
 
             #------------------------------------------------
             #### Perform SVD
