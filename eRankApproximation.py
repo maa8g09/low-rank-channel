@@ -265,6 +265,9 @@ if args.File[-3:] == ".h5":
     print(command)
     os.system(command)
     
+    command = "rm *.ff"
+    os.system(command)
+    
     os.chdir(parent_directory)
     command = "rm *.ff"
     os.system(command)
