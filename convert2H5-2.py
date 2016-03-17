@@ -17,7 +17,14 @@ if pwd[-1] != "/":
     pwd += "/"
 
 #### List all directories in directory passed in...
-dirs = [directory for directory in os.listdir(pwd) if os.path.isdir(os.path.join(pwd, directory))]
+dirs = []
+for directory in os.listdir(pwd):
+    tmp = os.path.join(pwd, directory)
+    if os.path.isdir(tmp):
+        print("")
+        print(tmp)
+        dirs.append(tmp)
+
 
 
 #### Loop through all directories
