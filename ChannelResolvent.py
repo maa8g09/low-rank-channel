@@ -465,9 +465,9 @@ def resolvent_approximation2(ffcf, rank, turb_mean_profile, ffmean, sparse):
             #### Calculate the resolvent (R_A) and transfer function (H)
             #------------------------------------------------
             state_vecs = get_state_vectors(ffcf, alpha, beta, turb_mean_profile[1:-1])
-            print("\n\nTransfer function shape:")
-            print(state_vecs['H'].shape)
-            print("")
+#            print("\n\nTransfer function shape:")
+#            print(state_vecs['H'].shape)
+#            print("")
 
             #------------------------------------------------
             #### Perform SVD
