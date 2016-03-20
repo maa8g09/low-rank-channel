@@ -86,20 +86,20 @@ os.system(command)
 
 
 #### Read into class
-var = ut.read_ASC_PP(images_directory, str(args.File)[:-3])
+var = ut.read_ASC_channelflow(images_directory, str(args.File)[:-3])
 
 details_directory = args.Directory
 if details_directory[-1] != "/":
     details_directory += "/"
 
-var2= ut.read_Details(details_directory, "u0")
+var2= ut.read_Details(details_directory, "u0_Details.txt")
 
 ffg = ffClass.FlowFieldGeometry(var2['bf'],
                                 var2['wp'],
-                                var2['Nd'],
-                                var2['Nx'],
-                                var2['Ny'],
-                                var2['Nz'],
+                                var['Nd'],
+                                var['Nx'],
+                                var['Ny'],
+                                var['Nz'],
                                 var2['Re'],
                                 var2['c'],
                                 var2['theta'])

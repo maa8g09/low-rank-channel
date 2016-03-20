@@ -2,6 +2,9 @@ import math
 import numpy as np
 from scipy.linalg import toeplitz
 from scipy.fftpack import ifft
+from numpy.linalg import inv
+from numpy.linalg import pinv
+import Tests
 
 def chebdiff(N, M):
     
@@ -211,9 +214,9 @@ def cheb4c(N, debug):
     
     for l in range(0, 4):
         
-        test_01 = B[l, :]
-        test_02 = (l + 1) * Y[0:N-3, :] * X
-        test_03 = np.concatenate((B[l, :], (l + 1) * Y[0:N-3, :] * X), axis=0)
+#        test_01 = B[l, :]
+#        test_02 = (l + 1) * Y[0:N-3, :] * X
+#        test_03 = np.concatenate((B[l, :], (l + 1) * Y[0:N-3, :] * X), axis=0)
         
         # Recursion for diagonals
         Y = np.cumsum(np.concatenate((B[l, :], (l + 1) * Y[0:N-3, :] * X), axis=0), axis=0)
@@ -321,3 +324,143 @@ def my_ifft(u_tilde, alpha, beta, ffg):
 
     return u
 
+
+def get_state_vectors(alpha, beta, Re, N, omega, bf, vel_profile):
+
+    #================================================================
+    #### Calculate the derivative matrices in the wall-normal direction
+    #================================================================
+    # y_cheb_full are the interpolated y co-ordinates, 
+    # i.e. Chebyshev interior points (nodes), with endpoints included.
+    y_cheb_full, DM = chebdiff(N, 2)
+    D1 = DM[0, 1:-1, 1:-1]              # First  derivative matrix (partial_d_dy)
+    D2 = DM[1, 1:-1, 1:-1]              # Second derivative matrix (partial_d_dyy)
+    y_cheb, D4 = cheb4c(N, False)    # Fourth derivative matrix (partial_d_dyyyy)
+    # y_cheb has endpoints removed, i.e. y_cheb_full[1:-1].
+    # Hence the number of modes are given as
+    modes = N-2 # because the endpoints are removed.
+
+    #================================================================
+    #### Assign mean flow
+    #================================================================
+    # Check to see if a turbulent mean is given
+    if len(vel_profile) == 0: # No turbulent mean given.
+        # Check which baseflow to use
+        if bf == 'lam': # Laminar Base flow 
+            U = np.identity(modes)
+            np.fill_diagonal(U, 1.0 - y_cheb**2.0) # 1 at centreline
+            dU_dy  = np.identity(modes)
+            np.fill_diagonal(dU_dy, -2.0*y_cheb)
+            d2U_dy2 = -2.0
+        elif bf == 'cou': # Couette Base flow
+            U = np.identity(modes)
+            np.fill_diagonal(U, y_cheb)
+            dU_dy  = np.identity(modes)
+            np.fill_diagonal(dU_dy, 1.0)
+            d2U_dy2 = 0.0
+    else: # Use turbulent mean
+        U = np.identity(len(vel_profile))
+        np.fill_diagonal(U, vel_profile)
+        dU_dy = np.identity(len(vel_profile))
+#        np.fill_diagonal(dU_dy, 0.0)
+#        d2U_dy2 = 0.0
+        np.fill_diagonal(dU_dy, -2.0*y_cheb) # laminar 
+        d2U_dy2 = -2.0                       # laminar 
+
+
+    #================================================================
+    #### Calculate Laplacian for constructing operators
+    #================================================================
+    I = np.identity(modes)                              # identity matrix
+    Z = np.zeros(shape=(modes, modes))                  # matrix of zeroes
+    kappa = (alpha*alpha) + (beta*beta)                 # variable calculated from (del)dot(del)
+    del_hat_2 = D2 - kappa*I                            # Laplacian
+    del_hat_4 = D4 - 2.0*D2*kappa + kappa*kappa*I       # Laplacian_2
+
+    #================================================================
+    #### Construct operators
+    #================================================================
+    # Calculations from pg60 Schmid Henningson eqns 3.29 and 3.30
+    # Squire operator
+    O_sq = ((del_hat_2/Re) - (1.0j * alpha * U))
+    # Center operator
+    O_c = -1.0j*beta*dU_dy
+    # Orr-Sommerfeld operator
+    a0=(del_hat_4 / Re)
+    a1=( 1.0j * alpha * d2U_dy2 * I)
+    a2=(-1.0j * alpha * np.asmatrix(U) * np.asmatrix(del_hat_2))
+    O_os = a0 + a1 + a2
+    x0 = np.linalg.solve(del_hat_2, O_os)
+
+    #================================================================
+    #### Calculate state operator
+    #================================================================
+    # Equation 2.7
+    # (Moarref, Model-based scaling of the streamwise energy density in 
+    # high-Reynolds number turbulent channels, 2013)
+    #
+    # State operator
+    # A = | x0   Z  |
+    #     |  C   SQ |
+    A = np.vstack((np.hstack((x0,Z)), np.hstack((O_c, O_sq))))
+
+    #================================================================
+    #### Calculate unweighted resolvent/transfer function
+    #================================================================
+    I = np.eye(A.shape[0]) # identity matrix (length of state operator)
+    L = -1.0j*omega*I - A
+    R = inv(L) # resolvent of A
+
+    #================================================================
+    #### Calculate conversion matrix
+    #================================================================
+    # C maps the resolvent from being a function of wall-normal velocity (v)
+    # and vorticity (eta) to primitives (u, v, w).
+    I = np.identity(modes) # identity matrix (length of modes)
+    C = np.vstack((np.hstack(((1.0j/kappa) * (alpha*D1), (-1.0j/kappa) * (beta*I))), 
+                   np.hstack((                        I,                   Z)), 
+                   np.hstack(( (1.0j/kappa) * (beta*D1),  ( 1.0j/kappa) * (alpha*I)))))
+    C = np.asmatrix(C)
+
+    #================================================================
+    #### Calculate Clenshaw–Curtis quadrature
+    #================================================================
+    tmp, clencurt_quadrature = clencurt(N)
+    clencurt_quadrature = np.diag(np.sqrt(clencurt_quadrature[1:-1]))
+    # Stack it 3 times for each velocity compoenent (u, v, w):
+    clencurt_quadrature = np.vstack((np.hstack((clencurt_quadrature,Z,Z)),
+                                     np.hstack((Z,clencurt_quadrature,Z)),
+                                     np.hstack((Z,Z,clencurt_quadrature))))
+    clencurt_quadrature = np.asmatrix(clencurt_quadrature)
+
+    #================================================================
+    #### Grid weighted conversion matrix
+    #================================================================
+    C_w = clencurt_quadrature * C
+    # Adjoint of C maps the forcing vector to resolvent
+#    w_inv_C_adj = C.H * np.linalg.inv(clencurt_quadrature)
+    invw_C_adj = pinv(C_w) # this is the calculation used in Ati's code. Why?
+
+    #================================================================
+    #### Calculate weighted resolvent/transfer function
+    #================================================================
+    H = C_w * R * invw_C_adj
+
+    #================================================================
+    #### Store necassary variables
+    #================================================================
+    state_vecs = {}
+    state_vecs['H'] = H
+    state_vecs['cq'] = clencurt_quadrature
+    state_vecs['y_cheb'] = y_cheb
+    state_vecs['y_cheb_full'] = y_cheb_full
+    state_vecs['D1'] = D1
+    state_vecs['U'] = np.diag(U)
+    
+    return state_vecs
+
+
+## Debugging
+#vecs = get_state_vectors(0.5, 1.0, [], 4000.0, 75, np.pi/12.0, "lam")
+#U, S, V = svd(vecs['H'])
+#S = np.diag(S)

@@ -51,7 +51,7 @@ def make_FlowField_output_directory_wIteration(output_directory, flowFieldGeomet
     return output_directory
 
 
-def make_mean_ff_pp(turb_mean, Nd, Nx, Nz):
+def make_ff_from_profile(turb_mean, Nd, Nx, Nz):
     ff = np.zeros((Nd, Nx, len(turb_mean), Nz))
     for nx in range(0, Nx):
         for nz in range(0, Nz):
@@ -353,7 +353,8 @@ def read_Vel_Profile(directory, fileName):
 
     for j, line in enumerate(file):
         values = line.split()
-        aray.append(float(values[0]))
+        if values[0] != "%":
+            aray.append(float(values[0]))
 
     aray = np.asanyarray(aray)
 
@@ -912,7 +913,7 @@ def calculate_Temporal_Mean(dns_data_directory, tmp_directory, T0, T1):
                     command = "field2ascii -p ../" + k + " " + k[:-3]
                     os.system(command)
                     # read the ascii file and add it to the 4D mean flow field array
-                    var = read_ASC_PP(tmp_directory, k[:-3])
+                    var = read_ASC_channelflow(tmp_directory, k[:-3])
                     mean_ff += var['ff']
                     # remove contents of temporary folder
                     command = "rm -rf *.asc *.geom"

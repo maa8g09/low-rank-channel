@@ -64,7 +64,7 @@ if not os.path.exists(tmp_directory):
 #### Construct a FlowField object for the temporal mean (read the u0_Details file)
 #================================================================
 var = ut.calculate_Temporal_Mean(dns_data_directory, tmp_directory, args.T0, args.T1)
-var2= ut.read_Details(dns_data_directory[:dns_data_directory.find("data")], "u0")
+var2= ut.read_Details(dns_data_directory[:dns_data_directory.find("data")], "u0_Details.txt")
 ffg = ffClass.FlowFieldGeometry(var2['bf'],
                                 var2['wp'],
                                 var2['Nd'],

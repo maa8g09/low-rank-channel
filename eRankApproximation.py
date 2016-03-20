@@ -109,7 +109,7 @@ elif args.File[-3:] == ".ff": # channelflow binary file type
     #------------------------------------------------
     #### Read physical ascii file
     #------------------------------------------------
-    var = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-3])
+    var = ut.read_ASC_channelflow(temp_rank_folder, str(args.File)[:-3])
 
 
 else: # No file type given.
@@ -155,7 +155,7 @@ if args.MeanProfile:
     #------------------------------------------------
     #### Construct 4D array of turb profile
     #------------------------------------------------
-    turb_mean = ut.make_mean_ff_pp(turb_mean_profile, ffcf_flucs.Nd, ffcf_flucs.Nx, ffcf_flucs.Nz)
+    turb_mean = ut.make_ff_from_profile(turb_mean_profile, ffcf_flucs.Nd, ffcf_flucs.Nx, ffcf_flucs.Nz)
 
     #------------------------------------------------
     #### Initialize mean instance FlowField class
@@ -181,6 +181,8 @@ else:
     #------------------------------------------------
     #### Use original file as the mean
     #------------------------------------------------
+    ffcf = ffcf_flucs
+    instantaneous_field = ffcf.velocityField
     ffmean = ffClass.FlowFieldChannelFlow2( var['Nd'],
                                             var['Nx'],var['Ny'],var['Nz'],
                                             var['Lx'],var['Lz'],
@@ -199,7 +201,7 @@ approx_instantaneous_field, alpha_beta_chi = cr.resolvent_approximation2(ffcf, a
 print("State of approximated field.")
 print(ffcf.state)
 
-approx_flucs = instantaneous_field.real - approx_instantaneous_field.real
+approx_flucs = approx_instantaneous_field.real - turb_mean
 approx_field = ffClass.FlowFieldChannelFlow2(var['Nd'],
                                              var['Nx'],var['Ny'],var['Nz'],
                                              var['Lx'],var['Lz'],

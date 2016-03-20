@@ -143,6 +143,15 @@ wavepackets['KE_z'] = np.array([kz4a, kz4b, kz5a, kz5b, kz6a, kz6b, kz7a, kz7b])
 wavepackets['KE_a'] = np.array([a4a, a4b, a5a, a5b, a6a, a6b, a7a, a7b])
 
 
+
+
+wavepackets['test_x'] = np.array([1.0])
+wavepackets['test_z'] = np.array([1.0])
+wavepackets['test_a'] = np.array([1.0])
+
+
+
+
 ## KA
 #kx = np.array([kx1a, kx1b])
 #kz = np.array([kz1a, kz1b])

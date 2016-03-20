@@ -1,26 +1,43 @@
 import numpy as np
 import Utils as ut
 
+def SVD(U, s, V, A, sparse):
+    svd_passed = False
+    if sparse:
+        S = np.diag(s)
+        svd_passed = np.allclose(A, np.dot(U, np.dot(S, V)))
+        if not svd_passed:
+            nrm = str(np.linalg.norm(np.dot( np.dot(U, S), V) - A))
+            err = 'Something went wrong with the SVD, norm is ' + str(nrm)
+            ut.error(err)
 
-def SVDNorm(U, S, V, A):
-#    print("")
-#    print(np.linalg.norm(np.dot( np.dot(U, np.diag(S)), V) - A))
-#    print("\n\n")
-    if np.linalg.norm(np.dot( np.dot(U, np.diag(S)), V) - A) >= 1e-9:
-        nrm = str(np.linalg.norm(np.dot( np.dot(U, np.diag(S)), V) - A))
-        err = 'Something went wrong with the SVD, norm is ' + str(nrm)
-        ut.error(err)
+    elif not sparse:
+        S = np.zeros((U.shape[1], V.shape[0]), dtype=complex)
+        S[:V.shape[0], :V.shape[0]] = np.diag(s)
+        svd_passed = np.allclose(A, np.dot(U, np.dot(S, V)))
+        if not svd_passed:
+            nrm = str(np.linalg.norm(np.dot( np.dot(U, S), V) - A))
+            err = 'Something went wrong with the SVD, norm is ' + str(nrm)
+            ut.error(err)
+
+#    if np.linalg.norm(np.dot( np.dot(U, np.diag(S)), V) - A) >= 1e-9:
+#        nrm = str(np.linalg.norm(np.dot( np.dot(U, np.diag(S)), V) - A))
+#        err = 'Something went wrong with the SVD, norm is ' + str(nrm)
+#        ut.error(err)
         
     return 0
 
 
-def divergence(resolvent_modes, alpha, beta, m, D1):
-    divgnce = 1.0j*alpha*resolvent_modes[0:m, 0] + np.dot(D1, resolvent_modes[m:2*m, 0]) + 1.0j*beta*resolvent_modes[2*m:3*m, 0]
-    div_norm = np.linalg.norm(divgnce)
-    
-    if div_norm >= 1e-10:
-        err = 'Something went wrong with the divergence criteria, norm is ' + str(div_norm)
-        ut.error(err)
+def continuity(resolvent_modes, kx, kz, Nm, D1):
+    for column in range(0, resolvent_modes.shape[1]):
+        u = resolvent_modes[   0:Nm,   column]
+        v = resolvent_modes[  Nm:2*Nm, column]
+        w = resolvent_modes[2*Nm:3*Nm, column]
+        continuty = 1.0j*kx*u + np.dot(D1, v) + 1.0j*kz*w
+        norm = np.linalg.norm(continuty)
+        if norm >= 1e-10:
+            err = 'Something went wrong with the divergence criteria, norm is ' + str(norm)
+            ut.error(err)
     
     return 0
 
@@ -31,7 +48,7 @@ def orthogonality(A):
     C = B.real - I
     C_norm = np.linalg.norm(C)
     if C_norm >= 1e-10:
-        err = 'Resolvent modes are not orthogonal, norm is ' + str(C_norm)
+        err = 'Modes are not orthogonal, norm is ' + str(C_norm)
         ut.error(err)
     
     return 0
