@@ -226,7 +226,7 @@ def resolvent_approximation(original_ff_spectral,
             #### Calculate the state vectors
             #------------------------------------------------
             omega = kx * c
-            state_vecs = ps.get_state_vectors(kx, kz, Re, Nm+2, omega, baseflow, mean_profile[1:-1])
+            state_vecs = ps.get_state_vectors(kx, kz, Re, Nm+2, omega, baseflow, mean_profile)
 
 
             #------------------------------------------------
@@ -256,8 +256,8 @@ def resolvent_approximation(original_ff_spectral,
             #------------------------------------------------
             #### Check that the continuity criteria is satisfied
             #------------------------------------------------
-#            if not sparse:
-#                Tests.continuity(resolvent_modes, kx, kz, Nm, state_vecs['D1'])
+            if not sparse:
+                Tests.continuity(resolvent_modes, kx, kz, Nm, state_vecs['D1'])
 #            elif sparse:
 #                Tests.continuity(resolvent_modes[: , :rank], kx, kz, Nm, state_vecs['D1'])
 

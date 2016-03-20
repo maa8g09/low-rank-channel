@@ -349,24 +349,34 @@ def get_state_vectors(alpha, beta, Re, N, omega, bf, vel_profile):
         if bf == 'lam': # Laminar Base flow 
             U = np.identity(modes)
             np.fill_diagonal(U, 1.0 - y_cheb**2.0) # 1 at centreline
+
             dU_dy  = np.identity(modes)
             np.fill_diagonal(dU_dy, -2.0*y_cheb)
-            d2U_dy2 = -2.0
+
+            d2U_dy2  = np.identity(modes)
+            np.fill_diagonal(d2U_dy2, -2.0)
+
         elif bf == 'cou': # Couette Base flow
             U = np.identity(modes)
             np.fill_diagonal(U, y_cheb)
+
             dU_dy  = np.identity(modes)
             np.fill_diagonal(dU_dy, 1.0)
-            d2U_dy2 = 0.0
-    else: # Use turbulent mean
-        U = np.identity(len(vel_profile))
-        np.fill_diagonal(U, vel_profile)
-        dU_dy = np.identity(len(vel_profile))
-#        np.fill_diagonal(dU_dy, 0.0)
-#        d2U_dy2 = 0.0
-        np.fill_diagonal(dU_dy, -2.0*y_cheb) # laminar 
-        d2U_dy2 = -2.0                       # laminar 
 
+            d2U_dy2  = np.identity(modes)
+            np.fill_diagonal(d2U_dy2, 0.0)
+
+    else: # Use turbulent mean
+        U = np.identity(modes) # without endpoints
+        np.fill_diagonal(U, vel_profile[1:-1])
+
+        dU_dy  = np.identity(modes)
+        tmp = np.asmatrix(D1) * np.asmatrix(vel_profile[1:-1]).T
+        np.fill_diagonal(dU_dy, tmp)
+
+        d2U_dy2  = np.identity(modes)
+        tmp = np.asmatrix(D2) * np.asmatrix(vel_profile[1:-1]).T
+        np.fill_diagonal(dU_dy, tmp)
 
     #================================================================
     #### Calculate Laplacian for constructing operators
@@ -387,7 +397,7 @@ def get_state_vectors(alpha, beta, Re, N, omega, bf, vel_profile):
     O_c = -1.0j*beta*dU_dy
     # Orr-Sommerfeld operator
     a0=(del_hat_4 / Re)
-    a1=( 1.0j * alpha * d2U_dy2 * I)
+    a1=( 1.0j * alpha * d2U_dy2)
     a2=(-1.0j * alpha * np.asmatrix(U) * np.asmatrix(del_hat_2))
     O_os = a0 + a1 + a2
     x0 = np.linalg.solve(del_hat_2, O_os)
