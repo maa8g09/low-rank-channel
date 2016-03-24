@@ -76,7 +76,7 @@ class FlowFieldGeometry(object):
         self.x = np.linspace(0.0, self.Lx, Nx)
         self.y_uniform = np.linspace(1.0, -1.0, Ny)
         self.y = np.linspace(1.0, -1.0, Ny)
-        self.z = np.linspace(-self.Lz/2.0, self.Lz/2.0, Nz)
+        self.z = np.linspace(0.0, self.Lz, Nz)
 
         # Total number of modes_____________________________________________________________________
         self.modes = self.Ny - 2 # take away the first and last grid points

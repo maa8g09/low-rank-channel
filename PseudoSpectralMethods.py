@@ -3,8 +3,7 @@ import numpy as np
 from scipy.linalg import toeplitz
 from scipy.fftpack import ifft
 from numpy.linalg import inv
-from numpy.linalg import pinv
-import Tests
+
 
 def chebdiff(N, M):
     
@@ -52,7 +51,7 @@ def chebdiff(N, M):
 
 
     # Identity matrix with logical matrix
-    I = np.identity(N)
+#    I = np.identity(N)
     #I_logical = np.matrix(np.eye(N, dtype=bool))
 
 
@@ -146,7 +145,7 @@ def cheb4c(N, debug):
         
     # Identity matrix with logical matrix
     I = np.matrix(np.identity(N - 2.0), copy=False)
-    I_logical = np.matrix(np.eye(N - 2.0, dtype=bool))
+#    I_logical = np.matrix(np.eye(N - 2.0, dtype=bool))
     
     # n1 n2 are indices used for the flipping trick
     n1 = math.floor((N / 2.0) - 1)
@@ -209,7 +208,7 @@ def cheb4c(N, debug):
     Y = np.ones((N-3, N-2.0))
     
     D = I
-    A = np.ones((N - 2.0, N - 2.0))
+#    A = np.ones((N - 2.0, N - 2.0))
     DM = np.empty((4, N - 2.0, N - 2.0))
     
     for l in range(0, 4):
@@ -325,17 +324,21 @@ def my_ifft(u_tilde, alpha, beta, ffg):
     return u
 
 
-def get_state_vectors(alpha, beta, Re, N, omega, bf, vel_profile):
 
+def calculate_derivatives(N, vel_profile, bf):
+
+    chebyshev_differentiation = {}
+    mean_flow_derivatives = {}
+    
     #================================================================
     #### Calculate the derivative matrices in the wall-normal direction
     #================================================================
     # y_cheb_full are the interpolated y co-ordinates, 
     # i.e. Chebyshev interior points (nodes), with endpoints included.
-    y_cheb_full, DM = chebdiff(N, 2)
-    D1 = DM[0, 1:-1, 1:-1]              # First  derivative matrix (partial_d_dy)
-    D2 = DM[1, 1:-1, 1:-1]              # Second derivative matrix (partial_d_dyy)
-    y_cheb, D4 = cheb4c(N, False)    # Fourth derivative matrix (partial_d_dyyyy)
+    chebyshev_differentiation['y_cheb_full'], DM = chebdiff(N, 2)
+    chebyshev_differentiation['D1'] = DM[0, 1:-1, 1:-1]              # First  derivative matrix (partial_d_dy)
+    chebyshev_differentiation['D2'] = DM[1, 1:-1, 1:-1]              # Second derivative matrix (partial_d_dyy)
+    y_cheb, chebyshev_differentiation['D4'] = cheb4c(N, False)    # Fourth derivative matrix (partial_d_dyyyy)
     # y_cheb has endpoints removed, i.e. y_cheb_full[1:-1].
     # Hence the number of modes are given as
     modes = N-2 # because the endpoints are removed.
@@ -371,34 +374,46 @@ def get_state_vectors(alpha, beta, Re, N, omega, bf, vel_profile):
         np.fill_diagonal(U, vel_profile[1:-1])
 
         dU_dy  = np.identity(modes)
-        tmp = np.asmatrix(D1) * np.asmatrix(vel_profile[1:-1]).T
+        tmp = np.asmatrix(chebyshev_differentiation['D1']) * np.asmatrix(vel_profile[1:-1]).T
         np.fill_diagonal(dU_dy, tmp)
 
         d2U_dy2  = np.identity(modes)
-        tmp = np.asmatrix(D2) * np.asmatrix(vel_profile[1:-1]).T
-        np.fill_diagonal(dU_dy, tmp)
+        tmp = np.asmatrix(chebyshev_differentiation['D2']) * np.asmatrix(vel_profile[1:-1]).T
+        np.fill_diagonal(d2U_dy2, tmp)
+
+    mean_flow_derivatives['U'] = U
+    mean_flow_derivatives['dU_dy'] = dU_dy
+    mean_flow_derivatives['d2U_dy2'] = d2U_dy2
+
+
+    return chebyshev_differentiation, mean_flow_derivatives
+
+
+
+
+def calculate_transfer_function(alpha, beta, Re, Nm, omega, chebyshev_differentiation, mean_flow_derivatives):
 
     #================================================================
     #### Calculate Laplacian for constructing operators
     #================================================================
-    I = np.identity(modes)                              # identity matrix
-    Z = np.zeros(shape=(modes, modes))                  # matrix of zeroes
+    I = np.identity(Nm)                                 # identity matrix
+    Z = np.zeros(shape=(Nm, Nm))                        # matrix of zeroes
     kappa = (alpha*alpha) + (beta*beta)                 # variable calculated from (del)dot(del)
-    del_hat_2 = D2 - kappa*I                            # Laplacian
-    del_hat_4 = D4 - 2.0*D2*kappa + kappa*kappa*I       # Laplacian_2
+    del_hat_2 = chebyshev_differentiation['D2'] - kappa*I                            # Laplacian
+    del_hat_4 = chebyshev_differentiation['D4'] - 2.0*chebyshev_differentiation['D2']*kappa + kappa*kappa*I       # Laplacian_2
 
     #================================================================
     #### Construct operators
     #================================================================
     # Calculations from pg60 Schmid Henningson eqns 3.29 and 3.30
     # Squire operator
-    O_sq = ((del_hat_2/Re) - (1.0j * alpha * U))
+    O_sq = ((del_hat_2/Re) - (1.0j * alpha * mean_flow_derivatives['U']))
     # Center operator
-    O_c = -1.0j*beta*dU_dy
+    O_c = -1.0j*beta*mean_flow_derivatives['dU_dy']
     # Orr-Sommerfeld operator
     a0=(del_hat_4 / Re)
-    a1=( 1.0j * alpha * d2U_dy2)
-    a2=(-1.0j * alpha * np.asmatrix(U) * np.asmatrix(del_hat_2))
+    a1=( 1.0j * alpha * mean_flow_derivatives['d2U_dy2'])
+    a2=(-1.0j * alpha * np.asmatrix(mean_flow_derivatives['U']) * np.asmatrix(del_hat_2))
     O_os = a0 + a1 + a2
     x0 = np.linalg.solve(del_hat_2, O_os)
 
@@ -426,48 +441,52 @@ def get_state_vectors(alpha, beta, Re, N, omega, bf, vel_profile):
     #================================================================
     # C maps the resolvent from being a function of wall-normal velocity (v)
     # and vorticity (eta) to primitives (u, v, w).
-    I = np.identity(modes) # identity matrix (length of modes)
-    C = np.vstack((np.hstack(((1.0j/kappa) * (alpha*D1), (-1.0j/kappa) * (beta*I))), 
-                   np.hstack((                        I,                   Z)), 
-                   np.hstack(( (1.0j/kappa) * (beta*D1),  ( 1.0j/kappa) * (alpha*I)))))
+    I = np.identity(Nm) # identity matrix (length of modes)
+    C = np.vstack((np.hstack(((1.0j/kappa) * (alpha*chebyshev_differentiation['D1']),   (-1.0j/kappa) * (beta*I))), 
+                   np.hstack(( I, Z)), 
+                   np.hstack(( (1.0j/kappa) * (beta*chebyshev_differentiation['D1']),  ( 1.0j/kappa) * (alpha*I)))))
     C = np.asmatrix(C)
+
+
+    #================================================================
+    #### Calculate conversion matrix adjoint
+    #================================================================
+    Ch = C.H
+
+
+    # Moarref's formulation:
+    invLap = np.asmatrix(inv(del_hat_2))
+    Ch_Moarref = np.vstack((np.hstack(( (1.0j/kappa) * (alpha*invLap*chebyshev_differentiation['D1']) ,   kappa*invLap, (1.0j/kappa) * (beta*invLap*chebyshev_differentiation['D1']) )),
+                            np.hstack((                                       (1.0j/kappa) * (beta*I) ,              Z,                                    (-1.0j/kappa) * (alpha*I) ))))
+
 
     #================================================================
     #### Calculate Clenshaw–Curtis quadrature
     #================================================================
-    tmp, clencurt_quadrature = clencurt(N)
-    clencurt_quadrature = np.diag(np.sqrt(clencurt_quadrature[1:-1]))
+    tmp, w = clencurt(Nm+2)
+    w = np.diag(np.sqrt(w[1:-1]))
     # Stack it 3 times for each velocity compoenent (u, v, w):
-    clencurt_quadrature = np.vstack((np.hstack((clencurt_quadrature,Z,Z)),
-                                     np.hstack((Z,clencurt_quadrature,Z)),
-                                     np.hstack((Z,Z,clencurt_quadrature))))
-    clencurt_quadrature = np.asmatrix(clencurt_quadrature)
+    w = np.vstack((np.hstack((w,Z,Z)),
+                   np.hstack((Z,w,Z)),
+                   np.hstack((Z,Z,w))))
+    w = np.asmatrix(w)
 
-    #================================================================
-    #### Grid weighted conversion matrix
-    #================================================================
-    C_w = clencurt_quadrature * C
-    # Adjoint of C maps the forcing vector to resolvent
-#    w_inv_C_adj = C.H * np.linalg.inv(clencurt_quadrature)
-    invw_C_adj = pinv(C_w) # this is the calculation used in Ati's code. Why?
+#    ================================================================
+#     Grid weighted conversion matrix
+#    ================================================================
+#    C_w = w * C
+#     Adjoint of C maps the forcing vector to resolvent
+#    w_inv_C_adj = C.H * np.linalg.inv(w)
+#    invw_C_adj = pinv(C_w) # this is the calculation used in Ati's code. Why?
+    
 
     #================================================================
     #### Calculate weighted resolvent/transfer function
     #================================================================
-    H = C_w * R * invw_C_adj
+    H = w * C * R * Ch_Moarref * inv(w)
 
-    #================================================================
-    #### Store necassary variables
-    #================================================================
-    state_vecs = {}
-    state_vecs['H'] = H
-    state_vecs['cq'] = clencurt_quadrature
-    state_vecs['y_cheb'] = y_cheb
-    state_vecs['y_cheb_full'] = y_cheb_full
-    state_vecs['D1'] = D1
-    state_vecs['U'] = np.diag(U)
-    
-    return state_vecs
+
+    return H, w
 
 
 ## Debugging

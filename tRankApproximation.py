@@ -70,7 +70,7 @@ def main(File, Rank, Directory, MeanProfile, sparse):
         #------------------------------------------------
         #### Read physical ascii file
         #------------------------------------------------
-        file_info = ut.read_ASC_channelflow(temp_rank_folder, str(File)[:-3])
+        file_info = ut.read_ASC_PP(temp_rank_folder, str(File)[:-3])
         details = ut.read_Details(parent_directory, "u0_Details.txt")
 
 
@@ -225,8 +225,8 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     #================================================================
     # Modes multiplied with fundamental wavenumbers
     #(Modes: the physical modes, i.e. the grid points)
-    kx = ff_original.Mx * ff_original.alpha
-    kz = ff_original.Mz * ff_original.beta
+    kx_array = ff_original.Mx * ff_original.alpha
+    kz_array = ff_original.Mz * ff_original.beta
 
 
     #================================================================
@@ -238,17 +238,25 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     #================================================================
     #### Approximate the file w/regards to specified rank
     #================================================================
-    approximated_ff_spectral, alpha_beta_chi = cr.resolvent_approximation(ff_original.velocityField,
-                                                                          ff_mean.velocityField,
-                                                                          kx,
-                                                                          kz,
-                                                                          ff_original.numModes,
-                                                                          ff_original.c,
-                                                                          ff_original.Re,
-                                                                          ff_original.baseflow,
-                                                                          rank,
-                                                                          mean_profile,
-                                                                          sparse)
+    deconstructed_field = cr.deconstruct_field(ff_original.velocityField,
+                                              kx_array,
+                                              kz_array,
+                                              ff_original.numModes,
+                                              ff_original.c,
+                                              ff_original.Re,
+                                              ff_original.baseflow,
+                                              rank,
+                                              mean_profile,
+                                              sparse)
+
+
+    approximated_ff_spectral = cr.construct_field(deconstructed_field['resolvent_modes'],
+                                                  deconstructed_field['singular_values'],
+                                                  deconstructed_field['coefficients'],
+                                                  ff_mean.velocityField,
+                                                  kx_array,
+                                                  kz_array,
+                                                  ff_original.numModes)
 
 
     #================================================================
@@ -315,7 +323,7 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     #================================================================
     #### Retrieve approximated fluctuations
     #================================================================  
-    tmp = ff_approximated.velocityField[:,:,:,:] - mean.real
+    tmp = ff_approximated.velocityField[:,:,:,:] # - mean.real The mean is not set...
     app_u = tmp[0,:,:,:].real
     app_v = tmp[1,:,:,:].real
     app_w = tmp[2,:,:,:].real
@@ -377,7 +385,7 @@ def main(File, Rank, Directory, MeanProfile, sparse):
         # Write amplitude coefficients for each Fourier mode combination
         #------------------------------------------------
         fileName = File[:-3] + "_coeffs"
-        ut.write_amplitude_coefficients(ff_approximated, rank_folder, fileName, alpha_beta_chi)
+        ut.write_amplitude_coefficients(ff_approximated, rank_folder, fileName, deconstructed_field['coefficients'])
 
         #------------------------------------------------
         # Remove ascii file and temporary folder
@@ -392,12 +400,10 @@ def main(File, Rank, Directory, MeanProfile, sparse):
 
 
 
-#dirc = "/home/arslan/Desktop/Re1200.0/KB/2016_03_18/theta_-1.0000"
-dirc = "/home/arslan/Desktop/ati-modes-copy/modes/B/kz2/ff_files"
+dirc = "/home/arslan/Desktop/ati-modes-copy/modes/A/kz2/ff_files/"
 os.chdir(dirc)
-main("mode-00.ff", 
-     10, 
+main("mode-00.ff",
+     2,
      dirc, 
      "turbdeviation.txt",
-#     "",
      True)

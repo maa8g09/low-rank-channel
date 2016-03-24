@@ -56,3 +56,13 @@ def orthogonality(A):
 
 def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
+
+
+def invertible(A):
+    # A must be a square matrix
+    I = np.identity(A.shape[0])
+    Z = I - (np.linalg.inv(A) * A)
+    Znorm = np.linalg.norm(Z)
+    if Znorm >= 1e-10:
+        err = 'Matrix is not invertible, ||I - inv(A)A|| = ' + str(Znorm)
+        ut.error(err)
