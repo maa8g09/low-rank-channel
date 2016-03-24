@@ -253,7 +253,7 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     approximated_ff_spectral = cr.construct_field(deconstructed_field['resolvent_modes'],
                                                   deconstructed_field['singular_values'],
                                                   deconstructed_field['coefficients'],
-                                                  ff_mean.velocityField,
+#                                                  ff_mean.velocityField,
                                                   kx_array,
                                                   kz_array,
                                                   ff_original.numModes)
