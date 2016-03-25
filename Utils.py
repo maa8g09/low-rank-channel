@@ -366,7 +366,7 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
     #================================================================
     #### Save CSV
     #================================================================
-    csv_file = open(output_directory + fileName + ".csv", "w")
+    csv_file = open(output_directory + fileName + "-REAL.csv", "w")
         
     title = "|chi| @ each (mx, mz)\n"
     csv_file.write(title)
@@ -417,7 +417,7 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
         for mz in range(0, len(flowField.Mz)):
             mz = int(Mz_shifted[mz])
             
-            tmp  = abc_array[mx, mz, :][0]
+            tmp  = abc_array[mx, mz, :][0].real
             entry += format(tmp, ".4f") + "\t"
             
         csv_file.write(entry + "\n")

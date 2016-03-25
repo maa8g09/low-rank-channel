@@ -389,19 +389,32 @@ def deconstruct_field(original_ff_spectral,
 
 
 
-            phase_test = False
+            phase_test = True
             norm_test  = False
+            fix_xi     = False
             xi_norm = np.linalg.norm(xi)
-            if xi_norm >= 1e-10:
+            if mz == 2 or mz == -2: 
+            #xi_norm >= 1e-10:
                 # Phase test
                 if phase_test:
+                    print("\nApplying phase shift at: " + str(kz) + "\n ")
                     # shift the field by pi/3
                     xi += 1.0j*(np.pi/3.0)
 
                 # Norm test
                 if norm_test:
+                    print("\nApplying norm doubling.")
                     # Double the energy of the field
-                    xi *= 1.414 + 1.414j
+                    xi *= np.sqrt(2.0) + 1.0j*np.sqrt(2.0)
+
+                # Fix xi to see if same coefficients are retrieved from projection
+                if fix_xi:
+                    xi[0] = 1.0
+                    xi[1] = 0.0
+                    print("\nXI:")
+                    print("norm: " + str(xi_norm))
+                    print(xi)
+                    print("")
 
 
             # Store the resolvent modes and amplitudes 
@@ -518,7 +531,7 @@ def construct_field(resolvent_modes,
             #------------------------------------------------
             psi = np.asmatrix(resolvent_modes[mx,mz,:,:])
             sigma = np.asmatrix(np.diag(singular_values[mx,mz,:]))
-            xi = np.asmatrix(coefficients[mx,mz,:])
+            xi = np.asmatrix(coefficients[mx,mz,:]).T
 
             tmp = psi * sigma * xi
             approximated_ff_spectral[mx, :, mz] = np.squeeze(np.asarray(tmp))
