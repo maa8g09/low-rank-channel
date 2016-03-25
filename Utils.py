@@ -362,15 +362,7 @@ def read_Vel_Profile(directory, fileName):
 
 
 def write_amplitude_coefficients(flowField, output_directory, fileName, abc_array):
-    
-    #================================================================
-    #### Save CSV
-    #================================================================
-    csv_file = open(output_directory + fileName + "-REAL.csv", "w")
         
-    title = "|chi| @ each (mx, mz)\n"
-    csv_file.write(title)
-
     #================================================================
     #### Rearrange the modes so that they go from -max:max with zero in the middle
     #================================================================
@@ -396,7 +388,17 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
 
     kx = np.asarray(Mx_shifted) * flowField.alpha
     kz = np.asarray(Mz_shifted) * flowField.beta
+    
+    
+    #================================================================
+    #### Save CSV of REAL compoennt
+    #================================================================
+    csv_file = open(output_directory + fileName + "-REAL.csv", "w")
+        
+    title = "|chi| @ each (mx, mz)\n"
+    csv_file.write(title)
 
+    
     #================================================================
     #### Write File
     #================================================================
@@ -424,7 +426,42 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
 
     csv_file.close()
 
+    
+    #================================================================
+    #### Save CSV of IMAG compoennt
+    #================================================================
+    csv_file = open(output_directory + fileName + "-IMAG.csv", "w")
+        
+    title = "|chi| @ each (mx, mz)\n"
+    csv_file.write(title)
 
+    
+    #================================================================
+    #### Write File
+    #================================================================
+    entry = "\t"
+    for mz in range(0, len(flowField.Mz)):            
+        beta = kz[mz]
+        # mz = int(Mz_shifted[mz])
+        entry += str(Mz_shifted[mz]) + "\t"
+
+    csv_file.write(entry + "\n")
+
+    for mx in range(0, len(flowField.Mx)):
+#        alpha = kx[mx]
+        mx = int(Mx_shifted[mx])
+
+        entry = str(flowField.Mx[mx]) + ":\t" 
+        
+        for mz in range(0, len(flowField.Mz)):
+            mz = int(Mz_shifted[mz])
+            
+            tmp  = abc_array[mx, mz, :][0].imag
+            entry += format(tmp, ".4f") + "\t"
+            
+        csv_file.write(entry + "\n")
+
+    csv_file.close()
 #    csv_file_2 = open(output_directory + fileName + "2.csv", "w")
 #
 #    #================================================================
