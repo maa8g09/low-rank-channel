@@ -389,11 +389,11 @@ def deconstruct_field(original_ff_spectral,
 
 
 
-            phase_test = True
+            phase_test = False
             norm_test  = False
             fix_xi     = False
             xi_norm = np.linalg.norm(xi)
-            if mz == 2 or mz == -2: 
+            if kz == 2.0 or kz == -2.0: 
             #xi_norm >= 1e-10:
                 # Phase test
                 if phase_test:
@@ -416,6 +416,7 @@ def deconstruct_field(original_ff_spectral,
                     print(xi)
                     print("")
 
+                print(xi)
 
             # Store the resolvent modes and amplitudes 
             # for reconstruction at a later date
