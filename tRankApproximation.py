@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
 import os
-
+import sys
 import Utils as ut
 import FlowField as ffClass
 import ChannelResolvent as cr
+import Tests
 
 import numpy as np
 
 
-def main(File, Rank, Directory, MeanProfile, sparse):
+def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
 
     #================================================================
     #### Create a temporary folder
@@ -18,22 +19,22 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     # Add slash at the end of the string if there isn't one already
     if parent_directory[-1] != "/":
         parent_directory += "/"
-
+    
     temp_rank_folder = "rank-temp/"
     temp_rank_folder = parent_directory + temp_rank_folder
-
+    
     #if a temporary directory exists, delete it.
     if os.path.exists(temp_rank_folder):
         command = "rm -rf " + temp_rank_folder
         os.system(command)
-
+    
     #if a temporary directory doesn't exist, create one.
     if not os.path.exists(temp_rank_folder):
         os.mkdir(temp_rank_folder)
-
+    
     # All work is done from the temporary directory.
     os.chdir(temp_rank_folder)
-
+    
     #================================================================
     #### Check file type
     #================================================================
@@ -45,19 +46,22 @@ def main(File, Rank, Directory, MeanProfile, sparse):
         command = "fieldconvert ../" + str(File) + " ../" + str(File)[:-3] + ".ff"
         print(command)
         os.system(command)
-
+    
         #------------------------------------------------
         #### Convert binary to ASCII
         #------------------------------------------------
         command = "field2ascii -p -g ../" + str(File)[:-3] + ".ff " + str(File)[:-3]
         print(command)
         os.system(command)
-
+    
         #------------------------------------------------
         #### Read physical ascii file
         #------------------------------------------------
         file_info = ut.read_ASC_channelflow(temp_rank_folder, str(File)[:-3])
-
+    
+    
+    
+    
     elif File[-3:] == ".ff": # channelflow binary file type
         print("\nA channelflow binary file given...")
         #------------------------------------------------
@@ -66,20 +70,34 @@ def main(File, Rank, Directory, MeanProfile, sparse):
         command = "field2ascii -p ../" + str(File) + " " + str(File)[:-3]
         print(command)
         os.system(command)
-
+    
         #------------------------------------------------
         #### Read physical ascii file
         #------------------------------------------------
         file_info = ut.read_ASC_PP(temp_rank_folder, str(File)[:-3])
         details = ut.read_Details(parent_directory, "u0_Details.txt")
-
-
+    
+    
+    
+    
+    elif File[-3:] == "asc": # PP_ascii file with the indices prefixed
+        print("\nA pp ascii file given...")
+    
+        #------------------------------------------------
+        #### Read physical ascii file
+        #------------------------------------------------
+        file_info = ut.read_ASC_PP(parent_directory, str(File)[:-7])
+        details = ut.read_Details(parent_directory, "u0_Details.txt")
+    
+    
+    
+    
     else: # No file type given.
         ut.error("Invalid file given.")
     
-
+    
     #================================================================
-    #### Initialise original flow field object
+    #### Initialise flow field object for field to approximate
     #================================================================
     ff_original = ffClass.FlowFieldChannelFlow( file_info['Nd'],
                                                 file_info['Nx'],
@@ -94,37 +112,40 @@ def main(File, Rank, Directory, MeanProfile, sparse):
                                                 details['Re'],
                                                 file_info['ff'],
                                                 "pp")
+    
+#    test_u = file_info['ff'][0,:,:,:].real
+#    
+#    # Remove wall boundaries
+#    ff_original.remove_wall_boundaries()
+#    test_u_walls = ff_original.velocityField[0,:,:,:]
+#    
+#    # FFT
+#    ff_original.make_xz_spectral()
+#    test_u_fft = ff_original.velocityField[0,:,:,:]
+#    
+#    # Stack
+#    ff_original.stack_ff_in_y()
+#    test_u_stk = ff_original.velocityField[:,:,:]
+#    
+#    # Unstack
+#    ff_original.unstack_ff()
+#    test_u_ustk = ff_original.velocityField[0,:,:,:]
+#    
+#    # IFFT
+#    ff_original.make_xz_physical()
+#    test_u_ifft = ff_original.velocityField[0,:,:,:]
+#    test_u_ifftR = test_u_ifft.real
+#    test_u_ifftI = test_u_ifft.imag
+#    
+#    # Add wall boundaries
+#    ff_original.add_wall_boundaries()
+#    test_u_walls2 = ff_original.velocityField[0,:,:,:]
+#    
+#    test_u3 = ff_original.velocityField[0,:,:,:]
+#    d = test_u3.real - file_info['ff'][0,:,:,:]
+#    dnorm = np.linalg.norm(d)
 
-    test_u = file_info['ff'][0,:,:,:].real
-
-    # Remove wall boundaries
-    ff_original.remove_wall_boundaries()
-    test_u_walls = ff_original.velocityField[0,:,:,:].real
-
-    # FFT
-    ff_original.make_xz_spectral()
-    test_u_fft = ff_original.velocityField[0,:,:,:].real
-
-    # Stack
-    ff_original.stack_ff_in_y()
-    test_u_stk = ff_original.velocityField[:,:,:].real
-
-    # Unstack
-    ff_original.unstack_ff()
-    test_u_ustk = ff_original.velocityField[0,:,:,:].real
-
-    # IFFT
-    ff_original.make_xz_physical()
-    test_u_ifft = ff_original.velocityField[0,:,:,:].real
-
-    # Add wall boundaries
-    ff_original.add_wall_boundaries()
-    test_u_walls2 = ff_original.velocityField[0,:,:,:].real
-
-    test_u3 = ff_original.velocityField[0,:,:,:].real
-    d = test_u3.real - file_info['ff'][0,:,:,:].real
-    dnorm = np.linalg.norm(d)
-
+#    sys.exit("")
 
     #================================================================
     #### Check velocity profile
@@ -132,7 +153,7 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     # Create empty 4D array to store mean flow field
     mean = np.zeros((file_info['Nd'], file_info['Nx'], file_info['Ny'], file_info['Nz']))
     mean_profile = []
-
+    
     if MeanProfile: # Velocity profile given
         #------------------------------------------------
         #### Read velocity profile
@@ -147,13 +168,13 @@ def main(File, Rank, Directory, MeanProfile, sparse):
                 baseflow = 1.0 - ff_original.y**2.0
             elif details['bf'] == "cou": # Couette base flow
                 baseflow = ff_original.y
-
+    
             # Add baseflow to deviation
             mean_profile = vel_profile + np.asarray(baseflow)
-
+    
         else: # Mean profile given
             mean_profile = vel_profile
-
+    
         #------------------------------------------------
         #### Construct 4D array from mean_profile
         #------------------------------------------------
@@ -171,13 +192,13 @@ def main(File, Rank, Directory, MeanProfile, sparse):
             baseflow = 1.0 - ff_original.y**2.0
         elif details['bf'] == "cou": # Couette base flow
             baseflow = ff_original.y
-
+    
         #------------------------------------------------
         #### Construct 4D array from mean_profile
         #------------------------------------------------
         mean = ut.make_ff_from_profile(np.asarray(baseflow), ff_original.Nd, ff_original.Nx, ff_original.Nz)
-
-
+    
+    
     #================================================================
     #### Initialize mean flow field object
     #================================================================
@@ -194,8 +215,8 @@ def main(File, Rank, Directory, MeanProfile, sparse):
                                             details['Re'],
                                             mean,
                                             "pp")
-
-
+    
+    
     #================================================================
     #### Remove the wall boundaries
     #================================================================
@@ -204,22 +225,22 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     # the transfer function.
     ff_original.remove_wall_boundaries()
     ff_mean.remove_wall_boundaries()
-
-
+    
+    
     #================================================================
     #### Fourier transform original and mean velocity fields in xz directions
     #================================================================
     ff_original.make_xz_spectral()
     ff_mean.make_xz_spectral()
-
-
+    
+    
     #================================================================
     #### Stack velocity fields in the wall-normal direction
     #================================================================
     ff_original.stack_ff_in_y()
     ff_mean.stack_ff_in_y()
-
-
+    
+    
     #================================================================
     #### Create arrays of Fourier modes to use
     #================================================================
@@ -227,16 +248,27 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     #(Modes: the physical modes, i.e. the grid points)
     kx_array = ff_original.Mx * ff_original.alpha
     kz_array = ff_original.Mz * ff_original.beta
-
-
+    
+        
+    Tests.checkHermitianSymmetry(ff_original.velocityField[:,0:ff_original.numModes,:],
+                                 ff_original.Nx, 
+                                 ff_original.Nz)
+    Tests.checkHermitianSymmetry(ff_original.velocityField[:,ff_original.numModes:ff_original.numModes*2,:],
+                                 ff_original.Nx, 
+                                 ff_original.Nz)
+    Tests.checkHermitianSymmetry(ff_original.velocityField[:,2*ff_original.numModes:ff_original.numModes*3,:],
+                                 ff_original.Nx, 
+                                 ff_original.Nz)
+    sys.exit("")
+    
     #================================================================
     #### Ensure valid rank is specified
     #================================================================
     rank = min(Rank, 3*ff_original.numModes)
-
-
+    
+    
     #================================================================
-    #### Approximate the file w/regards to specified rank
+    #### Deconstruct original flow field
     #================================================================
     deconstructed_field = cr.deconstruct_field(ff_original.velocityField,
                                               kx_array,
@@ -247,13 +279,17 @@ def main(File, Rank, Directory, MeanProfile, sparse):
                                               ff_original.baseflow,
                                               rank,
                                               mean_profile,
-                                              sparse)
-
-
+                                              Sparse,
+                                              False)
+    
+    
+    #================================================================
+    #### Reconstruct approximated flow field
+    #================================================================
     approximated_ff_spectral = cr.construct_field(deconstructed_field['resolvent_modes'],
                                                   deconstructed_field['singular_values'],
                                                   deconstructed_field['coefficients'],
-#                                                  ff_mean.velocityField,
+    #                                             ff_mean.velocityField,
                                                   kx_array,
                                                   kz_array,
                                                   ff_original.numModes)
@@ -275,21 +311,22 @@ def main(File, Rank, Directory, MeanProfile, sparse):
                                                     details['Re'],
                                                     approximated_ff_spectral,
                                                     "sp")
+    
 
+    
+    
+    # If not symmetric: you need to filter the negative frequencies in teh approximated result.
+    # This will introduce hermitian symmetry.
+    
 
     #================================================================
     #### Unstack velocity fields in the wall-normal direction
     #================================================================
-    if ff_approximated.is_stacked_in_y:
-        ff_approximated.unstack_ff()
-
-    if ff_mean.is_stacked_in_y:
-        ff_mean.unstack_ff()
-
-    if ff_original.is_stacked_in_y:
-        ff_original.unstack_ff()
-
-
+    ff_approximated.unstack_ff()
+    ff_mean.unstack_ff()
+    ff_original.unstack_ff()
+    
+    
     #================================================================
     #### Inverse Fourier transform approximated and mean velocity fields in xz directions
     #================================================================
@@ -297,61 +334,136 @@ def main(File, Rank, Directory, MeanProfile, sparse):
     ff_mean.make_xz_physical()
     ff_original.make_xz_physical()
 
-
+    
     #================================================================
     #### Add wall boundaries
     #================================================================
     ff_approximated.add_wall_boundaries()
     ff_mean.add_wall_boundaries()
     ff_original.add_wall_boundaries()
+    
 
-    test_u3 = ff_original.velocityField[0,:,:,:].real
-    doriginal = test_u3.real - file_info['ff'][0,:,:,:].real
-    dnorm = np.linalg.norm(doriginal)
-#    if dnorm >= 1e-10:
-#        message = "The original field has not been retrieved after FFT, stacking and removing wall boundaries and then reversing those operations... ||delta||" + str(dnorm)
-#        ut.error(message)
+
+    
+    # Check to see if the imaginary component is significant...    
+    u = ff_original.velocityField[0,:,:,:]
+    ur = u.real
+    ui = u.imag
+    
+    ua = ff_approximated.velocityField[0,:,:,:]
+    uar = ua.real
+    uai = ua.imag
+    
+
+    
+    #### -!-!- TESTING -!-!-    
+    if Testing:
+        #### Remove boundaries
+        ff_approximated.remove_wall_boundaries()
+        #### FFT
+        ff_approximated.make_xz_spectral()
+        #### stack in y
+        ff_approximated.stack_ff_in_y()
+        #### Deconstruct the approximated flow field.
+        deconstructed_approximated = cr.deconstruct_field(ff_approximated.velocityField,
+                                                          kx_array,
+                                                          kz_array,
+                                                          ff_approximated.numModes,
+                                                          ff_approximated.c,
+                                                          ff_approximated.Re,
+                                                          ff_approximated.baseflow,
+                                                          rank,
+                                                          mean_profile,
+                                                          Sparse,
+                                                          False)
+        #### Reconstruct projected approximated flow field.
+        doubly_approximated_ff_spectral = cr.construct_field( deconstructed_approximated['resolvent_modes'],
+                                                              deconstructed_approximated['singular_values'],
+                                                              deconstructed_approximated['coefficients'],
+                #                                             ff_mean.velocityField,
+                                                              kx_array,
+                                                              kz_array,
+                                                              ff_approximated.numModes)
+
+        #### Initialize projected approximated flow field object.
+        ff_doubly_approximated = ffClass.FlowFieldChannelFlow(  file_info['Nd'],
+                                                                file_info['Nx'],
+                                                                ff_approximated.numModes, # the velocity field is missing wall boundaries
+                                                                file_info['Nz'],
+                                                                file_info['Lx'],
+                                                                file_info['Lz'],
+                                                                file_info['alpha'],
+                                                                file_info['beta'],
+                                                                details['c'],
+                                                                details['bf'],
+                                                                details['Re'],
+                                                                doubly_approximated_ff_spectral,
+                                                                "sp")
+
+        #### unstack
+        ff_doubly_approximated.unstack_ff()
+        ff_approximated.unstack_ff()
+        #### IFFT
+        ff_doubly_approximated.make_xz_physical()
+        ff_approximated.make_xz_physical()
+        #### add wall boundaries
+        ff_doubly_approximated.add_wall_boundaries()
+        ff_approximated.add_wall_boundaries()
+
+
+        #### check differences between modes/sing vals/coeffs
+        del_sigma = deconstructed_approximated['singular_values'] - deconstructed_field['singular_values']
+        del_sigmaR = del_sigma.real
+        del_sigmaI = del_sigma.imag
+        del_sigma_n = np.linalg.norm(del_sigma)
+        print("\n\n||sigma_tilde - sigma|| = " + str(del_sigma_n))
+    
+        del_psi = deconstructed_approximated['resolvent_modes'] - deconstructed_field['resolvent_modes']
+        del_psiR = del_psi.real
+        del_psiI = del_psi.imag
+        del_psi_n = np.linalg.norm(del_psi)
+        print("\n\n||psi_tilde - psi|| = " + str(del_psi_n))
+    
+        del_xi = deconstructed_approximated['coefficients'] - deconstructed_field['coefficients']
+        del_xiR = del_xi.real
+        del_xiI = del_xi.imag
+        del_xi_n = np.linalg.norm(del_xi)
+        print("\n\n||xi_tilde - xi|| = " + str(del_xi_n))
         
-    test_u3 = ff_mean.velocityField[0,:,:,:].real
-    dmean = test_u3.real - mean[0,:,:,:].real
-    dnorm = np.linalg.norm(dmean)
-#    if dnorm >= 1e-10:
-#        message = "The original mean has not been retrieved after FFT, stacking and removing wall boundaries and then reversing those operations... ||delta||" + str(dnorm)
-#        ut.error(message)
+        
+        del_ff = ff_doubly_approximated.velocityField.real - ff_approximated.velocityField.real
+        dim_a = ff_approximated.velocityField.shape
+        print("\nDimension of approximated ff: " + str(dim_a))
 
+        dim_da = ff_doubly_approximated.velocityField.shape
+        print("\nDimension of doubly approximated ff: " + str(dim_da))
 
-    #================================================================
-    #### Retrieve approximated fluctuations
-    #================================================================  
-    tmp = ff_approximated.velocityField[:,:,:,:] # - mean.real The mean is not set...
-    app_u = tmp[0,:,:,:].real
-    app_v = tmp[1,:,:,:].real
-    app_w = tmp[2,:,:,:].real
-    org_u = ff_original.velocityField[0,:,:,:].real
-    org_v = ff_original.velocityField[1,:,:,:].real
-    org_w = ff_original.velocityField[2,:,:,:].real
-    ff_approximated.set_ff(tmp.real, "pp")
-
-
+        del_ff_n = np.linalg.norm(del_ff)
+        print("\n\n||u_tilde_tilde - u_tilde|| = " + str(del_ff_n))
+    
+    
+    
+    
+    
     #================================================================
     # Create a folder to store the approximated velocity field in
     #================================================================
     os.chdir(parent_directory) # Go up one directory
     rank_folder = File[:-3]+"_rank_" + str(rank) + "/"
     rank_folder = parent_directory + rank_folder
-
+    
     #if a rank directory does exist, delete it:
     if os.path.exists(rank_folder):
         command = "rm -rf " + rank_folder
         os.system(command)
-
+    
     #if a rank directory doesn't exist, create one:
     if not os.path.exists(rank_folder):
         os.mkdir(rank_folder)
-
+    
     # Change into the new rank directory
     os.chdir(rank_folder)
-
+    
     
     #================================================================
     # Save flow field to file
@@ -373,37 +485,54 @@ def main(File, Rank, Directory, MeanProfile, sparse):
         #------------------------------------------------
         fileName = File[:-3] + "_rnk_" + str(rank)
         ut.write_ASC(ff_approximated, rank_folder, fileName)
-
+    
         #------------------------------------------------
         # Write binary file
         #------------------------------------------------
         command = "ascii2field -p false -ge ../rank-temp/" + str(File)[:-3] + ".geom " + fileName + ".asc " + fileName
         print(command)
         os.system(command)
-
+    
+    
+    
+    
+    elif File[-3:] == "asc":
         #------------------------------------------------
-        # Write amplitude coefficients for each Fourier mode combination
+        # Write physical ascii file
         #------------------------------------------------
-        fileName = File[:-3] + "_coeffs"
-        ut.write_amplitude_coefficients(ff_approximated, rank_folder, fileName, deconstructed_field['coefficients'])
-
-        #------------------------------------------------
-        # Remove ascii file and temporary folder
-        #------------------------------------------------
+        fileName = File[:-3] + "_rnk_" + str(rank)
+        ut.write_ASC_Py(ff_approximated, rank_folder, fileName)
+    
+    
+    
+    #------------------------------------------------
+    # Write amplitude coefficients for each Fourier mode combination
+    #------------------------------------------------
+    fileName = File[:-3] + "_coeffs"
+    ut.write_amplitude_coefficients(ff_approximated, rank_folder, fileName, deconstructed_field['coefficients'])
+    
+    #------------------------------------------------
+    # Remove ascii file and temporary folder
+    #------------------------------------------------
     #    os.system("rm *.asc")
-        os.chdir(parent_directory)
-        command = "rm -rf " + temp_rank_folder
-        os.system(command)
+    os.chdir(parent_directory)
+    command = "rm -rf " + temp_rank_folder
+    os.system(command)
+    
     
     print("\nFinished")
 
 
 
 
-dirc = "/home/arslan/Desktop/ati-modes-copy/modes/A/kz2/ff_files/"
+dirc = "/Users/arslan/Desktop/ati-modes-copy/modes/A/kz2/ff_files/"
+#dirc = "/Users/arslan/Desktop/ati-modes-copy/modes/A/kz2/ff_files/mode-00_pp_rank_2/"
 os.chdir(dirc)
-main("mode-00.ff",
-     2,
+fileName = "mode-00_pp.asc"
+#fileName = "mode-00_rnk_2_pp.asc"
+main(fileName,
+     10,
      dirc, 
      "turbdeviation.txt",
-     True)
+     True,
+     False)

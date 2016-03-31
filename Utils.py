@@ -69,7 +69,7 @@ def read_ASC_channelflow(directory, fileName):
     full_field = [float(line.strip()) for line in file]
     file.close()
 
-    U = np.zeros((var['Nd'], var['Nx'], var['Ny'], var['Nz']), dtype=np.complex128)
+    U = np.zeros((var['Nd'], var['Nx'], var['Ny'], var['Nz']), dtype=float)
 
 #    U[0,:,:,:] = np.asarray(full_field[0::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
 #    U[1,:,:,:] = np.asarray(full_field[1::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
@@ -105,7 +105,7 @@ def read_ASC_PP(directory, fileName):
                   var['Nx'],
                   var['Ny'],
                   var['Nz']),
-                  dtype=np.complex128)
+                  dtype=float)
 
     for i, line in enumerate(file):
         values = line.split()
@@ -594,7 +594,7 @@ def write_ASC_Py(flowField, output_directory, fileName):
         for ny in range(0, flowField.Ny):
             for nz in range(0, flowField.Nz):
                 for nd in range(0, flowField.Nd):
-                    tmp = flowField.velocityField[nd, nx, ny, nz]
+                    tmp = flowField.velocityField[nd, nx, ny, nz].real
                     line = str(nd) + '\t'
                     line+= str(nx) + '\t'
                     line+= str(ny) + '\t'

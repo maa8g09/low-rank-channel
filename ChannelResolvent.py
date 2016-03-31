@@ -209,7 +209,8 @@ def deconstruct_field(original_ff_spectral,
                      baseflow,
                      rank,
                      mean_profile,
-                     sparse):
+                     sparse,
+                     fixXi):
 
     ''' 
     Deconstruct given flow field and return the resolvent modes,
@@ -303,7 +304,7 @@ def deconstruct_field(original_ff_spectral,
 
         for mz in range(0, len(kz_array)):
             kz  = kz_array[mz]
-            sys.stdout.write(" "+ str(kz))
+            sys.stdout.write(".")
             sys.stdout.flush()
 
             if kx == 0 or kz == 0: # Zero Fourier modes
@@ -391,7 +392,6 @@ def deconstruct_field(original_ff_spectral,
 
             phase_test = False
             norm_test  = False
-            fix_xi     = False
             xi_norm = np.linalg.norm(xi)
             if kz == 2.0 or kz == -2.0: 
             #xi_norm >= 1e-10:
@@ -408,7 +408,7 @@ def deconstruct_field(original_ff_spectral,
                     xi *= np.sqrt(2.0) + 1.0j*np.sqrt(2.0)
 
                 # Fix xi to see if same coefficients are retrieved from projection
-                if fix_xi:
+                if fixXi:
                     xi[0] = 1.0
                     xi[1] = 0.0
                     print("\nXI:")
@@ -510,7 +510,7 @@ def construct_field(resolvent_modes,
 
         for mz in range(0, len(kz_array)):
             kz  = kz_array[mz]
-            sys.stdout.write(" "+ str(kz))
+            sys.stdout.write(".")
             sys.stdout.flush()
 
             if kx == 0 or kz == 0: # Zero Fourier modes

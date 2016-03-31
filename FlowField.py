@@ -335,3 +335,11 @@ class FlowFieldChannelFlow(object):
                                                      axis=2)
 
 
+    def make_real(self):
+        for nx in range(self.Nx):
+            for ny in range(0, self.Ny):
+                for nz in range(0, self.Nz):
+                    for i in range(0, self.Nd):
+                        tmp = self.velocityField[i, nx, ny, nz]
+                        tmp = np.linalg(tmp)
+                        self.velocityField[i, nx, ny, nz] = tmp

@@ -94,6 +94,9 @@ if args.File[-3:] == ".h5": # H5 file type
     #------------------------------------------------
     file_info = ut.read_ASC_channelflow(temp_rank_folder, str(args.File)[:-3])
 
+
+
+
 elif args.File[-3:] == ".ff": # channelflow binary file type
     print("\nA channelflow binary file given...")
     #------------------------------------------------
@@ -108,6 +111,20 @@ elif args.File[-3:] == ".ff": # channelflow binary file type
     #------------------------------------------------
     file_info = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-3])
     details = ut.read_Details(parent_directory, "u0_Details.txt")
+
+
+
+
+elif args.File[-3:] == "asc": # PP_ascii file with the indices prefixed
+    print("\nA pp ascii file given...")
+
+    #------------------------------------------------
+    #### Read physical ascii file
+    #------------------------------------------------
+    file_info = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-7])
+    details = ut.read_Details(parent_directory, "u0_Details.txt")
+
+
 
 
 else: # No file type given.
@@ -295,6 +312,15 @@ approximated_ff_spectral = cr.construct_field(deconstructed_field['resolvent_mod
                                               ff_original.numModes)
 
 
+# deconstruct the approximated field to see if you get the same modes, singular values, resolvent op,
+# transfer function.
+# Check to see if you get the same amplitude coefficients... YOU SHOULD. make sure to debug so you can see 
+# where the discrepancy comes.
+
+deconstructed_approximated =
+
+
+
 #================================================================
 #### Initialize approximated flow field object
 #================================================================
@@ -417,18 +443,31 @@ elif args.File[-3:] == ".ff":
     print(command)
     os.system(command)
 
-    #------------------------------------------------
-    # Write amplitude coefficients for each Fourier mode combination
-    #------------------------------------------------
-    fileName = args.File[:-3] + "_coeffs"
-    ut.write_amplitude_coefficients(ff_approximated, rank_folder, fileName, deconstructed_field['coefficients'])
 
+
+
+elif args.File[-3:] == "asc":
     #------------------------------------------------
-    # Remove ascii file and temporary folder
+    # Write physical ascii file
     #------------------------------------------------
+    fileName = args.File[:-3] + "_rnk_" + str(rank)
+    ut.write_ASC_Py(ff_approximated, rank_folder, fileName)
+
+
+
+#------------------------------------------------
+# Write amplitude coefficients for each Fourier mode combination
+#------------------------------------------------
+fileName = args.File[:-3] + "_coeffs"
+ut.write_amplitude_coefficients(ff_approximated, rank_folder, fileName, deconstructed_field['coefficients'])
+
+#------------------------------------------------
+# Remove ascii file and temporary folder
+#------------------------------------------------
 #    os.system("rm *.asc")
-    os.chdir(parent_directory)
-    command = "rm -rf " + temp_rank_folder
-    os.system(command)
+os.chdir(parent_directory)
+command = "rm -rf " + temp_rank_folder
+os.system(command)
+
 
 print("\nFinished")

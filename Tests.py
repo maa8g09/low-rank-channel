@@ -66,3 +66,67 @@ def invertible(A):
     if Znorm >= 1e-10:
         err = 'Matrix is not invertible, ||I - inv(A)A|| = ' + str(Znorm)
         ut.error(err)
+
+    return 0
+
+
+def checkHermitianSymmetry(velocityField, Nx, Nz):
+    # Check for conjugacy in spectral flow field
+    # otherwise known as Hermitian symmetry
+    Nx = int(Nx/2+1)
+    Nz = int(Nz/2+1)
+    for kx in range(0, Nx):
+        for kz in range(0, Nz):
+            u_pos = velocityField[kx, :, kz]  # positive streamwise frequencies
+            u_neg = velocityField[-kx, :, kz] # negative streamwise frequencies
+            # Are they complex conjugates?
+            delta_real = u_pos.real - u_neg.real
+            delta_imag = u_pos.imag + u_neg.imag
+            delta_real_norm = np.linalg.norm(delta_real)
+            delta_imag_norm = np.linalg.norm(delta_imag)
+            if delta_real_norm >= 1e-8 and delta_imag_norm >= 1e-8:
+                # not conjugate
+                print("Spectral velocity field has no complex conjugacy")
+                print("between positive and negative streamwise frequencies at ")
+                print("kx:\t"+str(kx))
+                print("kz:\t"+str(kz))
+                print(str(delta_real_norm))
+                print(str(delta_imag_norm))
+                print("")
+    
+            u_pos = velocityField[kx, :, kz]  # positive spanwise frequencies
+            u_neg = velocityField[kx, :, -kz] # negative spanwise frequencies
+            # Are they complex conjugates?
+            delta_real = u_pos.real - u_neg.real
+            delta_imag = u_pos.imag + u_neg.imag
+            delta_real_norm = np.linalg.norm(delta_real)
+            delta_imag_norm = np.linalg.norm(delta_imag)
+            if delta_real_norm >= 1e-8 and delta_imag_norm >= 1e-8:
+                # not conjugate
+                print("Spectral velocity field has no complex conjugacy")
+                print("between positive and negative spanwise frequencies at ")
+                print("kx:\t"+str(kx))
+                print("kz:\t"+str(kz))
+                print(str(delta_real_norm))
+                print(str(delta_imag_norm))
+                print("")
+                
+            u_pos = velocityField[kx, :, kz]  # positive stream-spanwise frequencies
+            u_neg = velocityField[-kx, :, -kz] # negative stream-spanwise frequencies
+            # Are they complex conjugates?
+            delta_real = u_pos.real - u_neg.real
+            delta_imag = u_pos.imag + u_neg.imag
+            delta_real_norm = np.linalg.norm(delta_real)
+            delta_imag_norm = np.linalg.norm(delta_imag)
+            if delta_real_norm >= 1e-8 and delta_imag_norm >= 1e-8:
+                # not conjugate
+                print("Spectral velocity field has no complex conjugacy")
+                print("between positive and negative spanwise frequencies at ")
+                print("kx:\t"+str(kx))
+                print("kz:\t"+str(kz))
+                print(str(delta_real_norm))
+                print(str(delta_imag_norm))
+                print("")
+    
+    return 0
+    
