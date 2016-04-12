@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 
+
 #### -0.5
 directory = "/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0/KB/2016_02_18/002_theta_-0.5000_continued/data-alt"
 print(directory)
