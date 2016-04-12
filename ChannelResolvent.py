@@ -322,14 +322,14 @@ def deconstruct_field(original_ff_spectral,
             #### Perform SVD
             #------------------------------------------------
             if sparse:
-                if r == min(wegihted_transfer_function.shape):
-                    vel_modes, singular_values, forcing_modes = svds(wegihted_transfer_function)
-                    
-                elif r < min(wegihted_transfer_function.shape):
-                    vel_modes, singular_values, forcing_modes = svds(wegihted_transfer_function, r)
+#                if r == min(wegihted_transfer_function.shape):
+#                    vel_modes, singular_values, forcing_modes = svds(wegihted_transfer_function)
+#                    
+#                elif r < min(wegihted_transfer_function.shape):
+#                    vel_modes, singular_values, forcing_modes = svds(wegihted_transfer_function, r)
+#                r = len(singular_values)
 
-#                vel_modes, singular_values, forcing_modes = svd(wegihted_transfer_function, full_matrices=False)
-                r = len(singular_values)
+                vel_modes, singular_values, forcing_modes = svd(wegihted_transfer_function, full_matrices=False)
             else:
                 vel_modes, singular_values, forcing_modes = svd(wegihted_transfer_function)
 
@@ -339,8 +339,7 @@ def deconstruct_field(original_ff_spectral,
             #------------------------------------------------
             #### Check SVD
             #------------------------------------------------
-            if not sparse:
-                Tests.SVD(vel_modes, singular_values, forcing_modes, wegihted_transfer_function, sparse)
+            Tests.SVD(vel_modes, singular_values, forcing_modes, wegihted_transfer_function, sparse)
 
 
             #------------------------------------------------
@@ -359,18 +358,18 @@ def deconstruct_field(original_ff_spectral,
             #------------------------------------------------
             #### Check that the continuity condition is satisfied
             #------------------------------------------------
-            if not sparse:
-                Tests.continuity(resolvent_modes, S, kx, kz, Nm, chebyshev_differentiation['D1'])
+            Tests.continuity(resolvent_modes, S, kx, kz, Nm, chebyshev_differentiation['D1'])
 #            elif sparse:
 #                Tests.continuity(resolvent_modes[: , :r], kx, kz, Nm, state_vecs['D1'])
 
             #------------------------------------------------
             #### Check that the weighted resovlent and forcing modes are orthogonal.
             #------------------------------------------------
-            if not sparse:
-                Tests.orthogonality(vel_modes)
-                Tests.orthogonality(forcing_modes.T)
+            Tests.orthogonality(vel_modes)
+            Tests.orthogonality(forcing_modes)
 
+            Tests.orthogonality(vel_modes[:,:r])
+            Tests.orthogonality(forcing_modes[:,:r])
 
             #------------------------------------------------
             #### Fix phase of resolvent modes based on critical layer or centreline
@@ -385,6 +384,11 @@ def deconstruct_field(original_ff_spectral,
             np.fill_diagonal(phase_shift, np.exp(-1j * np.angle(resolvent_modes[ind0,:])))
             resolvent_modes *= phase_shift
 
+#            # What do my modes look like?
+#            resolvent_modes_1Ru = resolvent_modes[0:Nm,0].real
+#            resolvent_modes_1Rv = resolvent_modes[Nm:Nm*2,0].real
+#            resolvent_modes_1Rw = resolvent_modes[Nm*2:Nm*3,0].real
+
 
             #------------------------------------------------
             #### Project resolvent modes to get amplitude coefficients
@@ -393,11 +397,14 @@ def deconstruct_field(original_ff_spectral,
             # chi  = singular_values * xi
 
             # Initialize the scalars vector
-            xi = np.zeros((original_rank, 1), dtype=np.complex128)    
+            xi = np.zeros((r, 1), dtype=np.complex128)    
 
             # Projection
             xi[:r] = inv(S) * resolvent_modes.H * w.H * w * np.asmatrix(original_ff_spectral[mx, :, mz]).T
-
+            test_Xi = resolvent_modes * S * xi[:r] # this variable should be equal to the original vector
+            o = np.asmatrix(original_ff_spectral[mx, :, mz]).T          
+            d = o - test_Xi
+            d = np.linalg.norm(d)
 #            phase_test = False
 #            norm_test  = False
 #            xi_norm = np.linalg.norm(xi)
@@ -428,8 +435,21 @@ def deconstruct_field(original_ff_spectral,
             #### Store the resolvent modes, amplitudesand coefficients
             # for reconstruction at a later date
             resolvent_modes_array[mx, mz, :, :r] = resolvent_modes[: , :r]
-            coefficients_array[mx, mz, :] = np.squeeze(np.asarray(xi))
+            coefficients_array[mx, mz, :r] = np.squeeze(np.asarray(xi[:r]))
             sing_vals_array[mx, mz, :r] = singular_values[:r]
+            
+            psi = np.asmatrix(resolvent_modes_array[mx,mz,:,:])
+            sigma = np.asmatrix(np.diag(sing_vals_array[mx,mz,:]))
+            xi = np.asmatrix(coefficients_array[mx,mz,:]).T
+
+            test_full = psi * sigma * xi
+            d2 = test_full - test_Xi
+            d2 = np.linalg.norm(d2)
+            a = d2
+            
+            
+            
+            
 
     calcTime = datetime.now() - startTime
     print("\n\n\n")
@@ -480,6 +500,13 @@ def construct_field(resolvent_modes,
                                         1D array of coefficients, where
                                         rank = len(coefficients[mx, mz, :]).
 
+    mean_ff_spectral:               3D array of mean flow field  
+                                    in xz spectral form with 
+                                    Chebyshev nodes in wall-normal 
+                                    direction (Chebyshev spacing).
+                                    Stacked in wall-normal direction:
+                                    dimensions: (Nx, Nd*Ny, Nz).
+
     kx_array:                       1D array of streamwise Fourier modes.
 
     kz_array:                       1D array of spanwise Fourier modes.
@@ -514,6 +541,17 @@ def construct_field(resolvent_modes,
             sys.stdout.flush()
 
             if kx == 0 or kz == 0: # Zero Fourier modes
+                #------------------------------------------------
+                #### Set the zero Fourier modes to equal the mean flow
+                #------------------------------------------------
+                approximated_ff_spectral[mx, :, mz] = mean_ff_spectral[mx, :, mz]
+
+                # [uvw] of approximation at the zero Fourier modes 
+                # equals the [uvw] of mean at the zero Fourier modes.
+                
+                # Therefore the projection will be of the total flow,
+                # i.e. original + mean flow
+
                 continue # Start the loop again
 
             #------------------------------------------------
@@ -524,6 +562,63 @@ def construct_field(resolvent_modes,
             xi = np.asmatrix(coefficients[mx,mz,:]).T
 
             tmp = psi * sigma * xi
+            approximated_ff_spectral[mx, :, mz] = np.squeeze(np.asarray(tmp))
+    
+    return approximated_ff_spectral
+
+
+
+
+def construct_field_testing(resolvent_modes,
+                            singular_values,
+                            coefficients,
+                            mean_ff_spectral,
+                            kx_array,
+                            kz_array,
+                            Nm,
+                            original_field):
+
+    #================================================================
+    #### Initialize empty 3D array to store approximated velocity field
+    #================================================================
+    # Approximated velocity field is stacked in the wall-normal direction
+    approximated_ff_spectral  = np.zeros((len(kx_array), 3*Nm, len(kz_array)), dtype=np.complex128)
+
+    for mx in range(0, len(kx_array)):
+        kx = kx_array[mx]
+        print('\n\nkx:'+ str(kx))
+
+        for mz in range(0, len(kz_array)):
+            kz  = kz_array[mz]
+            sys.stdout.write(".")
+            sys.stdout.flush()
+
+            if kx == 0 or kz == 0: # Zero Fourier modes
+                #------------------------------------------------
+                #### Set the zero Fourier modes to equal the mean flow
+                #------------------------------------------------
+                approximated_ff_spectral[mx, :, mz] = mean_ff_spectral[mx, :, mz]
+
+                # [uvw] of approximation at the zero Fourier modes 
+                # equals the [uvw] of mean at the zero Fourier modes.
+                
+                # Therefore the projection will be of the total flow,
+                # i.e. original + mean flow
+
+                continue # Start the loop again
+
+            #------------------------------------------------
+            #### Construct approximated flow field
+            #------------------------------------------------
+            psi = np.asmatrix(resolvent_modes[mx,mz,:,:])
+            sigma = np.asmatrix(np.diag(singular_values[mx,mz,:]))
+            xi = np.asmatrix(coefficients[mx,mz,:]).T
+
+            tmp = psi * sigma * xi
+            
+            a = original_field[mx,:,mz]
+            d = a - tmp
+            
             approximated_ff_spectral[mx, :, mz] = np.squeeze(np.asarray(tmp))
     
     return approximated_ff_spectral

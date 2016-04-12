@@ -453,7 +453,6 @@ def calculate_transfer_function(alpha, beta, Re, Nm, omega, chebyshev_differenti
     #================================================================
     Ch = C.H
 
-
     # Moarref's formulation:
     invLap = np.asmatrix(inv(del_hat_2))
     Ch_Moarref = np.vstack((np.hstack(( (1.0j/kappa) * (alpha*invLap*chebyshev_differentiation['D1']) ,   kappa*invLap, (1.0j/kappa) * (beta*invLap*chebyshev_differentiation['D1']) )),
@@ -483,8 +482,8 @@ def calculate_transfer_function(alpha, beta, Re, Nm, omega, chebyshev_differenti
     #================================================================
     #### Calculate weighted resolvent/transfer function
     #================================================================
-    H = w * C * R * Ch_Moarref * inv(w)
-
+    R_A = C * R * Ch_Moarref    # Resolvent operator in terms of [uvw]
+    H = w * R_A * inv(w)        # Weighted transfer function
 
     return H, w
 

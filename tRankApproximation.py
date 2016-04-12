@@ -278,10 +278,21 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     
     diffsn = np.linalg.norm(diffs)
     
+    
+    
+    
+    #### -!-!- TESTING -!-!-:   Synthesizing a Fourier domain flow field
+    fake_field = ff_original.velocityField
+    fake_field *= 0.0+0.0j
+    fake_field[1,:,1] += 1.0+2.0j
+    fake_field[1,:,-1] += 1.0-2.0j
+    
+    
+    
     #================================================================
     #### Deconstruct original flow field
     #================================================================
-    deconstructed_field = cr.deconstruct_field(ff_original.velocityField,
+    deconstructed_field = cr.deconstruct_field(fake_field,
                                               kx_array,
                                               kz_array,
                                               ff_original.numModes,
@@ -297,14 +308,26 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     #================================================================
     #### Reconstruct approximated flow field
     #================================================================
-    approximated_ff_spectral = cr.construct_field(deconstructed_field['resolvent_modes'],
-                                                  deconstructed_field['singular_values'],
-                                                  deconstructed_field['coefficients'],
-#                                                  ff_mean.velocityField, # Use mean field at zeroth modes
-                                                  ff_original.velocityField, # Use original field at zeroth modes
-                                                  kx_array,
-                                                  kz_array,
-                                                  ff_original.numModes)
+    approximated_ff_spectral = cr.construct_field_testing(deconstructed_field['resolvent_modes'],
+                                                          deconstructed_field['singular_values'],
+                                                          deconstructed_field['coefficients'],
+        #                                                  ff_mean.velocityField, # Use mean field at zeroth modes
+                                                          fake_field, # Use original field at zeroth modes
+                                                          kx_array,
+                                                          kz_array,
+                                                          ff_original.numModes,
+                                                          fake_field)
+
+
+
+
+
+
+    #### -!-!- TESTING -!-!-:   Synthesizing a Fourier domain flow field
+    # The retrieved field should be the same as the fak_field...
+    retrieved_difference = approximated_ff_spectral - fake_field
+    retrieved_difference_n = np.linalg.norm(retrieved_difference)
+
 
 
 
@@ -313,6 +336,8 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     meanFF = ff_mean.velocityField
     origFF = ff_original.velocityField
     difference = np.linalg.norm(ff_original.velocityField[1:,:,1:] - approximated_ff_spectral[1:,:,1:])
+    
+    
     #### -!-!- TESTING -!-!-:   Zeroth mode differences
     difference2 = np.linalg.norm( approximated_ff_spectral[0,:,0] - ff_original.velocityField[0,:,0])
     difference3 = np.linalg.norm( approximated_ff_spectral[0,:,0] - meanFF[0, :, 0])
@@ -562,8 +587,8 @@ dirc="/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0
 os.chdir(dirc)
 fileName = "u975.000.h5"
 vel_profile_file = "turbulent_deviation950-999.txt"
-sparse=False
 testing=False
+sparse=True
 main(fileName,
      2,
      dirc,
