@@ -283,26 +283,25 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     
     #### -!-!- TESTING -!-!-:   Synthesizing a Fourier domain flow field
     fake_field = ff_original.velocityField
-    fake_field *= 0.0+0.0j
-    fake_field[1,:,1] += 1.0+2.0j
-    fake_field[1,:,-1] += 1.0-2.0j
+#    fake_field *= 0.0+0.0j
+#    fake_field[1,:,1] += 1.0+2.0j
+#    fake_field[1,:,-1] += 1.0-2.0j
     
     
     
     #================================================================
     #### Deconstruct original flow field
     #================================================================
-    deconstructed_field = cr.deconstruct_field(fake_field,
-                                              kx_array,
-                                              kz_array,
-                                              ff_original.numModes,
-                                              ff_original.c,
-                                              ff_original.Re,
-                                              ff_original.baseflow,
-                                              rank,
-                                              mean_profile,
-                                              Sparse,
-                                              False)
+    deconstructed_field = cr.deconstruct_field_testing(fake_field,
+                                                      kx_array,
+                                                      kz_array,
+                                                      ff_original.numModes,
+                                                      ff_original.c,
+                                                      ff_original.Re,
+                                                      ff_original.baseflow,
+                                                      mean_profile,
+                                                      Sparse,
+                                                      False)
 
 
     #================================================================
@@ -316,6 +315,7 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
                                                           kx_array,
                                                           kz_array,
                                                           ff_original.numModes,
+                                                          rank,
                                                           fake_field)
 
 
@@ -590,7 +590,7 @@ vel_profile_file = "turbulent_deviation950-999.txt"
 testing=False
 sparse=True
 main(fileName,
-     2,
+     20,
      dirc,
      vel_profile_file,
      sparse,

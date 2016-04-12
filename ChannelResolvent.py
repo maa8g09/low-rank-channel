@@ -309,6 +309,8 @@ def deconstruct_field(original_ff_spectral,
             sys.stdout.flush()
 
             if kx == 0 or kz == 0: # Zero Fourier modes
+                # Save zeroth modes to the resolvent modes...
+                resolvent_modes_array[mx, mz, :, 0] = original_ff_spectral[mx,:,mz]
                 continue # Start the loop again
 
             #------------------------------------------------
@@ -464,13 +466,193 @@ def deconstruct_field(original_ff_spectral,
 
 
 
+ 
+def deconstruct_field_testing(original_ff_spectral,
+                             kx_array,
+                             kz_array,
+                             Nm,
+                             c,
+                             Re,
+                             baseflow,
+                             mean_profile,
+                             sparse,
+                             fixXi):
+
+    #================================================================
+    #### Store the resolvent modes and amplitude coefficients 
+    #    at each  Fourier mode pair
+    #================================================================
+    resolvent_modes_array = np.zeros((len(kx_array), len(kz_array), 3*Nm, 3*Nm), dtype=np.complex128)
+    coefficients_array = np.zeros((len(kx_array), len(kz_array), 3*Nm), dtype=np.complex128)
+    sing_vals_array = np.zeros((len(kx_array), len(kz_array), 3*Nm), dtype=np.float64)
+
+    #================================================================
+    #### Loop through wavenumbers 
+    #================================================================
+    chebyshev_differentiation, mean_flow_derivatives = ps.calculate_derivatives(Nm+2, mean_profile, baseflow)
+
+    startTime = datetime.now()
+    #================================================================
+    #### Loop through wavenumbers 
+    #================================================================
+    for mx in range(0, len(kx_array)):
+        kx = kx_array[mx]
+        print('\n\nkx:'+ str(kx))
+
+        for mz in range(0, len(kz_array)):
+            kz  = kz_array[mz]
+            sys.stdout.write(".")
+            sys.stdout.flush()
+
+            if kx == 0 or kz == 0: # Zero Fourier modes
+                # Save zeroth modes to the resolvent modes...
+                resolvent_modes_array[mx, mz, :, 0] = original_ff_spectral[mx,:,mz]
+                continue # Start the loop again
+
+            #------------------------------------------------
+            #### Calculate the state vectors
+            #------------------------------------------------
+            omega = kx * c
+            wegihted_transfer_function, w = ps.calculate_transfer_function(kx, kz, Re, Nm, omega, chebyshev_differentiation, mean_flow_derivatives)
+
+
+            #------------------------------------------------
+            #### Perform SVD
+            #------------------------------------------------
+            if sparse:
+                vel_modes, singular_values, forcing_modes = svd(wegihted_transfer_function, full_matrices=False)
+            else:
+                vel_modes, singular_values, forcing_modes = svd(wegihted_transfer_function)
+
+            vel_modes = np.asmatrix(vel_modes)
+            forcing_modes = np.asmatrix(forcing_modes)
+
+            #------------------------------------------------
+            #### Check SVD
+            #------------------------------------------------
+            Tests.SVD(vel_modes, singular_values, forcing_modes, wegihted_transfer_function, sparse)
+
+
+            #------------------------------------------------
+            #### Retrieve non-grid-weighted resolvent modes (physical modes)
+            #------------------------------------------------
+            resolvent_modes = np.linalg.solve(w, vel_modes)
+
+            #------------------------------------------------
+            #### Check that the singular value matrix is invertible
+            #------------------------------------------------
+            S = np.diag(singular_values)
+            Tests.invertible(S)
+            
+            
+            #------------------------------------------------
+            #### Check that the continuity condition is satisfied
+            #------------------------------------------------
+            Tests.continuity(resolvent_modes, S, kx, kz, Nm, chebyshev_differentiation['D1'])
+#            elif sparse:
+#                Tests.continuity(resolvent_modes[: , :r], kx, kz, Nm, state_vecs['D1'])
+
+            #------------------------------------------------
+            #### Check that the weighted resovlent and forcing modes are orthogonal.
+            #------------------------------------------------
+            Tests.orthogonality(vel_modes)
+            Tests.orthogonality(forcing_modes)
+
+            #------------------------------------------------
+            #### Fix phase of resolvent modes based on critical layer or centreline
+            #------------------------------------------------
+            phase_shift = np.zeros((resolvent_modes.shape[1], resolvent_modes.shape[1]), dtype=np.complex128)
+            ind0 = Nm/2 + 1 # Use centreline, unless
+            if c < 1.0:
+                inds = Tests.indices(mean_flow_derivatives['U'].diagonal(), lambda x: x > c)
+                if len(inds) > 0:
+                    ind0 = inds[0]
+
+            np.fill_diagonal(phase_shift, np.exp(-1j * np.angle(resolvent_modes[ind0,:])))
+            resolvent_modes *= phase_shift
+
+            #------------------------------------------------
+            #### Project resolvent modes to get amplitude coefficients
+            #------------------------------------------------
+            # denoted xi, defined as
+            # chi  = singular_values * xi
+
+            # Initialize the scalars vector
+            xi = np.zeros((3*Nm, 1), dtype=np.complex128)    
+
+            # Projection
+            xi = inv(S) * resolvent_modes.H * w.H * w * np.asmatrix(original_ff_spectral[mx, :, mz]).T
+            test_Xi = resolvent_modes * S * xi # this variable should be equal to the original vector
+            o = np.asmatrix(original_ff_spectral[mx, :, mz]).T          
+            d = o - test_Xi
+            d = np.linalg.norm(d)
+#            phase_test = False
+#            norm_test  = False
+#            xi_norm = np.linalg.norm(xi)
+#            if kz == 2.0 or kz == -2.0: 
+#            #xi_norm >= 1e-10:
+#                # Phase test
+#                if phase_test:
+#                    print("\nApplying phase shift at: " + str(kz) + "\n ")
+#                    # shift the field by pi/3
+#                    xi += 1.0j*(np.pi/3.0)
+#
+#                # Norm test
+#                if norm_test:
+#                    print("\nApplying norm doubling.")
+#                    # Double the energy of the field
+#                    xi *= np.sqrt(2.0) + 1.0j*np.sqrt(2.0)
+#
+#                # Fix xi to see if same coefficients are retrieved from projection
+#                if fixXi:
+#                    xi[0] = 1.0
+#                    xi[1] = 0.0
+#                    print("\nXI:")
+#                    print("norm: " + str(xi_norm))
+#                    print(xi)
+#                    print("")
+#                print(xi)
+
+            #### Store the resolvent modes, amplitudesand coefficients
+            # for reconstruction at a later date
+            resolvent_modes_array[mx, mz, :, :] = resolvent_modes
+            coefficients_array[mx, mz, :] = np.squeeze(np.asarray(xi))
+            sing_vals_array[mx, mz, :] = singular_values
+            
+            psi = np.asmatrix(resolvent_modes_array[mx,mz,:,:])
+            sigma = np.asmatrix(np.diag(sing_vals_array[mx,mz,:]))
+            xi = np.asmatrix(coefficients_array[mx,mz,:]).T
+
+            test_full = psi * sigma * xi
+            d2 = test_full - test_Xi
+            d2 = np.linalg.norm(d2)
+            a = d2
+            
+            
+            
+            
+
+    calcTime = datetime.now() - startTime
+    print("\n\n\n")
+    print(calcTime)
+    print("\n\n\n")
+    deconstructed_dict = {}
+    deconstructed_dict['resolvent_modes'] = resolvent_modes_array
+    deconstructed_dict['singular_values'] = sing_vals_array
+    deconstructed_dict['coefficients'] = coefficients_array
+
+    return deconstructed_dict
+
+
+
 def construct_field(resolvent_modes,
                     singular_values,
                     coefficients,
                     mean_ff_spectral,
                     kx_array,
                     kz_array,
-                    Nm):
+                    Nm,
+                    r):
 
     ''' 
     Construct a flow field using the resolvent modes, singular values and 
@@ -513,6 +695,8 @@ def construct_field(resolvent_modes,
 
     Nm:                             Number of interior Chebyshev nodes,
                                     i.e. Ny - 2 (endpoints removed).
+
+    r:                              Rank to approximate to.
 
     ================================================================
     OUTPUTS:
@@ -576,6 +760,7 @@ def construct_field_testing(resolvent_modes,
                             kx_array,
                             kz_array,
                             Nm,
+                            r,
                             original_field):
 
     #================================================================
@@ -597,7 +782,7 @@ def construct_field_testing(resolvent_modes,
                 #------------------------------------------------
                 #### Set the zero Fourier modes to equal the mean flow
                 #------------------------------------------------
-                approximated_ff_spectral[mx, :, mz] = mean_ff_spectral[mx, :, mz]
+                approximated_ff_spectral[mx, :, mz] = resolvent_modes[mx,mz,:,0]
 
                 # [uvw] of approximation at the zero Fourier modes 
                 # equals the [uvw] of mean at the zero Fourier modes.
@@ -610,9 +795,9 @@ def construct_field_testing(resolvent_modes,
             #------------------------------------------------
             #### Construct approximated flow field
             #------------------------------------------------
-            psi = np.asmatrix(resolvent_modes[mx,mz,:,:])
-            sigma = np.asmatrix(np.diag(singular_values[mx,mz,:]))
-            xi = np.asmatrix(coefficients[mx,mz,:]).T
+            psi = np.asmatrix(resolvent_modes[mx,mz,:,:r])
+            sigma = np.asmatrix(np.diag(singular_values[mx,mz,:r]))
+            xi = np.asmatrix(coefficients[mx,mz,:r]).T
 
             tmp = psi * sigma * xi
             
