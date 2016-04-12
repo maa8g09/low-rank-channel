@@ -207,7 +207,7 @@ def deconstruct_field(original_ff_spectral,
                      c,
                      Re,
                      baseflow,
-                     rank,
+                     r,
                      mean_profile,
                      sparse,
                      fixXi):
@@ -242,7 +242,7 @@ def deconstruct_field(original_ff_spectral,
     baseflow:                       Base flow type: [laminar, Couette],
                                     laminar means Plane Poiseuille.
 
-    rank:                           Rank to approximate to.
+    r:                              Rank to approximate to.
 
     mean_profile:                   1D array of streamwise velocity 
                                     profile of the turbulent mean in
@@ -284,10 +284,11 @@ def deconstruct_field(original_ff_spectral,
     #### Store the resolvent modes and amplitude coefficients 
     #    at each  Fourier mode pair
     #================================================================
-    resolvent_modes_array = np.zeros((len(kx_array), len(kz_array), 3*Nm, rank), dtype=np.complex128)
-    coefficients_array = np.zeros((len(kx_array), len(kz_array), rank), dtype=np.complex128)
-    sing_vals_array = np.zeros((len(kx_array), len(kz_array), rank), dtype=np.float64)
+    resolvent_modes_array = np.zeros((len(kx_array), len(kz_array), 3*Nm, r), dtype=np.complex128)
+    coefficients_array = np.zeros((len(kx_array), len(kz_array), r), dtype=np.complex128)
+    sing_vals_array = np.zeros((len(kx_array), len(kz_array), r), dtype=np.float64)
 
+    original_rank = r
 
     #================================================================
     #### Loop through wavenumbers 
@@ -321,8 +322,14 @@ def deconstruct_field(original_ff_spectral,
             #### Perform SVD
             #------------------------------------------------
             if sparse:
-                #vel_modes, singular_values, forcing_modes = svds(state_vecs['H'], rank)
-                vel_modes, singular_values, forcing_modes = svd(wegihted_transfer_function, full_matrices=False)
+                if r == min(wegihted_transfer_function.shape):
+                    vel_modes, singular_values, forcing_modes = svds(wegihted_transfer_function)
+                    
+                elif r < min(wegihted_transfer_function.shape):
+                    vel_modes, singular_values, forcing_modes = svds(wegihted_transfer_function, r)
+
+#                vel_modes, singular_values, forcing_modes = svd(wegihted_transfer_function, full_matrices=False)
+                r = len(singular_values)
             else:
                 vel_modes, singular_values, forcing_modes = svd(wegihted_transfer_function)
 
@@ -332,22 +339,30 @@ def deconstruct_field(original_ff_spectral,
             #------------------------------------------------
             #### Check SVD
             #------------------------------------------------
-            Tests.SVD(vel_modes, singular_values, forcing_modes, wegihted_transfer_function, sparse)
+            if not sparse:
+                Tests.SVD(vel_modes, singular_values, forcing_modes, wegihted_transfer_function, sparse)
 
 
             #------------------------------------------------
             #### Retrieve non-grid-weighted resolvent modes (physical modes)
             #------------------------------------------------
             resolvent_modes = np.linalg.solve(w, vel_modes)
-
+            resolvent_modes = resolvent_modes[:,:r]
 
             #------------------------------------------------
-            #### Check that the continuity criteria is satisfied
+            #### Check that the singular value matrix is invertible
+            #------------------------------------------------
+            S = np.diag(singular_values[:r])
+            Tests.invertible(S)
+            
+            
+            #------------------------------------------------
+            #### Check that the continuity condition is satisfied
             #------------------------------------------------
             if not sparse:
-                Tests.continuity(resolvent_modes, kx, kz, Nm, chebyshev_differentiation['D1'])
+                Tests.continuity(resolvent_modes, S, kx, kz, Nm, chebyshev_differentiation['D1'])
 #            elif sparse:
-#                Tests.continuity(resolvent_modes[: , :rank], kx, kz, Nm, state_vecs['D1'])
+#                Tests.continuity(resolvent_modes[: , :r], kx, kz, Nm, state_vecs['D1'])
 
             #------------------------------------------------
             #### Check that the weighted resovlent and forcing modes are orthogonal.
@@ -356,11 +371,6 @@ def deconstruct_field(original_ff_spectral,
                 Tests.orthogonality(vel_modes)
                 Tests.orthogonality(forcing_modes.T)
 
-            #------------------------------------------------
-            #### Check that the singular value matrix is invertible
-            #------------------------------------------------
-            S = np.diag(singular_values[:rank])
-            Tests.invertible(S)
 
             #------------------------------------------------
             #### Fix phase of resolvent modes based on critical layer or centreline
@@ -383,46 +393,43 @@ def deconstruct_field(original_ff_spectral,
             # chi  = singular_values * xi
 
             # Initialize the scalars vector
-            xi = np.zeros((rank, 1), dtype=np.complex128)    
+            xi = np.zeros((original_rank, 1), dtype=np.complex128)    
 
             # Projection
-            xi = inv(S) * resolvent_modes[: , :rank].H * w.H * w * np.asmatrix(original_ff_spectral[mx, :, mz]).T
+            xi[:r] = inv(S) * resolvent_modes.H * w.H * w * np.asmatrix(original_ff_spectral[mx, :, mz]).T
 
+#            phase_test = False
+#            norm_test  = False
+#            xi_norm = np.linalg.norm(xi)
+#            if kz == 2.0 or kz == -2.0: 
+#            #xi_norm >= 1e-10:
+#                # Phase test
+#                if phase_test:
+#                    print("\nApplying phase shift at: " + str(kz) + "\n ")
+#                    # shift the field by pi/3
+#                    xi += 1.0j*(np.pi/3.0)
+#
+#                # Norm test
+#                if norm_test:
+#                    print("\nApplying norm doubling.")
+#                    # Double the energy of the field
+#                    xi *= np.sqrt(2.0) + 1.0j*np.sqrt(2.0)
+#
+#                # Fix xi to see if same coefficients are retrieved from projection
+#                if fixXi:
+#                    xi[0] = 1.0
+#                    xi[1] = 0.0
+#                    print("\nXI:")
+#                    print("norm: " + str(xi_norm))
+#                    print(xi)
+#                    print("")
+#                print(xi)
 
-
-            phase_test = False
-            norm_test  = False
-            xi_norm = np.linalg.norm(xi)
-            if kz == 2.0 or kz == -2.0: 
-            #xi_norm >= 1e-10:
-                # Phase test
-                if phase_test:
-                    print("\nApplying phase shift at: " + str(kz) + "\n ")
-                    # shift the field by pi/3
-                    xi += 1.0j*(np.pi/3.0)
-
-                # Norm test
-                if norm_test:
-                    print("\nApplying norm doubling.")
-                    # Double the energy of the field
-                    xi *= np.sqrt(2.0) + 1.0j*np.sqrt(2.0)
-
-                # Fix xi to see if same coefficients are retrieved from projection
-                if fixXi:
-                    xi[0] = 1.0
-                    xi[1] = 0.0
-                    print("\nXI:")
-                    print("norm: " + str(xi_norm))
-                    print(xi)
-                    print("")
-
-                print(xi)
-
-            # Store the resolvent modes and amplitudes 
+            #### Store the resolvent modes, amplitudesand coefficients
             # for reconstruction at a later date
-            resolvent_modes_array[mx, mz, :, :] = resolvent_modes[: , :rank]
+            resolvent_modes_array[mx, mz, :, :r] = resolvent_modes[: , :r]
             coefficients_array[mx, mz, :] = np.squeeze(np.asarray(xi))
-            sing_vals_array[mx, mz, :] = singular_values[:rank]
+            sing_vals_array[mx, mz, :r] = singular_values[:r]
 
     calcTime = datetime.now() - startTime
     print("\n\n\n")
@@ -440,7 +447,7 @@ def deconstruct_field(original_ff_spectral,
 def construct_field(resolvent_modes,
                     singular_values,
                     coefficients,
-#                    mean_ff_spectral,
+                    mean_ff_spectral,
                     kx_array,
                     kz_array,
                     Nm):
@@ -472,13 +479,6 @@ def construct_field(resolvent_modes,
                                         coefficients[mx, mz, :] gives
                                         1D array of coefficients, where
                                         rank = len(coefficients[mx, mz, :]).
-
-    mean_ff_spectral:               3D array of mean flow field  
-                                    in xz spectral form with 
-                                    Chebyshev nodes in wall-normal 
-                                    direction (Chebyshev spacing).
-                                    Stacked in wall-normal direction:
-                                    dimensions: (Nx, Nd*Ny, Nz).
 
     kx_array:                       1D array of streamwise Fourier modes.
 
@@ -514,17 +514,6 @@ def construct_field(resolvent_modes,
             sys.stdout.flush()
 
             if kx == 0 or kz == 0: # Zero Fourier modes
-                #------------------------------------------------
-                #### Set the zero Fourier modes to equal the mean flow
-                #------------------------------------------------
-#                approximated_ff_spectral[mx, :, mz] = mean_ff_spectral[mx, :, mz]
-
-                # [uvw] of approximation at the zero Fourier modes 
-                # equals the [uvw] of mean at the zero Fourier modes.
-                
-                # Therefore the projection will be of the total flow,
-                # i.e. original + mean flow
-
                 continue # Start the loop again
 
             #------------------------------------------------

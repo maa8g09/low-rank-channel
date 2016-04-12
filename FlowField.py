@@ -276,6 +276,7 @@ class FlowFieldChannelFlow(object):
         if self.velocityField.ndim == 4:
             self.velocityField = np.fft.ifft(self.velocityField, axis=1)
             self.velocityField = np.fft.ifft(self.velocityField, axis=3)
+            self.velocityField = self.velocityField.real
             self.state = "pp"
         elif self.velocityField.ndim == 3:
             self.velocityField = np.fft.ifft(self.velocityField, axis=0)

@@ -117,7 +117,8 @@ ut.write_FF(mean_directory, fileName)
 #================================================================
 #### Write the mean profile in wall-normal direction
 #================================================================
-ut.write_Vel_Profile(vel_profiles['u'], mean_directory, "turbulent_deviation")
+fileName = "turbulent_deviation" + str(args.T0) + "-" + str(args.T1)
+ut.write_Vel_Profile(vel_profiles['u'], mean_directory, fileName)
 
 
 #================================================================

@@ -2,6 +2,7 @@
 
 import os
 import sys
+import h5py
 import Utils as ut
 import FlowField as ffClass
 import ChannelResolvent as cr
@@ -41,26 +42,35 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     if File[-3:] == ".h5": # H5 file type
         print("HDF5 file given.")
         #------------------------------------------------
-        #### Convert it to binary flow field
+        #### Read the HDF5 file
         #------------------------------------------------
-        command = "fieldconvert ../" + str(File) + " ../" + str(File)[:-3] + ".ff"
-        print(command)
-        os.system(command)
-    
+        FilePath = Directory + '/' + File
+        file_info = {}
+        f = h5py.File(FilePath, 'r')
+        file_info['ff'] = np.array(f['data']['u'])
+        for item in f.attrs:
+            file_info[item] = f.attrs[item]
+        f.close()
+        
+        file_info['alpha'] = 2.0*np.pi / file_info['Lx']
+        file_info['beta'] = 2.0*np.pi / file_info['Lz']
+        
+        # Find out if the flow field is padded or not
+        if file_info['ff'].shape[1] == file_info['Nxpad']:
+            # Not padded
+            # Therefore set the Nx and Nz values to the Nxpad and Nzpad values
+            file_info['Nx'] = file_info['Nxpad']
+            file_info['Nz'] = file_info['Nzpad']
+        
+        # else: it is padded,
+        #   i.e. If this FlowField is padded (last 1/3 x,z modes are set to zero)
+        #        and the flow field has been interpolated (by channelflow) 
+        #        such that Nx and Nz are 2/3 of their original values.
+        
         #------------------------------------------------
-        #### Convert binary to ASCII
+        #### Read details file
         #------------------------------------------------
-        command = "field2ascii -p -g ../" + str(File)[:-3] + ".ff " + str(File)[:-3]
-        print(command)
-        os.system(command)
-    
-        #------------------------------------------------
-        #### Read physical ascii file
-        #------------------------------------------------
-        file_info = ut.read_ASC_channelflow(temp_rank_folder, str(File)[:-3])
-    
-    
-    
+        details = ut.read_Details(parent_directory, "u0_Details.txt")
     
     elif File[-3:] == ".ff": # channelflow binary file type
         print("\nA channelflow binary file given...")
@@ -70,16 +80,13 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
         command = "field2ascii -p ../" + str(File) + " " + str(File)[:-3]
         print(command)
         os.system(command)
-    
+
         #------------------------------------------------
-        #### Read physical ascii file
+        #### Read ASCII file
         #------------------------------------------------
-        file_info = ut.read_ASC_PP(temp_rank_folder, str(File)[:-3])
+        file_info = ut.read_ASC_channelflow(temp_rank_folder, str(File)[:-3])
         details = ut.read_Details(parent_directory, "u0_Details.txt")
-    
-    
-    
-    
+        
     elif File[-3:] == "asc": # PP_ascii file with the indices prefixed
         print("\nA pp ascii file given...")
     
@@ -88,16 +95,13 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
         #------------------------------------------------
         file_info = ut.read_ASC_PP(parent_directory, str(File)[:-7])
         details = ut.read_Details(parent_directory, "u0_Details.txt")
-    
-    
-    
-    
+        
     else: # No file type given.
         ut.error("Invalid file given.")
     
     
     #================================================================
-    #### Initialise flow field object for field to approximate
+    #### Initialise flow field object for field (to approximate)
     #================================================================
     ff_original = ffClass.FlowFieldChannelFlow( file_info['Nd'],
                                                 file_info['Nx'],
@@ -112,40 +116,39 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
                                                 details['Re'],
                                                 file_info['ff'],
                                                 "pp")
-    
-#    test_u = file_info['ff'][0,:,:,:].real
-#    
-#    # Remove wall boundaries
-#    ff_original.remove_wall_boundaries()
+    #### -!-!- TESTING -!-!-:   FFT and IFFT loop
+    # Remove wall boundaries
+    ff_original.remove_wall_boundaries()
 #    test_u_walls = ff_original.velocityField[0,:,:,:]
-#    
-#    # FFT
-#    ff_original.make_xz_spectral()
+    
+    # FFT
+    ff_original.make_xz_spectral()
 #    test_u_fft = ff_original.velocityField[0,:,:,:]
-#    
-#    # Stack
-#    ff_original.stack_ff_in_y()
+    
+    # Stack
+    ff_original.stack_ff_in_y()
 #    test_u_stk = ff_original.velocityField[:,:,:]
-#    
-#    # Unstack
-#    ff_original.unstack_ff()
+    
+    # Unstack
+    ff_original.unstack_ff()
 #    test_u_ustk = ff_original.velocityField[0,:,:,:]
-#    
-#    # IFFT
-#    ff_original.make_xz_physical()
+    
+    # IFFT
+    ff_original.make_xz_physical()
 #    test_u_ifft = ff_original.velocityField[0,:,:,:]
 #    test_u_ifftR = test_u_ifft.real
 #    test_u_ifftI = test_u_ifft.imag
-#    
-#    # Add wall boundaries
-#    ff_original.add_wall_boundaries()
+    
+    # Add wall boundaries
+    ff_original.add_wall_boundaries()
 #    test_u_walls2 = ff_original.velocityField[0,:,:,:]
-#    
-#    test_u3 = ff_original.velocityField[0,:,:,:]
-#    d = test_u3.real - file_info['ff'][0,:,:,:]
-#    dnorm = np.linalg.norm(d)
-
-#    sys.exit("")
+    
+    # The difference between the flow field after having gone through
+    # operations and the original should be the same.
+    difference = np.linalg.norm(file_info['ff'][0,:,:,:].real - ff_original.velocityField[0,:,:,:].real)
+    print("")
+    print("The norm of the difference is " + str(difference))
+    print("")
 
     #================================================================
     #### Check velocity profile
@@ -169,16 +172,16 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
             elif details['bf'] == "cou": # Couette base flow
                 baseflow = ff_original.y
     
-            # Add baseflow to deviation
+            # Add baseflow to deviation to get turbulent mean profile
             mean_profile = vel_profile + np.asarray(baseflow)
     
-        else: # Mean profile given
+        else: # Turbulent mean profile given
             mean_profile = vel_profile
     
         #------------------------------------------------
         #### Construct 4D array from mean_profile
         #------------------------------------------------
-        mean = ut.make_ff_from_profile(mean_profile, 
+        mean = ut.make_ff_from_profile(vel_profile, 
                                        ff_original.Nd, 
                                        ff_original.Nx, 
                                        ff_original.Nz)
@@ -218,7 +221,7 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     
     
     #================================================================
-    #### Remove the wall boundaries
+    #### ---- Remove the wall boundaries
     #================================================================
     # Removing the xz-planes at y=1 and y=-1,
     # so that the chebyshev nodes can be used to construct 
@@ -228,14 +231,14 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     
     
     #================================================================
-    #### Fourier transform original and mean velocity fields in xz directions
+    #### ---- Fourier transform in xz directions
     #================================================================
     ff_original.make_xz_spectral()
     ff_mean.make_xz_spectral()
     
     
     #================================================================
-    #### Stack velocity fields in the wall-normal direction
+    #### ---- Stack velocity fields in the wall-normal direction
     #================================================================
     ff_original.stack_ff_in_y()
     ff_mean.stack_ff_in_y()
@@ -250,22 +253,30 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     kz_array = ff_original.Mz * ff_original.beta
     
         
-    Tests.checkHermitianSymmetry(ff_original.velocityField[:,0:ff_original.numModes,:],
-                                 ff_original.Nx, 
-                                 ff_original.Nz)
-    Tests.checkHermitianSymmetry(ff_original.velocityField[:,ff_original.numModes:ff_original.numModes*2,:],
-                                 ff_original.Nx, 
-                                 ff_original.Nz)
-    Tests.checkHermitianSymmetry(ff_original.velocityField[:,2*ff_original.numModes:ff_original.numModes*3,:],
-                                 ff_original.Nx, 
-                                 ff_original.Nz)
-    sys.exit("")
+#    Tests.checkHermitianSymmetry(ff_original.velocityField[:,0:ff_original.numModes,:],
+#                                 ff_original.Nx, 
+#                                 ff_original.Nz)
+#    Tests.checkHermitianSymmetry(ff_original.velocityField[:,ff_original.numModes:ff_original.numModes*2,:],
+#                                 ff_original.Nx, 
+#                                 ff_original.Nz)
+#    Tests.checkHermitianSymmetry(ff_original.velocityField[:,2*ff_original.numModes:ff_original.numModes*3,:],
+#                                 ff_original.Nx, 
+#                                 ff_original.Nz)
+
     
     #================================================================
     #### Ensure valid rank is specified
     #================================================================
     rank = min(Rank, 3*ff_original.numModes)
     
+    
+    
+    #### -!-!- TESTING -!-!-:   Zeroth mode differences
+    meanFF = ff_mean.velocityField
+    origFF = ff_original.velocityField
+    diffs = meanFF[0, :, 0] - origFF[0, :, 0]
+    
+    diffsn = np.linalg.norm(diffs)
     
     #================================================================
     #### Deconstruct original flow field
@@ -281,18 +292,34 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
                                               mean_profile,
                                               Sparse,
                                               False)
-    
-    
+
+
     #================================================================
     #### Reconstruct approximated flow field
     #================================================================
     approximated_ff_spectral = cr.construct_field(deconstructed_field['resolvent_modes'],
                                                   deconstructed_field['singular_values'],
                                                   deconstructed_field['coefficients'],
-    #                                             ff_mean.velocityField,
+#                                                  ff_mean.velocityField, # Use mean field at zeroth modes
+                                                  ff_original.velocityField, # Use original field at zeroth modes
                                                   kx_array,
                                                   kz_array,
                                                   ff_original.numModes)
+
+
+
+
+    #### -!-!- TESTING -!-!-:   Full-Rank decomposition and recomposition (Fourier Domain)
+    meanFF = ff_mean.velocityField
+    origFF = ff_original.velocityField
+    difference = np.linalg.norm(ff_original.velocityField[1:,:,1:] - approximated_ff_spectral[1:,:,1:])
+    #### -!-!- TESTING -!-!-:   Zeroth mode differences
+    difference2 = np.linalg.norm( approximated_ff_spectral[0,:,0] - ff_original.velocityField[0,:,0])
+    difference3 = np.linalg.norm( approximated_ff_spectral[0,:,0] - meanFF[0, :, 0])
+#    diffsn and difference2 should be the same...
+    print("")
+    print("The norm of the difference is " + str(difference))
+    print("")
 
 
     #================================================================
@@ -315,12 +342,12 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
 
     
     
-    # If not symmetric: you need to filter the negative frequencies in teh approximated result.
+    # If not symmetric: you need to filter the negative frequencies in the approximated result.
     # This will introduce hermitian symmetry.
-    
+
 
     #================================================================
-    #### Unstack velocity fields in the wall-normal direction
+    #### ---- Unstack velocity fields in the wall-normal direction
     #================================================================
     ff_approximated.unstack_ff()
     ff_mean.unstack_ff()
@@ -328,7 +355,7 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     
     
     #================================================================
-    #### Inverse Fourier transform approximated and mean velocity fields in xz directions
+    #### ---- Inverse Fourier transform approximated and mean velocity fields in xz directions
     #================================================================
     ff_approximated.make_xz_physical()
     ff_mean.make_xz_physical()
@@ -336,27 +363,32 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
 
     
     #================================================================
-    #### Add wall boundaries
+    #### ---- Add wall boundaries
     #================================================================
     ff_approximated.add_wall_boundaries()
     ff_mean.add_wall_boundaries()
     ff_original.add_wall_boundaries()
     
 
+    #================================================================
+    #### Remove mean flow from approximated field (if mean used to reconstruct)
+    #================================================================
+#    approximated_field = ff_approximated.velocityField.real - ff_mean.velocityField.real
+#    ff_approximated.set_ff(approximated_field, "pp")
+#
+#    difference = np.linalg.norm(approximated_field - ff_approximated.velocityField)
 
-    
-    # Check to see if the imaginary component is significant...    
-    u = ff_original.velocityField[0,:,:,:]
-    ur = u.real
-    ui = u.imag
-    
-    ua = ff_approximated.velocityField[0,:,:,:]
-    uar = ua.real
-    uai = ua.imag
-    
 
+
+    #### -!-!- TESTING -!-!-:   Full-Rank decomposition and recomposition: (Real Domain)
+    u_a = ff_approximated.velocityField[0,:,:,:].real
+    u_o = ff_original.velocityField[0,:,:,:].real
+    difference = np.linalg.norm(ff_original.velocityField.real - ff_approximated.velocityField.real)
+    print("")
+    print("The norm of the difference is " + str(difference))
+    print("")
     
-    #### -!-!- TESTING -!-!-    
+    #### -!-!- TESTING -!-!-:   Projections
     if Testing:
         #### Remove boundaries
         ff_approximated.remove_wall_boundaries()
@@ -525,14 +557,16 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
 
 
 
-dirc = "/Users/arslan/Desktop/ati-modes-copy/modes/A/kz2/ff_files/"
-#dirc = "/Users/arslan/Desktop/ati-modes-copy/modes/A/kz2/ff_files/mode-00_pp_rank_2/"
+dirc="/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0/KB/2016_02_18/002_theta_-0.5000/data-alt"
+
 os.chdir(dirc)
-fileName = "mode-00_pp.asc"
-#fileName = "mode-00_rnk_2_pp.asc"
+fileName = "u975.000.h5"
+vel_profile_file = "turbulent_deviation950-999.txt"
+sparse=False
+testing=False
 main(fileName,
-     10,
-     dirc, 
-     "turbdeviation.txt",
-     True,
-     False)
+     2,
+     dirc,
+     vel_profile_file,
+     sparse,
+     testing)

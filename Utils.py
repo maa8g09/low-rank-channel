@@ -71,22 +71,22 @@ def read_ASC_channelflow(directory, fileName):
 
     U = np.zeros((var['Nd'], var['Nx'], var['Ny'], var['Nz']), dtype=float)
 
-#    U[0,:,:,:] = np.asarray(full_field[0::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
-#    U[1,:,:,:] = np.asarray(full_field[1::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
-#    U[2,:,:,:] = np.asarray(full_field[2::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
+    U[0,:,:,:] = np.asarray(full_field[0::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
+    U[1,:,:,:] = np.asarray(full_field[1::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
+    U[2,:,:,:] = np.asarray(full_field[2::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
 
-    u = full_field[0::3]#np.asarray(full_field[0::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
-    v = full_field[1::3]#np.asarray(full_field[1::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
-    w = full_field[2::3]#np.asarray(full_field[2::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
-
-    index=0
-    for nx in range(0, var['Nx']):
-        for ny in range(0, var['Ny']):
-            for nz in range(0, var['Nz']):
-                U[0, nx, ny, nz] = u[index]
-                U[1, nx, ny, nz] = v[index]
-                U[2, nx, ny, nz] = w[index]
-                index+=1
+#    u = full_field[0::3]#np.asarray(full_field[0::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
+#    v = full_field[1::3]#np.asarray(full_field[1::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
+#    w = full_field[2::3]#np.asarray(full_field[2::3]).reshape((var['Nx'], var['Ny'], var['Nz']))
+#
+#    index=0
+#    for nx in range(0, var['Nx']):
+#        for ny in range(0, var['Ny']):
+#            for nz in range(0, var['Nz']):
+#                U[0, nx, ny, nz] = u[index]
+#                U[1, nx, ny, nz] = v[index]
+#                U[2, nx, ny, nz] = w[index]
+#                index+=1
 
     var['ff'] = U
 
@@ -609,6 +609,12 @@ def write_ASC_Py(flowField, output_directory, fileName):
     return 0
 
 
+def write_Deconstructed_Field(deconstructed_field, output_directory, fileName):
+    # Make a HDF5 object and save all variable in it
+    
+    return 0
+
+
 def write_Details(flowField, output_directory, fileName):
 
     fileName += "_Details.txt"
@@ -948,6 +954,7 @@ def calculate_Temporal_Mean(dns_data_directory, tmp_directory, T0, T1):
                     #------------------------------------------------
                     # (remember we are in the temporary folder within the data directory)
                     command = "field2ascii -p ../" + k + " " + k[:-3]
+                    print(command)
                     os.system(command)
                     # read the ascii file and add it to the 4D mean flow field array
                     var = read_ASC_channelflow(tmp_directory, k[:-3])

@@ -1,36 +1,86 @@
-#!/usr/bin/env python
-
+#!/usr/bin/env python3
 import os
-print("")
-print("Running Newton searches at Re 1800")
-# RANK 10
-print("\nRank 10")
 
-d_1 = "/home/arslan/Documents/work/channelflow-related/set01/Re1800/KB/ampls-DNS-2015_11_20/wavepacket_001/data-skew/u600.000_rank_10"
-os.chdir(d_1)
-command_1 = "findsoln -orb -R 1800 -T 24.0 -sigma ../../sigma.asc -symms ../../symms.asc -nl skew -mc bulkv -Ubulk 1.33333333 -Uwall 0 -vdt -CFLmin 0.01 -CFLmax 1.0 -sn -log nkh-log.txt u600.000_rank_10.ff"
-os.system(command_1)
-
-
-# RANK 50
-print("\nRank 50")
-d_1 = "/home/arslan/Documents/work/channelflow-related/set01/Re1800/KB/ampls-DNS-2015_11_20/wavepacket_001/data-skew/u600.000_rank_50"
-os.chdir(d_1)
-command_1 = "findsoln -orb -R 1800 -T 24.0 -sigma ../../sigma.asc -symms ../../symms.asc -nl skew -mc bulkv -Ubulk 1.33333333 -Uwall 0 -vdt -CFLmin 0.01 -CFLmax 1.0 -sn -log nkh-log.txt u600.000_rank_50.ff"
-os.system(command_1)
+#### -0.5
+directory = "/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0/KB/2016_02_18/002_theta_-0.5000_continued/data-alt"
+print(directory)
+os.chdir(directory)
+command = "eRoutineNKH.py -f u751.000.ff u1001.000.ff u1501.000.ff u2001.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+print(command)
+os.system(command)
 
 
-# RANK 100
-print("\nRank 100")
-d_1 = "/home/arslan/Documents/work/channelflow-related/set01/Re1800/KB/ampls-DNS-2015_11_20/wavepacket_001/data-skew/u600.000_rank_100"
-os.chdir(d_1)
-command_1 = "findsoln -orb -R 1800 -T 24.0 -sigma ../../sigma.asc -symms ../../symms.asc -nl skew -mc bulkv -Ubulk 1.33333333 -Uwall 0 -vdt -CFLmin 0.01 -CFLmax 1.0 -sn -log nkh-log.txt u600.000_rank_100.ff"
-os.system(command_1)
+#### -0.6
+directory = "/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0/KB/2016_03_03/001_theta_-0.6000/data-alt"
+print(directory)
+os.chdir(directory)
+command = "eRoutineNKH.py -f u751.000.ff u1001.000.ff u1501.000.ff u2001.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+print(command)
+os.system(command)
 
 
-# RANK 104
-print("\nRank 104")
-d_1 = "/home/arslan/Documents/work/channelflow-related/set01/Re1800/KB/ampls-DNS-2015_11_20/wavepacket_001/data-skew/u600.000_rank_104"
-os.chdir(d_1)
-command_1 = "findsoln -orb -R 1800 -T 24.0 -sigma ../../sigma.asc -symms ../../symms.asc -nl skew -mc bulkv -Ubulk 1.33333333 -Uwall 0 -vdt -CFLmin 0.01 -CFLmax 1.0 -sn -log nkh-log.txt u600.000_rank_104.ff"
-os.system(command_1)
+#### -0.7
+directory = "/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0/KB/2016_03_03/002_theta_-0.7000/data-alt"
+print(directory)
+os.chdir(directory)
+#command = "eRoutineNKH.py -f u750.000.ff u1000.000.ff u1500.000.ff u2000.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+command = "eRoutineNKH.py -f u751.000.ff u1001.000.ff u1501.000.ff u2001.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+print(command)
+os.system(command)
+
+
+
+#### -0.8
+directory = "/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0/KB/2016_03_03/003_theta_-0.8000/data-alt"
+print(directory)
+os.chdir(directory)
+#command = "eRoutineNKH.py -f u750.000.ff u1000.000.ff u1500.000.ff u2000.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+command = "eRoutineNKH.py -f u751.000.ff u1001.000.ff u1501.000.ff u2001.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+print(command)
+os.system(command)
+
+
+#### -0.9
+directory = "/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0/KB/2016_03_03/004_theta_-0.9000/data-alt"
+print(directory)
+os.chdir(directory)
+#command = "eRoutineNKH.py -f u750.000.ff u1000.000.ff u1500.000.ff u2000.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+command = "eRoutineNKH.py -f u751.000.ff u1001.000.ff u1501.000.ff u2001.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+print(command)
+os.system(command)
+
+
+
+
+#### -0.2
+directory = "/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0/KB/2016_03_04/002_theta_-0.2000/data-alt"
+print(directory)
+os.chdir(directory)
+#command = "eRoutineNKH.py -f u750.000.ff u1000.000.ff u1500.000.ff u2000.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+command = "eRoutineNKH.py -f u751.000.ff u1001.000.ff u1501.000.ff u2001.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+print(command)
+os.system(command)
+
+
+
+#### -0.3
+directory = "/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0/KB/2016_03_04/003_theta_-0.3000/data-alt"
+print(directory)
+os.chdir(directory)
+#command = "eRoutineNKH.py -f u750.000.ff u1000.000.ff u1500.000.ff u2000.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+command = "eRoutineNKH.py -f u751.000.ff u1001.000.ff u1501.000.ff u2001.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+print(command)
+os.system(command)
+
+
+
+
+#### -0.4
+directory = "/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0/KB/2016_03_04/004_theta_-0.4000/data-alt"
+print(directory)
+os.chdir(directory)
+#command = "eRoutineNKH.py -f u750.000.ff u1000.000.ff u1500.000.ff u2000.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+command = "eRoutineNKH.py -f u751.000.ff u1001.000.ff u1501.000.ff u2001.000.ff -sym ../s_tw1_sigma_z_tau_x.asc"
+print(command)
+os.system(command)
+
