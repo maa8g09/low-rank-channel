@@ -61,11 +61,15 @@ def indices(a, func):
 
 def invertible(A):
     # A must be a square matrix
-    I = np.identity(A.shape[0])
-    Z = I - (np.linalg.inv(A) * A)
-    Znorm = np.linalg.norm(Z)
-    if Znorm >= 1e-10:
-        err = 'Matrix is not invertible, ||I - inv(A)A|| = %.2E' % Znorm 
+    if A.shape[0] == A.shape[1]:
+        I = np.identity(A.shape[0])
+        Z = I - (np.linalg.inv(A) * A)
+        norm = np.linalg.norm(Z)
+        if norm >= 1e-10:
+            err = 'Matrix is not invertible, ||I - inv(A)A|| = %.2E' % norm 
+            ut.error(err)
+    else:
+        err = "Non-square matrix provided."
         ut.error(err)
 
     return
@@ -168,8 +172,7 @@ def fft_ifft(A):
         message = "FFT <=> IFFT test failed."
         ut.error(message)
     else:
-        print("Passes FFT <=> IFFT test.\n")
-        print("The norm of the difference is %.2E \n" % difference)
+        print("Passed FFT <=> IFFT test.\nThe norm of the difference is %.2E \n" % difference)
     return
 
 
@@ -178,5 +181,14 @@ def no_difference(A, B, tolerance):
     if difference >= tolerance:
         err = 'Something went wrong with the projection, difference is ||u_approx - u_original|| = %.2E' % difference
         ut.error(err)
-
     return
+    
+def projection(chi, sigma, psi, u_hat):
+    test = psi * sigma * chi    
+    d = u_hat - test
+    d = np.linalg.norm(d)
+    if d >= 1e-12:
+        err = "Projection failed."
+        ut.error(err)
+    return
+    

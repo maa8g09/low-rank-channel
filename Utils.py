@@ -280,8 +280,7 @@ def read_H5(directory, fileName):
     var['beta'] = 2.0*np.pi / var['Lz']
     
     # Find out if the flow field is padded or not
-    if var['ff'].shape[1] == var['Nxpad']:
-        # Not padded
+    if var['ff'].shape[1] == var['Nxpad']: # Not padded
         # Therefore set the Nx and Nz values to the Nxpad and Nzpad values
         var['Nx'] = var['Nxpad']
         var['Nz'] = var['Nzpad']
@@ -637,8 +636,35 @@ def write_ASC_Py(flowField, output_directory, fileName):
     return 0
 
 
-def write_Deconstructed_Field(deconstructed_field, output_directory, fileName):
+def write_Deconstructed_Field(deconstructed_field, ff_approximated, output_directory, fileName):
     # Make a HDF5 object and save all variable in it
+    fileName = output_directory + fileName
+    fileName += "-deconstructed.h5"
+    
+    with h5py.File(fileName, 'w') as hf:
+        g1 = hf.create_group("deconstructed_field")
+        g1.create_dataset("resolvent_modes", data=deconstructed_field["resolvent_modes"], compression="gzip")
+        g1.create_dataset("forcing_modes", data=deconstructed_field["forcing_modes"], compression="gzip")
+        g1.create_dataset("singular_values", data=deconstructed_field["singular_values"], compression="gzip")
+        g1.create_dataset("coefficients", data=deconstructed_field["coefficients"], compression="gzip")
+        
+        g1.attrs['Nd'] = ff_approximated.Nd
+        g1.attrs['Nx'] = ff_approximated.Nx
+        g1.attrs['Ny'] = ff_approximated.Ny
+        g1.attrs['Nz'] = ff_approximated.Nz
+        g1.attrs['Lx'] = ff_approximated.Lx
+        g1.attrs['Lz'] = ff_approximated.Lz
+        g1.attrs['Re'] = ff_approximated.Re
+        g1.attrs['c'] = ff_approximated.c
+        g1.attrs['bf'] = ff_approximated.baseflow
+        g1.attrs['a'] = ff_approximated.y[-1]
+        g1.attrs['b'] = ff_approximated.y[0]
+        
+        g2 = hf.create_group("geometry")
+        g2.create_dataset("x", data=ff_approximated.x, compression="gzip")
+        g2.create_dataset("y", data=ff_approximated.y, compression="gzip")
+        g2.create_dataset("z", data=ff_approximated.z, compression="gzip")
+    
     
     return 0
 
@@ -745,6 +771,20 @@ def write_GEOM(flowField, output_directory, fileName):
 
     print('\nSaved GEOM file')
 
+    return 0
+
+
+def write_H5(flowField, directory, fileName):
+    
+    f = h5py.File(directory + fileName, 'w')
+    f.create_dataset('data/u', data = flowField.velocityField, compression = 'gzip')
+    f.create_dataset('geom/x', data = flowField.x)
+    f.create_dataset('geom/y', data = flowField.y)
+    f.create_dataset('geom/z', data = flowField.z)
+    
+#    for a in self.attributes:
+#        f.attrs[a] = self.attributes[a] 
+#    f.close()
     return 0
 
 

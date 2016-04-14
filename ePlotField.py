@@ -86,7 +86,7 @@ os.system(command)
 
 
 #### Read into class
-var = ut.read_ASC_PP(images_directory, str(args.File)[:-3])
+var = ut.read_ASC_channelflow(images_directory, str(args.File)[:-3])
 
 details_directory = args.Directory
 if details_directory[-1] != "/":

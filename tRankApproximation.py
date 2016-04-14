@@ -42,27 +42,36 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     #================================================================
     if File[-3:] == ".h5":
         print("HDF5 file given.")
-        #------------------------------------------------
+        #------------------------------------------------------------
         #### Read the HDF5 and details file
+        #------------------------------------------------------------
         file_info = ut.read_H5(parent_directory, File)
         details = ut.read_Details(parent_directory, "u0_Details.txt")
     
+        #------------------------------------------------------------
+        #### Copy geometry file into rank-temp
+        #------------------------------------------------------------
+        command = "field2ascii ../" + str(File) + " " + str(File)[:-3]
+        os.system(command)
     
     elif File[-3:] == ".ff":
-        #------------------------------------------------
+        #------------------------------------------------------------
         #### Convert the binary file to ascii
+        #------------------------------------------------------------
         command = "field2ascii -p ../" + str(File) + " " + str(File)[:-3]
         print(command)
         os.system(command)
-        #------------------------------------------------
+        #------------------------------------------------------------
         #### Read ASCII file and details file
+        #------------------------------------------------------------
         file_info = ut.read_ASC_channelflow(temp_rank_folder, str(File)[:-3])
         details = ut.read_Details(parent_directory, "u0_Details.txt")
     
     
     elif File[-3:] == "asc":
-        #------------------------------------------------
+        #------------------------------------------------------------
         #### Read ASCII file and details file
+        #------------------------------------------------------------
         file_info = ut.read_ASC_PP(parent_directory, str(File)[:-7])
         details = ut.read_Details(parent_directory, "u0_Details.txt")
     
@@ -99,8 +108,9 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     mean_profile = []
     
     if MeanProfile: # Velocity profile given
-        #------------------------------------------------
+        #------------------------------------------------------------
         #### Read velocity profile
+        #------------------------------------------------------------
         vel_profile = ut.read_Vel_Profile(parent_directory, MeanProfile)
         # Check to see if it is a mean profile or a deviation profile.
         deviation = any(n < 0 for n in vel_profile)
@@ -118,17 +128,17 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
         else: # Turbulent mean profile given
             mean_profile = vel_profile
     
-        #------------------------------------------------
+        #------------------------------------------------------------
         #### Construct 4D array from mean_profile
-        #------------------------------------------------
+        #------------------------------------------------------------
         mean = ut.make_ff_from_profile(vel_profile, 
                                        ff_original.Nd, 
                                        ff_original.Nx, 
                                        ff_original.Nz)
     else:
-        #------------------------------------------------
+        #------------------------------------------------------------
         #### Use base flow only
-        #------------------------------------------------
+        #------------------------------------------------------------
         # Add baseflow to deviation
         baseflow = []
         if details['bf'] == "lam": # Laminary base flow
@@ -136,9 +146,9 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
         elif details['bf'] == "cou": # Couette base flow
             baseflow = ff_original.y
     
-        #------------------------------------------------
+        #------------------------------------------------------------
         #### Construct 4D array from mean_profile
-        #------------------------------------------------
+        #------------------------------------------------------------
         mean = ut.make_ff_from_profile(np.asarray(baseflow), ff_original.Nd, ff_original.Nx, ff_original.Nz)
 
     
@@ -212,51 +222,54 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     
     
     #### -!-!- TESTING -!-!-:   Zeroth mode differences
-    meanFF = ff_mean.velocityField
-    origFF = ff_original.velocityField
-    diffs = meanFF[0, :, 0] - origFF[0, :, 0]
-    
-    diffsn = np.linalg.norm(diffs)
-    
-    
+    if MeanProfile:
+        spectral_mean_profile = np.zeros((3*ff_original.numModes),dtype=complex)
+        mean_profile_sp = np.fft.fft(mean_profile)
+        spectral_mean_profile[1:ff_original.numModes] = mean_profile_sp[1:ff_original.numModes]
+        origFF = ff_original.velocityField[0, :, 0]
+        diffs = spectral_mean_profile - origFF
+        
+        diffsn = np.linalg.norm(diffs)
+    #    print("%.2E" % diffsn)
+        
     
     
     #### -!-!- TESTING -!-!-:   Synthesizing a Fourier domain flow field
-    fake_field = ff_original.velocityField
-#    fake_field *= 0.0+0.0j
-#    fake_field[1,:,1] += 1.0+2.0j
-#    fake_field[1,:,-1] += 1.0-2.0j
-    
+#    fake_field = ff_original.velocityField
+##    fake_field *= 0.0+0.0j
+##    fake_field[1,:,1] += 1.0+2.0j
+##    fake_field[1,:,-1] += 1.0-2.0j
+#    
     
     
     #================================================================
     #### Deconstruct original flow field
     #================================================================
-    deconstructed_field = cr.deconstruct_field_testing(fake_field,
+    deconstructed_field = cr.test_deconstruct_field(ff_original.velocityField,
                                                       kx_array,
                                                       kz_array,
                                                       ff_original.numModes,
+                                                      ff_original.y,
                                                       ff_original.c,
                                                       ff_original.Re,
                                                       ff_original.baseflow,
                                                       mean_profile,
-                                                      Sparse,
-                                                      False)
+                                                      Sparse)
 
 
     #================================================================
     #### Reconstruct approximated flow field
     #================================================================
-    approximated_ff_spectral = cr.construct_field_testing(deconstructed_field['resolvent_modes'],
+    approximated_ff_spectral = cr.test_construct_field(deconstructed_field['resolvent_modes'],
                                                           deconstructed_field['singular_values'],
                                                           deconstructed_field['coefficients'],
-        #                                                  ff_mean.velocityField, # Use mean field at zeroth modes
-                                                          fake_field, # Use original field at zeroth modes
                                                           kx_array,
                                                           kz_array,
                                                           ff_original.numModes,
                                                           rank,
-                                                          fake_field)
+                                                            mean_profile,
+                                                            ff_original.baseflow,
+                                                            ff_original.y)
 
 
 
@@ -265,26 +278,8 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
 
     #### -!-!- TESTING -!-!-:   Synthesizing a Fourier domain flow field
     # The retrieved field should be the same as the fak_field...
-    retrieved_difference = approximated_ff_spectral - fake_field
+    retrieved_difference = approximated_ff_spectral - ff_original.velocityField
     retrieved_difference_n = np.linalg.norm(retrieved_difference)
-
-
-
-
-
-    #### -!-!- TESTING -!-!-:   Full-Rank decomposition and recomposition (Fourier Domain)
-    meanFF = ff_mean.velocityField
-    origFF = ff_original.velocityField
-    difference = np.linalg.norm(ff_original.velocityField[1:,:,1:] - approximated_ff_spectral[1:,:,1:])
-    
-    
-    #### -!-!- TESTING -!-!-:   Zeroth mode differences
-    difference2 = np.linalg.norm( approximated_ff_spectral[0,:,0] - ff_original.velocityField[0,:,0])
-    difference3 = np.linalg.norm( approximated_ff_spectral[0,:,0] - meanFF[0, :, 0])
-#    diffsn and difference2 should be the same...
-    print("")
-    print("The norm of the difference is " + str(difference))
-    print("")
 
 
     #================================================================
@@ -467,54 +462,59 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     #================================================================
     # Check file type
     if File[-3:] == ".h5":
-        #------------------------------------------------
-        # Inverse Fourier transform the velocity field
-        #------------------------------------------------
-        print("Inverse Fourier transform the velocity field.")
-        #------------------------------------------------
+        #------------------------------------------------------------
         # Write the file to disk in H5 format
-        #------------------------------------------------
-    
-    
-    elif File[-3:] == ".ff":    
-        #------------------------------------------------
-        # Write physical ascii file
-        #------------------------------------------------
+        #------------------------------------------------------------
         fileName = File[:-3] + "_rnk_" + str(rank)
         ut.write_ASC(ff_approximated, rank_folder, fileName)
-    
-        #------------------------------------------------
+        #------------------------------------------------------------
         # Write binary file
-        #------------------------------------------------
-        command = "ascii2field -p false -ge ../rank-temp/" + str(File)[:-3] + ".geom " + fileName + ".asc " + fileName
+        #------------------------------------------------------------
+        command = "ascii2field -p false -ge ../rank-temp/" + str(File)[:-3] + ".geom " + fileName + ".asc " + fileName + ".h5"
         print(command)
         os.system(command)
     
     
+    elif File[-3:] == ".ff":
+        #------------------------------------------------------------
+        # Write physical ascii file
+        #------------------------------------------------------------
+        fileName = File[:-3] + "_rnk_" + str(rank)
+        ut.write_ASC(ff_approximated, rank_folder, fileName)
+    
+        #------------------------------------------------------------
+        # Write binary file
+        #------------------------------------------------------------
+        command = "ascii2field -p false -ge ../rank-temp/" + str(File)[:-3] + ".geom " + fileName + ".asc " + fileName + ".ff"
+        print(command)
+        os.system(command)
     
     
     elif File[-3:] == "asc":
-        #------------------------------------------------
+        #------------------------------------------------------------
         # Write physical ascii file
-        #------------------------------------------------
+        #------------------------------------------------------------
         fileName = File[:-3] + "_rnk_" + str(rank)
         ut.write_ASC_Py(ff_approximated, rank_folder, fileName)
     
     
-    
-    #------------------------------------------------
-    # Write amplitude coefficients for each Fourier mode combination
-    #------------------------------------------------
+    #----------------------------------------------------------------
+    # Write decomposed flow field to HDF5 object.
+    #----------------------------------------------------------------
     fileName = File[:-3] + "_coeffs"
     ut.write_amplitude_coefficients(ff_approximated, rank_folder, fileName, deconstructed_field['coefficients'])
     
-    #------------------------------------------------
+    ut.write_Deconstructed_Field(deconstructed_field, ff_approximated, parent_directory, File[:-3])
+    
+    
+    
+    #----------------------------------------------------------------
     # Remove ascii file and temporary folder
-    #------------------------------------------------
+    #----------------------------------------------------------------
     #    os.system("rm *.asc")
     os.chdir(parent_directory)
-    command = "rm -rf " + temp_rank_folder
-    os.system(command)
+#    command = "rm -rf " + temp_rank_folder
+#    os.system(command)
     
     
     print("\nFinished")
@@ -527,10 +527,11 @@ dirc="/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0
 os.chdir(dirc)
 fileName = "u975.000.h5"
 vel_profile_file = "turbulent_deviation950-999.txt"
+vel_profile_file = ""
 testing=False
 sparse=True
 main(fileName,
-     20,
+     2,
      dirc,
      vel_profile_file,
      sparse,
