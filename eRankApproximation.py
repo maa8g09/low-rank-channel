@@ -7,6 +7,8 @@ import numpy as np
 import Utils as ut
 import FlowField as ffClass
 import ChannelResolvent as cr
+import h5py
+import Tests
 
 # Project flow field
 
@@ -15,8 +17,9 @@ import ChannelResolvent as cr
 
 date = time.strftime("%Y_%m_%d")
 
-####################################################################################################
-# Parse the command line arguments (flag parameters)
+#================================================================
+#### Parse the command line arguments (flag parameters)
+#================================================================
 #ut.print_ResolventHeader()
 #ut.print_ResolventSubHeader()
 parser = argparse.ArgumentParser(description="Project modes onto a velocity field to get a rank approximation.")
@@ -41,90 +44,49 @@ parser.add_argument("-v",
                 metavar='\b',
                 help="Turbulent mean velocity profile as .txt file. Keep in same directory as file to approximate.")
 parser.add_argument("-s",
-                "--Sparse",
-                help="Use sparse SVD algorithm.",
-                action='store_true')
+                    "--Sparse",
+                    help="Use sparse SVD algorithm.",
+                    action='store_true')
 args = parser.parse_args()
 
 
 #================================================================
 #### Create a temporary folder
 #================================================================
-parent_directory = os.getcwd()
-# Add slash at the end of the string if there isn't one already
-if parent_directory[-1] != "/":
-    parent_directory += "/"
-
-temp_rank_folder = "rank-temp/"
-temp_rank_folder = parent_directory + temp_rank_folder
-
-#if a temporary directory exists, delete it.
-if os.path.exists(temp_rank_folder):
-    command = "rm -rf " + temp_rank_folder
-    os.system(command)
-
-#if a temporary directory doesn't exist, create one.
-if not os.path.exists(temp_rank_folder):
-    os.mkdir(temp_rank_folder)
-
+parent_directory = ut.format_Directory_Path(os.getcwd())
+temp_rank_folder = ut.make_Temporary_Folder(parent_directory, "rank", True)
 # All work is done from the temporary directory.
 os.chdir(temp_rank_folder)
+
 
 #================================================================
 #### Check file type
 #================================================================
-if args.File[-3:] == ".h5": # H5 file type
+if args.File[-3:] == ".h5":
     print("HDF5 file given.")
     #------------------------------------------------
-    #### Convert it to binary flow field
-    #------------------------------------------------
-    command = "fieldconvert ../" + str(args.File) + " ../" + str(args.File)[:-3] + ".ff"
-    print(command)
-    os.system(command)
-
-    #------------------------------------------------
-    #### Convert binary to ASCII
-    #------------------------------------------------
-    command = "field2ascii -p -g ../" + str(args.File)[:-3] + ".ff " + str(args.File)[:-3]
-    print(command)
-    os.system(command)
-
-    #------------------------------------------------
-    #### Read physical ascii file
-    #------------------------------------------------
-    file_info = ut.read_ASC_channelflow(temp_rank_folder, str(args.File)[:-3])
+    #### Read the HDF5 and details file
+    files_info = ut.read_H5(parent_directory, args.File)
+    details = ut.read_Details(parent_directory, "u0_Details.txt")
 
 
-
-
-elif args.File[-3:] == ".ff": # channelflow binary file type
-    print("\nA channelflow binary file given...")
+elif args.File[-3:] == ".ff":
     #------------------------------------------------
     #### Convert the binary file to ascii
-    #------------------------------------------------
     command = "field2ascii -p ../" + str(args.File) + " " + str(args.File)[:-3]
     print(command)
     os.system(command)
-
     #------------------------------------------------
-    #### Read physical ascii file
-    #------------------------------------------------
-    file_info = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-3])
+    #### Read ASCII file and details file
+    file_info = ut.read_ASC_channelflow(temp_rank_folder, str(args.File)[:-3])
     details = ut.read_Details(parent_directory, "u0_Details.txt")
 
 
-
-
-elif args.File[-3:] == "asc": # PP_ascii file with the indices prefixed
-    print("\nA pp ascii file given...")
-
+elif args.File[-3:] == "asc":
     #------------------------------------------------
-    #### Read physical ascii file
-    #------------------------------------------------
-    file_info = ut.read_ASC_PP(temp_rank_folder, str(args.File)[:-7])
+    #### Read ASCII file and details file
+    file_info = ut.read_ASC_PP(parent_directory, str(args.File)[:-7])
     details = ut.read_Details(parent_directory, "u0_Details.txt")
-
-
 
 
 else: # No file type given.
@@ -132,7 +94,7 @@ else: # No file type given.
 
 
 #================================================================
-#### Initialise original flow field object
+#### Initialise flow field object for field (to approximate)
 #================================================================
 ff_original = ffClass.FlowFieldChannelFlow( file_info['Nd'],
                                             file_info['Nx'],
@@ -148,35 +110,7 @@ ff_original = ffClass.FlowFieldChannelFlow( file_info['Nd'],
                                             file_info['ff'],
                                             "pp")
 
-test_u = file_info['ff'][0,:,:,:].real
-
-# Remove wall boundaries
-ff_original.remove_wall_boundaries()
-test_u_walls = ff_original.velocityField[0,:,:,:].real
-
-# FFT
-ff_original.make_xz_spectral()
-test_u_fft = ff_original.velocityField[0,:,:,:].real
-
-# Stack
-ff_original.stack_ff_in_y()
-test_u_stk = ff_original.velocityField[:,:,:].real
-
-# Unstack
-ff_original.unstack_ff()
-test_u_ustk = ff_original.velocityField[0,:,:,:].real
-
-# IFFT
-ff_original.make_xz_physical()
-test_u_ifft = ff_original.velocityField[0,:,:,:].real
-
-# Add wall boundaries
-ff_original.add_wall_boundaries()
-test_u_walls2 = ff_original.velocityField[0,:,:,:].real
-
-test_u3 = ff_original.velocityField[0,:,:,:].real
-d = test_u3.real - file_info['ff'][0,:,:,:].real
-dnorm = np.linalg.norm(d)
+Tests.fft_ifft(ff_original)
 
 
 #================================================================
@@ -189,7 +123,6 @@ mean_profile = []
 if args.MeanProfile: # Velocity profile given
     #------------------------------------------------
     #### Read velocity profile
-    #------------------------------------------------
     vel_profile = ut.read_Vel_Profile(parent_directory, args.MeanProfile)
     # Check to see if it is a mean profile or a deviation profile.
     deviation = any(n < 0 for n in vel_profile)
@@ -201,16 +134,16 @@ if args.MeanProfile: # Velocity profile given
         elif details['bf'] == "cou": # Couette base flow
             baseflow = ff_original.y
 
-        # Add baseflow to deviation
+        # Add baseflow to deviation to get turbulent mean profile
         mean_profile = vel_profile + np.asarray(baseflow)
 
-    else: # Mean profile given
+    else: # Turbulent mean profile given
         mean_profile = vel_profile
 
     #------------------------------------------------
     #### Construct 4D array from mean_profile
     #------------------------------------------------
-    mean = ut.make_ff_from_profile(mean_profile, 
+    mean = ut.make_ff_from_profile(vel_profile, 
                                    ff_original.Nd, 
                                    ff_original.Nx, 
                                    ff_original.Nz)
@@ -250,7 +183,7 @@ ff_mean = ffClass.FlowFieldChannelFlow( file_info['Nd'],
 
 
 #================================================================
-#### Remove the wall boundaries
+#### ---- Remove the wall boundaries
 #================================================================
 # Removing the xz-planes at y=1 and y=-1,
 # so that the chebyshev nodes can be used to construct 
@@ -260,14 +193,14 @@ ff_mean.remove_wall_boundaries()
 
 
 #================================================================
-#### Fourier transform original and mean velocity fields in xz directions
+#### ---- Fourier transform in xz directions
 #================================================================
 ff_original.make_xz_spectral()
 ff_mean.make_xz_spectral()
 
 
 #================================================================
-#### Stack velocity fields in the wall-normal direction
+#### ---- Stack velocity fields in the wall-normal direction
 #================================================================
 ff_original.stack_ff_in_y()
 ff_mean.stack_ff_in_y()
@@ -281,7 +214,7 @@ ff_mean.stack_ff_in_y()
 kx_array = ff_original.Mx * ff_original.alpha
 kz_array = ff_original.Mz * ff_original.beta
 
-
+    
 #================================================================
 #### Ensure valid rank is specified
 #================================================================
@@ -289,7 +222,7 @@ rank = min(args.Rank, 3*ff_original.numModes)
 
 
 #================================================================
-#### Approximate the file w/regards to specified rank
+#### Deconstruct original flow field
 #================================================================
 deconstructed_field = cr.deconstruct_field(ff_original.velocityField,
                                           kx_array,
@@ -298,27 +231,47 @@ deconstructed_field = cr.deconstruct_field(ff_original.velocityField,
                                           ff_original.c,
                                           ff_original.Re,
                                           ff_original.baseflow,
-                                          rank,
                                           mean_profile,
                                           args.Sparse)
 
 
+#================================================================
+#### Reconstruct approximated flow field
+#================================================================
 approximated_ff_spectral = cr.construct_field(deconstructed_field['resolvent_modes'],
                                               deconstructed_field['singular_values'],
                                               deconstructed_field['coefficients'],
-#                                             ff_mean.velocityField,
                                               kx_array,
                                               kz_array,
-                                              ff_original.numModes)
+                                              rank)
 
 
-# deconstruct the approximated field to see if you get the same modes, singular values, resolvent op,
-# transfer function.
-# Check to see if you get the same amplitude coefficients... YOU SHOULD. make sure to debug so you can see 
-# where the discrepancy comes.
 
-deconstructed_approximated =
 
+
+
+#### -!-!- TESTING -!-!-:   Synthesizing a Fourier domain flow field
+# The retrieved field should be the same as the fak_field...
+retrieved_difference = approximated_ff_spectral - fake_field
+retrieved_difference_n = np.linalg.norm(retrieved_difference)
+
+
+
+
+
+#### -!-!- TESTING -!-!-:   Full-Rank decomposition and recomposition (Fourier Domain)
+meanFF = ff_mean.velocityField
+origFF = ff_original.velocityField
+difference = np.linalg.norm(ff_original.velocityField[1:,:,1:] - approximated_ff_spectral[1:,:,1:])
+
+
+#### -!-!- TESTING -!-!-:   Zeroth mode differences
+difference2 = np.linalg.norm( approximated_ff_spectral[0,:,0] - ff_original.velocityField[0,:,0])
+difference3 = np.linalg.norm( approximated_ff_spectral[0,:,0] - meanFF[0, :, 0])
+#    diffsn and difference2 should be the same...
+print("")
+print("The norm of the difference is " + str(difference))
+print("")
 
 
 #================================================================
@@ -339,21 +292,22 @@ ff_approximated = ffClass.FlowFieldChannelFlow( file_info['Nd'],
                                                 "sp")
 
 
-#================================================================
-#### Unstack velocity fields in the wall-normal direction
-#================================================================
-if ff_approximated.is_stacked_in_y:
-    ff_approximated.unstack_ff()
 
-if ff_mean.is_stacked_in_y:
-    ff_mean.unstack_ff()
 
-if ff_original.is_stacked_in_y:
-    ff_original.unstack_ff()
+# If not symmetric: you need to filter the negative frequencies in the approximated result.
+# This will introduce hermitian symmetry.
 
 
 #================================================================
-#### Inverse Fourier transform approximated and mean velocity fields in xz directions
+#### ---- Unstack velocity fields in the wall-normal direction
+#================================================================
+ff_approximated.unstack_ff()
+ff_mean.unstack_ff()
+ff_original.unstack_ff()
+
+
+#================================================================
+#### ---- Inverse Fourier transform approximated and mean velocity fields in xz directions
 #================================================================
 ff_approximated.make_xz_physical()
 ff_mean.make_xz_physical()
@@ -361,38 +315,31 @@ ff_original.make_xz_physical()
 
 
 #================================================================
-#### Add wall boundaries
+#### ---- Add wall boundaries
 #================================================================
 ff_approximated.add_wall_boundaries()
 ff_mean.add_wall_boundaries()
 ff_original.add_wall_boundaries()
 
-test_u3 = ff_original.velocityField[0,:,:,:].real
-doriginal = test_u3.real - file_info['ff'][0,:,:,:].real
-dnorm = np.linalg.norm(doriginal)
-#    if dnorm >= 1e-10:
-#        message = "The original field has not been retrieved after FFT, stacking and removing wall boundaries and then reversing those operations... ||delta||" + str(dnorm)
-#        ut.error(message)
-    
-test_u3 = ff_mean.velocityField[0,:,:,:].real
-dmean = test_u3.real - mean[0,:,:,:].real
-dnorm = np.linalg.norm(dmean)
-#    if dnorm >= 1e-10:
-#        message = "The original mean has not been retrieved after FFT, stacking and removing wall boundaries and then reversing those operations... ||delta||" + str(dnorm)
-#        ut.error(message)
-
 
 #================================================================
-#### Retrieve approximated fluctuations
-#================================================================  
-tmp = ff_approximated.velocityField[:,:,:,:] # - mean.real The mean is not set...
-app_u = tmp[0,:,:,:].real
-app_v = tmp[1,:,:,:].real
-app_w = tmp[2,:,:,:].real
-org_u = ff_original.velocityField[0,:,:,:].real
-org_v = ff_original.velocityField[1,:,:,:].real
-org_w = ff_original.velocityField[2,:,:,:].real
-ff_approximated.set_ff(tmp.real, "pp")
+#### Remove mean flow from approximated field (if mean used to reconstruct)
+#================================================================
+#    approximated_field = ff_approximated.velocityField.real - ff_mean.velocityField.real
+#    ff_approximated.set_ff(approximated_field, "pp")
+#
+#    difference = np.linalg.norm(approximated_field - ff_approximated.velocityField)
+
+
+
+#### -!-!- TESTING -!-!-:   Full-Rank decomposition and recomposition: (Real Domain)
+u_a = ff_approximated.velocityField[0,:,:,:].real
+u_o = ff_original.velocityField[0,:,:,:].real
+difference = np.linalg.norm(ff_original.velocityField.real - ff_approximated.velocityField.real)
+print("")
+print("The norm of the difference is " + str(difference))
+print("")
+
 
 
 #================================================================

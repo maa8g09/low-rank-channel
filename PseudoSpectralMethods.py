@@ -487,8 +487,3 @@ def calculate_transfer_function(alpha, beta, Re, Nm, omega, chebyshev_differenti
 
     return H, w
 
-
-## Debugging
-#vecs = get_state_vectors(0.5, 1.0, [], 4000.0, 75, np.pi/12.0, "lam")
-#U, S, V = svd(vecs['H'])
-#S = np.diag(S)

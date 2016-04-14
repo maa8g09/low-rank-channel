@@ -36,66 +36,37 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     # All work is done from the temporary directory.
     os.chdir(temp_rank_folder)
     
+    
     #================================================================
     #### Check file type
     #================================================================
-    if File[-3:] == ".h5": # H5 file type
+    if File[-3:] == ".h5":
         print("HDF5 file given.")
         #------------------------------------------------
-        #### Read the HDF5 file
-        #------------------------------------------------
-        FilePath = Directory + '/' + File
-        file_info = {}
-        f = h5py.File(FilePath, 'r')
-        file_info['ff'] = np.array(f['data']['u'])
-        for item in f.attrs:
-            file_info[item] = f.attrs[item]
-        f.close()
-        
-        file_info['alpha'] = 2.0*np.pi / file_info['Lx']
-        file_info['beta'] = 2.0*np.pi / file_info['Lz']
-        
-        # Find out if the flow field is padded or not
-        if file_info['ff'].shape[1] == file_info['Nxpad']:
-            # Not padded
-            # Therefore set the Nx and Nz values to the Nxpad and Nzpad values
-            file_info['Nx'] = file_info['Nxpad']
-            file_info['Nz'] = file_info['Nzpad']
-        
-        # else: it is padded,
-        #   i.e. If this FlowField is padded (last 1/3 x,z modes are set to zero)
-        #        and the flow field has been interpolated (by channelflow) 
-        #        such that Nx and Nz are 2/3 of their original values.
-        
-        #------------------------------------------------
-        #### Read details file
-        #------------------------------------------------
+        #### Read the HDF5 and details file
+        file_info = ut.read_H5(parent_directory, File)
         details = ut.read_Details(parent_directory, "u0_Details.txt")
     
-    elif File[-3:] == ".ff": # channelflow binary file type
-        print("\nA channelflow binary file given...")
+    
+    elif File[-3:] == ".ff":
         #------------------------------------------------
         #### Convert the binary file to ascii
-        #------------------------------------------------
         command = "field2ascii -p ../" + str(File) + " " + str(File)[:-3]
         print(command)
         os.system(command)
-
         #------------------------------------------------
-        #### Read ASCII file
-        #------------------------------------------------
+        #### Read ASCII file and details file
         file_info = ut.read_ASC_channelflow(temp_rank_folder, str(File)[:-3])
         details = ut.read_Details(parent_directory, "u0_Details.txt")
-        
-    elif File[-3:] == "asc": # PP_ascii file with the indices prefixed
-        print("\nA pp ascii file given...")
     
+    
+    elif File[-3:] == "asc":
         #------------------------------------------------
-        #### Read physical ascii file
-        #------------------------------------------------
+        #### Read ASCII file and details file
         file_info = ut.read_ASC_PP(parent_directory, str(File)[:-7])
         details = ut.read_Details(parent_directory, "u0_Details.txt")
-        
+    
+    
     else: # No file type given.
         ut.error("Invalid file given.")
     
@@ -116,40 +87,10 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
                                                 details['Re'],
                                                 file_info['ff'],
                                                 "pp")
-    #### -!-!- TESTING -!-!-:   FFT and IFFT loop
-    # Remove wall boundaries
-    ff_original.remove_wall_boundaries()
-#    test_u_walls = ff_original.velocityField[0,:,:,:]
     
-    # FFT
-    ff_original.make_xz_spectral()
-#    test_u_fft = ff_original.velocityField[0,:,:,:]
+    Tests.fft_ifft(ff_original)
     
-    # Stack
-    ff_original.stack_ff_in_y()
-#    test_u_stk = ff_original.velocityField[:,:,:]
     
-    # Unstack
-    ff_original.unstack_ff()
-#    test_u_ustk = ff_original.velocityField[0,:,:,:]
-    
-    # IFFT
-    ff_original.make_xz_physical()
-#    test_u_ifft = ff_original.velocityField[0,:,:,:]
-#    test_u_ifftR = test_u_ifft.real
-#    test_u_ifftI = test_u_ifft.imag
-    
-    # Add wall boundaries
-    ff_original.add_wall_boundaries()
-#    test_u_walls2 = ff_original.velocityField[0,:,:,:]
-    
-    # The difference between the flow field after having gone through
-    # operations and the original should be the same.
-    difference = np.linalg.norm(file_info['ff'][0,:,:,:].real - ff_original.velocityField[0,:,:,:].real)
-    print("")
-    print("The norm of the difference is " + str(difference))
-    print("")
-
     #================================================================
     #### Check velocity profile
     #================================================================
@@ -160,7 +101,6 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     if MeanProfile: # Velocity profile given
         #------------------------------------------------
         #### Read velocity profile
-        #------------------------------------------------
         vel_profile = ut.read_Vel_Profile(parent_directory, MeanProfile)
         # Check to see if it is a mean profile or a deviation profile.
         deviation = any(n < 0 for n in vel_profile)
@@ -200,7 +140,7 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
         #### Construct 4D array from mean_profile
         #------------------------------------------------
         mean = ut.make_ff_from_profile(np.asarray(baseflow), ff_original.Nd, ff_original.Nx, ff_original.Nz)
-    
+
     
     #================================================================
     #### Initialize mean flow field object

@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+import h5py
 #import pylab 
 import matplotlib
 matplotlib.use('Agg')
@@ -265,6 +266,33 @@ def read_GEOM(directory, fileName):
     file.close()
 
     return var
+
+
+def read_H5(directory, fileName):
+    var = {}
+    f = h5py.File(directory + fileName, 'r')
+    var['ff'] = np.array(f['data']['u'])
+    for item in f.attrs:
+        var[item] = f.attrs[item]
+    f.close()
+    
+    var['alpha'] = 2.0*np.pi / var['Lx']
+    var['beta'] = 2.0*np.pi / var['Lz']
+    
+    # Find out if the flow field is padded or not
+    if var['ff'].shape[1] == var['Nxpad']:
+        # Not padded
+        # Therefore set the Nx and Nz values to the Nxpad and Nzpad values
+        var['Nx'] = var['Nxpad']
+        var['Nz'] = var['Nzpad']
+    
+    # else: it is padded,
+    #   i.e. If this FlowField is padded the last 1/3 x,z modes are set to zero
+    #        and the flow field has been interpolated (by channelflow) 
+    #        such that Nx and Nz are 2/3 of their original values.
+    
+    return var
+
 
 def read_Output_DNS(fileName, T0, T1):    
     '''
@@ -756,9 +784,7 @@ def write_Symms_File(directory, fileName, N, symStrAry):
 
 
 def write_Vel_Profile(vel_profile, output_directory, fileName):
-    
     fileName += ".txt"
-    
     file = open(output_directory + fileName, "w")
     
     for i in range(0, len(vel_profile)):
@@ -770,6 +796,31 @@ def write_Vel_Profile(vel_profile, output_directory, fileName):
 
     return 0
 
+def format_Directory_Path(directory):
+    # Add slash at the end of the string if there isn't one already
+    if directory[-1] != "/":
+        directory += "/"
+    return directory
+
+def make_Temporary_Folder(parent_directory, name, delete):
+    tmp_folder = "tmp-" + name + "/"
+    tmp_folder = parent_directory + tmp_folder
+    
+    #if a temporary directory exists
+    if os.path.exists(tmp_folder) and delete:
+        command = "rm -rf " + tmp_folder
+        os.system(command)
+
+    elif os.path.exists(tmp_folder) and not delete:
+        print("Temporary folder already exists:")
+        print(tmp_folder)
+        print("Will write to it...\n")
+    
+    #if a temporary directory doesn't exist, create one.
+    if not os.path.exists(tmp_folder):
+        os.mkdir(tmp_folder)
+    
+    return tmp_folder
 
 def plot_Contour(output_directory, fileName, 
                  xAxis, yAxis, data, 

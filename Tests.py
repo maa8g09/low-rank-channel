@@ -7,8 +7,8 @@ def SVD(U, s, V, A, sparse):
         S = np.diag(s)
         svd_passed = np.allclose(A, np.dot(U, np.dot(S, V)))
         if not svd_passed:
-            nrm = str(np.linalg.norm(np.dot( np.dot(U, S), V) - A))
-            err = 'Something went wrong with the SVD, norm is ' + str(nrm)
+            norm = str(np.linalg.norm(np.dot( np.dot(U, S), V) - A))
+            err = 'Something went wrong with the SVD, norm is %.2E' % norm 
             ut.error(err)
 
     elif not sparse:
@@ -16,8 +16,8 @@ def SVD(U, s, V, A, sparse):
         S[:V.shape[0], :V.shape[0]] = np.diag(s)
         svd_passed = np.allclose(A, np.dot(U, np.dot(S, V)))
         if not svd_passed:
-            nrm = str(np.linalg.norm(np.dot( np.dot(U, S), V) - A))
-            err = 'Something went wrong with the SVD, norm is ' + str(nrm)
+            norm = str(np.linalg.norm(np.dot( np.dot(U, S), V) - A))
+            err = 'Something went wrong with the SVD, norm is %.2E' % norm 
             ut.error(err)
 
 #    if np.linalg.norm(np.dot( np.dot(U, np.diag(S)), V) - A) >= 1e-9:
@@ -25,7 +25,7 @@ def SVD(U, s, V, A, sparse):
 #        err = 'Something went wrong with the SVD, norm is ' + str(nrm)
 #        ut.error(err)
         
-    return 0
+    return
 
 
 def continuity(resolvent_modes, S, kx, kz, Nm, D1):
@@ -37,10 +37,10 @@ def continuity(resolvent_modes, S, kx, kz, Nm, D1):
     continuty = 1.0j*kx*u + np.dot(D1, v) + 1.0j*kz*w
     norm = np.linalg.norm(continuty)
     if norm >= 1e-8:
-        err = 'Something went wrong with the continuity condition, norm is ' + str(norm) 
+        err = 'Something went wrong with the continuity condition, norm is %.2E' % norm 
         ut.error(err)
     
-    return 0
+    return
 
 
 def orthogonality(A):
@@ -52,7 +52,7 @@ def orthogonality(A):
         err = 'Modes are not orthogonal, norm is ' + str(C_norm)
         ut.error(err)
     
-    return 0
+    return
 
 
 def indices(a, func):
@@ -65,10 +65,10 @@ def invertible(A):
     Z = I - (np.linalg.inv(A) * A)
     Znorm = np.linalg.norm(Z)
     if Znorm >= 1e-10:
-        err = 'Matrix is not invertible, ||I - inv(A)A|| = ' + str(Znorm)
+        err = 'Matrix is not invertible, ||I - inv(A)A|| = %.2E' % Znorm 
         ut.error(err)
 
-    return 0
+    return
 
 
 def checkHermitianSymmetry(velocityField, Nx, Nz):
@@ -136,5 +136,47 @@ def checkHermitianSymmetry(velocityField, Nx, Nz):
             print(str(delta_imag_norm))
             print("")
 
-    return 0
+    return
     
+    
+    
+def fft_ifft(A):
+    original = A.velocityField
+
+    # Remove wall boundaries
+    A.remove_wall_boundaries()
+    
+    # FFT
+    A.make_xz_spectral()
+    
+    # Stack
+    A.stack_ff_in_y()
+    
+    # Unstack
+    A.unstack_ff()
+    
+    # IFFT
+    A.make_xz_physical()
+    
+    # Add wall boundaries
+    A.add_wall_boundaries()
+    
+    # The difference between the flow field after having gone through
+    # above operations and the original should be the same.
+    difference = np.linalg.norm(original - A.velocityField.real)
+    if difference >= 1e-12:
+        message = "FFT <=> IFFT test failed."
+        ut.error(message)
+    else:
+        print("Passes FFT <=> IFFT test.\n")
+        print("The norm of the difference is %.2E \n" % difference)
+    return
+
+
+def no_difference(A, B, tolerance):
+    difference = np.linalg.norm(A - B)
+    if difference >= tolerance:
+        err = 'Something went wrong with the projection, difference is ||u_approx - u_original|| = %.2E' % difference
+        ut.error(err)
+
+    return

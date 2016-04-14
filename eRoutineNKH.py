@@ -28,11 +28,13 @@ parent_directory = os.getcwd()
 if parent_directory[-1] != "/":
     parent_directory += "/"
 
+
 #================================================================
 #### Extract Reynolds number from path
 #================================================================
 tmp = parent_directory[parent_directory.find("Re"):]
 Re = float(tmp[2:tmp.find("/")])
+
 
 #================================================================
 #### Loop over files given
