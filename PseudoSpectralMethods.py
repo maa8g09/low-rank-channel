@@ -369,6 +369,7 @@ def calculate_derivatives(N, vel_profile, bf):
             d2U_dy2  = np.identity(modes)
             np.fill_diagonal(d2U_dy2, 0.0)
 
+
     else: # Use turbulent mean
         U = np.identity(modes) # without endpoints
         np.fill_diagonal(U, vel_profile[1:-1])

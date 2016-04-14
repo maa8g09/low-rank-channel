@@ -664,8 +664,7 @@ def write_Deconstructed_Field(deconstructed_field, ff_approximated, output_direc
         g2.create_dataset("x", data=ff_approximated.x, compression="gzip")
         g2.create_dataset("y", data=ff_approximated.y, compression="gzip")
         g2.create_dataset("z", data=ff_approximated.z, compression="gzip")
-    
-    
+       
     return 0
 
 

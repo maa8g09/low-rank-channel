@@ -607,6 +607,7 @@ def test_deconstruct_field(original_ff_spectral,
     deconstructed_dict['singular_values'] = sing_vals_array
     deconstructed_dict['coefficients'] = coefficients_array
 
+
     return deconstructed_dict
 
 

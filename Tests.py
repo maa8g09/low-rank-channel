@@ -143,7 +143,6 @@ def checkHermitianSymmetry(velocityField, Nx, Nz):
     return
     
     
-    
 def fft_ifft(A):
     original = A.velocityField
 

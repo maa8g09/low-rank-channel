@@ -228,6 +228,7 @@ class FlowFieldChannelFlow(object):
             self.Mz[:np.ceil(Nz/2)] = Mz_tmp[np.floor(Nz/2):]
             self.Mz[-np.floor(Nz/2):] = Mz_tmp[:np.ceil(Nz/2)-1]
 
+
         self.alpha = alpha
         self.beta = beta
         self.c = c
