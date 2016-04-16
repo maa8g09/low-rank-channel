@@ -164,69 +164,36 @@ def read_ASC_SP(directory, fileName):
     return var
 
 
-def read_Deconstructed_Field(output_directory, fileName):
-    deconstructed_field = {}
-    with h5py.File(output_directory + fileName, 'r') as hf:
-        g1 = hf.get("deconstructed_field")
-        deconstructed_field["resolvent_modes"] = g1.get("resolvent_modes")
-        deconstructed_field["forcing_modes"] = g1.get("forcing_modes")
-        deconstructed_field["singular_values"] = g1.get("singular_values")
-        deconstructed_field["coefficients"] = g1.get("coefficients")
-        for item in g1.attrs:
-            deconstructed_field[item] = g1.attrs[item]
-
-        g2 = hf.get("geometry")
-        deconstructed_field["x"] = g2.get("x")
-        deconstructed_field["y"] = g2.get("y")
-        deconstructed_field["z"] = g2.get("z")
-    
-    return deconstructed_field
-    
-def read_Details(directory, fileName):
-    file = directory + fileName
-    file = open(file, 'r')
-
+def read_Details(fileName):
+    file = open(fileName, 'r')
     var = {}
-
     # i, kx, y, kz
     for i, line in enumerate(file):
         values = line.split()
         if len(values) != 0:
             if values[0] == 'Nx:':
                 var['Nx'] = int(values[1])
-    
             elif values[0] == 'Ny:':
                 var['Ny'] = int(values[1])
-    
             elif values[0] == 'Nz:':
                 var['Nz'] = int(values[1])
-    
             elif values[0] == 'Nd:':
                 var['Nd'] = int(values[1])
-    
             elif values[0] == 'Lx:':
                 var['Lx'] = float(values[1])
-    
             elif values[0] == 'Lz:':
                 var['Lz'] = float(values[1])
-    
             elif values[0] == 'Re:':
                 var['Re'] = float(values[1])
-    
             elif values[0] == 'c:':
                 var['c'] = float(values[1])
-    
             elif values[0] == 'wp:':
                 var['wp'] = str(values[1])
-    
             elif values[0] == 'bf:':
                 var['bf'] = str(values[1])
-    
             elif values[0] == 'theta:':
                 var['theta'] = float(values[1])
-
     file.close()
-
     return var
 
 
@@ -286,9 +253,9 @@ def read_GEOM(directory, fileName):
     return var
 
 
-def read_H5(directory, fileName):
+def read_H5(fileName):
     var = {}
-    f = h5py.File(directory + fileName, 'r')
+    f = h5py.File(fileName, 'r')
     var['ff'] = np.array(f['data']['u'])
     for item in f.attrs:
         var[item] = f.attrs[item]
@@ -310,6 +277,51 @@ def read_H5(directory, fileName):
     
     return var
 
+
+def read_H5_Deconstructed(fileName):
+    deconstructed_field = {}
+    with h5py.File(fileName, 'r') as hf:
+        g1 = hf.get("deconstructed_field")
+        deconstructed_field["resolvent_modes"] = g1.get("resolvent_modes")
+        deconstructed_field["forcing_modes"] = g1.get("forcing_modes")
+        deconstructed_field["singular_values"] = g1.get("singular_values")
+        deconstructed_field["coefficients"] = g1.get("coefficients")
+        for item in g1.attrs:
+            deconstructed_field[item] = g1.attrs[item]
+
+        g2 = hf.get("geometry")
+        deconstructed_field["x"] = g2.get("x")
+        deconstructed_field["y"] = g2.get("y")
+        deconstructed_field["z"] = g2.get("z")
+    
+    Nx = deconstructed_field['Nx']
+    Nz = deconstructed_field['Nz']
+    Mx_tmp = np.arange(-np.ceil(Nx/2)+1, np.floor(Nx/2)+1)
+    Mx_full = np.zeros(Nx)
+    if Nx % 2 == 0:
+        # even Nx
+        Mx_full[:np.ceil(Nx/2)+1] = Mx_tmp[np.floor(Nx/2)-1:]
+        Mx_full[-np.ceil(Nx/2)+1:] = Mx_tmp[:np.ceil(Nx/2)-1] 
+    else:
+        # odd Nx
+        Mx_full[:np.ceil(Nx/2)] = Mx_tmp[np.floor(Nx/2):]
+        Mx_full[-np.floor(Nx/2):] = Mx_tmp[:np.ceil(Nx/2)-1]
+    Mz_tmp = np.arange(-np.ceil(Nz/2)+1, np.floor(Nz/2)+1)
+    Mz_full = np.zeros(Nz)
+    if Nz % 2 == 0:
+        # even Nz
+        Mz_full[:np.ceil(Nz/2)+1] = Mz_tmp[np.floor(Nz/2)-1:]
+        Mz_full[-np.ceil(Nz/2)+1:] = Mz_tmp[:np.ceil(Nz/2)-1] 
+    else:
+        # odd Nz
+        Mz_full[:np.ceil(Nz/2)] = Mz_tmp[np.floor(Nz/2):]
+        Mz_full[-np.floor(Nz/2):] = Mz_tmp[:np.ceil(Nz/2)-1]
+    deconstructed_field['Mx'] = Mx_full
+    deconstructed_field['Mz'] = Mz_full
+    deconstructed_field['alpha'] = 2.0*np.pi / deconstructed_field['Lx']
+    deconstructed_field['beta'] = 2.0*np.pi / deconstructed_field['Lz']
+    return deconstructed_field
+    
 
 def read_Output_DNS(fileName, T0, T1):    
     '''
@@ -392,8 +404,8 @@ def read_Grid(directory, fileName):
     return aray
 
 
-def read_Vel_Profile(directory, fileName):
-    file = open(directory + fileName, 'r')
+def read_Vel_Profile(fileName):
+    file = open(fileName, 'r')
     aray = []
 
     for j, line in enumerate(file):
@@ -653,37 +665,6 @@ def write_ASC_Py(flowField, output_directory, fileName):
 
 
 
-def write_Deconstructed_Field(deconstructed_field, ff_approximated, output_directory, fileName):
-    # Make a HDF5 object and save all variable in it
-    fileName = output_directory + fileName
-    fileName += "-deconstructed.h5"
-    
-    with h5py.File(fileName, 'w') as hf:
-        g1 = hf.create_group("deconstructed_field")
-        g1.create_dataset("resolvent_modes", data=deconstructed_field["resolvent_modes"], compression="gzip")
-        g1.create_dataset("forcing_modes", data=deconstructed_field["forcing_modes"], compression="gzip")
-        g1.create_dataset("singular_values", data=deconstructed_field["singular_values"], compression="gzip")
-        g1.create_dataset("coefficients", data=deconstructed_field["coefficients"], compression="gzip")
-        
-        g1.attrs['Nd'] = ff_approximated.Nd
-        g1.attrs['Nx'] = ff_approximated.Nx
-        g1.attrs['Ny'] = ff_approximated.Ny
-        g1.attrs['Nz'] = ff_approximated.Nz
-        g1.attrs['Lx'] = ff_approximated.Lx
-        g1.attrs['Lz'] = ff_approximated.Lz
-        g1.attrs['Re'] = ff_approximated.Re
-        g1.attrs['c'] = ff_approximated.c
-        g1.attrs['bf'] = ff_approximated.baseflow
-        g1.attrs['a'] = ff_approximated.y[-1]
-        g1.attrs['b'] = ff_approximated.y[0]
-        
-        g2 = hf.create_group("geometry")
-        g2.create_dataset("x", data=ff_approximated.x, compression="gzip")
-        g2.create_dataset("y", data=ff_approximated.y, compression="gzip")
-        g2.create_dataset("z", data=ff_approximated.z, compression="gzip")
-
-
-
 def write_Details(flowField, output_directory, fileName):
 
     fileName += "_Details.txt"
@@ -786,9 +767,9 @@ def write_GEOM(flowField, output_directory, fileName):
 
 
 
-def write_H5(flowField, directory, fileName):
+def write_H5(flowField, fileName):
     
-    f = h5py.File(directory + fileName, 'w')
+    f = h5py.File(fileName, 'w')
     f.create_dataset('data/u', data = flowField.velocityField, compression = 'gzip')
     f.create_dataset('geom/x', data = flowField.x)
     f.create_dataset('geom/y', data = flowField.y)
@@ -797,6 +778,38 @@ def write_H5(flowField, directory, fileName):
 #    for a in self.attributes:
 #        f.attrs[a] = self.attributes[a] 
 #    f.close()
+
+
+
+def write_H5_Deconstructed(deconstructed_field, ff_approximated, fileName):
+    # Make a HDF5 object and save all variable in it
+    fileName += "_deconstructed.h5"
+    with h5py.File(fileName, 'w') as hf:
+        g1 = hf.create_group("deconstructed_field")
+        g1.create_dataset("resolvent_modes", data=deconstructed_field["resolvent_modes"], compression="gzip")
+        g1.create_dataset("forcing_modes", data=deconstructed_field["forcing_modes"], compression="gzip")
+        g1.create_dataset("singular_values", data=deconstructed_field["singular_values"], compression="gzip")
+        g1.create_dataset("coefficients", data=deconstructed_field["coefficients"], compression="gzip")
+        
+        g1.attrs['Nd'] = ff_approximated.Nd
+        g1.attrs['Nx'] = ff_approximated.Nx
+        g1.attrs['Ny'] = ff_approximated.Ny
+        g1.attrs['Nz'] = ff_approximated.Nz
+        g1.attrs['Lx'] = ff_approximated.Lx
+        g1.attrs['Lz'] = ff_approximated.Lz
+        g1.attrs['Re'] = ff_approximated.Re
+        g1.attrs['c'] = ff_approximated.c
+        g1.attrs['bf'] = ff_approximated.baseflow
+        g1.attrs['a'] = ff_approximated.y[-1]
+        g1.attrs['b'] = ff_approximated.y[0]
+        
+        g2 = hf.create_group("geometry")
+        g2.create_dataset("x", data=ff_approximated.x, compression="gzip")
+        g2.create_dataset("y", data=ff_approximated.y, compression="gzip")
+        g2.create_dataset("z", data=ff_approximated.z, compression="gzip")
+
+
+
 
 
 def write_Symms_File(directory, fileName, N, symStrAry):

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import sys
-import h5py
 import Utils as ut
 import FlowField as ffClass
 import ChannelResolvent as cr
