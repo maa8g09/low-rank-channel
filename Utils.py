@@ -164,6 +164,24 @@ def read_ASC_SP(directory, fileName):
     return var
 
 
+def read_Deconstructed_Field(output_directory, fileName):
+    deconstructed_field = {}
+    with h5py.File(output_directory + fileName, 'r') as hf:
+        g1 = hf.get("deconstructed_field")
+        deconstructed_field["resolvent_modes"] = g1.get("resolvent_modes")
+        deconstructed_field["forcing_modes"] = g1.get("forcing_modes")
+        deconstructed_field["singular_values"] = g1.get("singular_values")
+        deconstructed_field["coefficients"] = g1.get("coefficients")
+        for item in g1.attrs:
+            deconstructed_field[item] = g1.attrs[item]
+
+        g2 = hf.get("geometry")
+        deconstructed_field["x"] = g2.get("x")
+        deconstructed_field["y"] = g2.get("y")
+        deconstructed_field["z"] = g2.get("z")
+    
+    return deconstructed_field
+    
 def read_Details(directory, fileName):
     file = directory + fileName
     file = open(file, 'r')
@@ -489,6 +507,7 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
         csv_file.write(entry + "\n")
 
     csv_file.close()
+    
 #    csv_file_2 = open(output_directory + fileName + "2.csv", "w")
 #
 #    #================================================================
@@ -529,7 +548,6 @@ def write_amplitude_coefficients(flowField, output_directory, fileName, abc_arra
     #================================================================
 
 
-    return 0
 
 
 def write_approximated_ASC(flowField, output_directory, rank):
@@ -610,7 +628,7 @@ def write_ASC(flowField, output_directory, fileName):
 
     print('\nSaved ASCII file')
 
-    return 0
+
 
 
 def write_ASC_Py(flowField, output_directory, fileName):
@@ -633,7 +651,6 @@ def write_ASC_Py(flowField, output_directory, fileName):
 
     print('\nSaved ASCII Py file')
 
-    return 0
 
 
 def write_Deconstructed_Field(deconstructed_field, ff_approximated, output_directory, fileName):
@@ -664,8 +681,7 @@ def write_Deconstructed_Field(deconstructed_field, ff_approximated, output_direc
         g2.create_dataset("x", data=ff_approximated.x, compression="gzip")
         g2.create_dataset("y", data=ff_approximated.y, compression="gzip")
         g2.create_dataset("z", data=ff_approximated.z, compression="gzip")
-       
-    return 0
+
 
 
 def write_Details(flowField, output_directory, fileName):
@@ -695,7 +711,7 @@ def write_Details(flowField, output_directory, fileName):
     file.close()
     print("\nSaved details file")
 
-    return 0
+
 
 def write_DAT(ff, output_directory, fileName):
     fileName += '.dat'
@@ -726,7 +742,6 @@ def write_DAT(ff, output_directory, fileName):
 
     print('\nSaved DAT file')
 
-    return 0
 
 
 def write_FF(output_directory, fileName):
@@ -737,7 +752,6 @@ def write_FF(output_directory, fileName):
     
     os.system(command)
 
-    return 0
 
 
 def write_GEOM(flowField, output_directory, fileName):
@@ -770,7 +784,6 @@ def write_GEOM(flowField, output_directory, fileName):
 
     print('\nSaved GEOM file')
 
-    return 0
 
 
 def write_H5(flowField, directory, fileName):
@@ -784,7 +797,6 @@ def write_H5(flowField, directory, fileName):
 #    for a in self.attributes:
 #        f.attrs[a] = self.attributes[a] 
 #    f.close()
-    return 0
 
 
 def write_Symms_File(directory, fileName, N, symStrAry):
@@ -819,7 +831,6 @@ def write_Symms_File(directory, fileName, N, symStrAry):
 
     file.close()
 
-    return 0
 
 
 def write_Vel_Profile(vel_profile, output_directory, fileName):
@@ -833,7 +844,7 @@ def write_Vel_Profile(vel_profile, output_directory, fileName):
 
     file.close()
 
-    return 0
+
 
 def format_Directory_Path(directory):
     # Add slash at the end of the string if there isn't one already
@@ -860,6 +871,7 @@ def make_Temporary_Folder(parent_directory, name, delete):
         os.mkdir(tmp_folder)
     
     return tmp_folder
+
 
 def plot_Contour(output_directory, fileName, 
                  xAxis, yAxis, data, 

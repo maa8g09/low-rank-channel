@@ -439,7 +439,7 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     
     
     #================================================================
-    # Create a folder to store the approximated velocity field in
+    #### Create a folder to store the approximated velocity field in
     #================================================================
     os.chdir(parent_directory) # Go up one directory
     rank_folder = File[:-3]+"_rank_" + str(rank) + "/"
@@ -459,7 +459,7 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     
     
     #================================================================
-    # Save flow field to file
+    #### Save flow field to file
     #================================================================
     # Check file type
     if File[-3:] == ".h5":
@@ -499,9 +499,9 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
         ut.write_ASC_Py(ff_approximated, rank_folder, fileName)
     
     
-    #----------------------------------------------------------------
-    # Write decomposed flow field to HDF5 object.
-    #----------------------------------------------------------------
+    #================================================================
+    #### Write decomposed flow field to HDF5 object.
+    #================================================================
     fileName = File[:-3] + "_coeffs"
     ut.write_amplitude_coefficients(ff_approximated, rank_folder, fileName, deconstructed_field['coefficients'])
     
@@ -509,9 +509,9 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
     
     
     
-    #----------------------------------------------------------------
+    #================================================================
     # Remove ascii file and temporary folder
-    #----------------------------------------------------------------
+    #================================================================
     #    os.system("rm *.asc")
     os.chdir(parent_directory)
 #    command = "rm -rf " + temp_rank_folder
