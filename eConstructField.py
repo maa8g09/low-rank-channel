@@ -113,7 +113,8 @@ ff_approximated.add_wall_boundaries()
 prefix = args.File.split("deconstructed")[0]
 fileName = prefix + "rank_" + str(rank)
 # Make a folder to put it in
-ut.make_Folder(os.getcwd(), fileName, True)
+folder = ut.make_Folder(os.getcwd(), fileName, True)
+os.chdir(folder)
 fileName += ".h5"
 ut.write_H5(ff_approximated, deconstructed_field['original_attrs'],fileName) # need to write attributes to file...
 print("\n\nFinished\n")
