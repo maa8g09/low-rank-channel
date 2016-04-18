@@ -39,6 +39,10 @@ kz_array = deconstructed_field['Mz'] * deconstructed_field['beta']
 #================================================================
 numModes = deconstructed_field['Ny'] - 2
 rank = min(args.Rank, 3*numModes)
+if rank == 3*numModes:
+    rankStr = "full"
+else:
+    rankStr = str(rank)
 #================================================================
 #### Check velocity profile
 #================================================================
@@ -111,10 +115,10 @@ ff_approximated.add_wall_boundaries()
 #### Write approximated HDF5 file
 #================================================================
 prefix = args.File.split("deconstructed")[0]
-fileName = prefix + "rank_" + str(rank)
+fileName = prefix + "rank_" + rankStr
 # Make a folder to put it in
 folder = ut.make_Folder(os.getcwd(), fileName, True)
 os.chdir(folder)
 fileName += ".h5"
 ut.write_H5(ff_approximated, deconstructed_field['original_attrs'],fileName) # need to write attributes to file...
-print("\n\nFinished\n")
+#print("\nFinished\n")

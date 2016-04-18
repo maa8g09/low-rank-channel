@@ -171,7 +171,8 @@ def fft_ifft(A):
         message = "FFT <=> IFFT test failed."
         ut.error(message)
     else:
-        print("Passed FFT <=> IFFT test.\nThe norm of the difference is %.2E \n" % difference)
+#        print("Passed FFT <=> IFFT test.\nThe norm of the difference is %.2E \n" % difference)
+        print("")
     return
 
 
