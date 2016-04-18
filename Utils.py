@@ -288,6 +288,7 @@ def read_H5_Deconstructed(fileName):
         df["coefficients"] = np.array(g1.get("coefficients"))
         for item in g1.attrs:
             df[item] = g1.attrs[item]
+            print(item + " " + str(df[item]))
 
         g2 = hf.get("geometry")
         df["x"] = np.array(g2.get("x"))
