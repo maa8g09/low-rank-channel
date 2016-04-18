@@ -9,6 +9,7 @@ parser.add_argument("-f",
                     help="File to approximate",
                     required=True)
 
+
 args = parser.parse_args()
 name=str(args.File)
 directory="/home/arslan/Documents/work/cfd-channelflow_solutions/w03_EQ/"+name+"/"
