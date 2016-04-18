@@ -648,6 +648,12 @@ def construct_field(resolvent_modes,
                                     Stacked in wall-normal direction:
                                     dimensions: (Nx, Nd*Ny, Nz).
     '''
+    print("")
+    print(resolvent_modes.shape)
+    print("")
+    print(singular_values.shape)
+    print("")
+    print(coefficients.shape)
     #================================================================
     #### Initialize empty 3D array to store approximated velocity field
     #================================================================
