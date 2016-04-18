@@ -261,6 +261,7 @@ def read_H5(fileName):
     for item in f.attrs:
         var[item] = f.attrs[item]
         orig[item]= f.attrs[item]
+        print(item + " " + str(orig[item]))
     f.close()
     
     var['alpha'] = 2.0*np.pi / var['Lx']
