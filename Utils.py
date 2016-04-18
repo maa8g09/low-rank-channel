@@ -279,23 +279,23 @@ def read_H5(fileName):
 
 
 def read_H5_Deconstructed(fileName):
-    deconstructed_field = {}
+    df = {}
     with h5py.File(fileName, 'r') as hf:
         g1 = hf.get("deconstructed_field")
-        deconstructed_field["resolvent_modes"] = g1.get("resolvent_modes")
-        deconstructed_field["forcing_modes"] = g1.get("forcing_modes")
-        deconstructed_field["singular_values"] = g1.get("singular_values")
-        deconstructed_field["coefficients"] = g1.get("coefficients")
+        df["resolvent_modes"] = g1.get("resolvent_modes")
+        df["forcing_modes"] = g1.get("forcing_modes")
+        df["singular_values"] = g1.get("singular_values")
+        df["coefficients"] = g1.get("coefficients")
         for item in g1.attrs:
-            deconstructed_field[item] = g1.attrs[item]
+            df[item] = g1.attrs[item]
 
         g2 = hf.get("geometry")
-        deconstructed_field["x"] = g2.get("x")
-        deconstructed_field["y"] = g2.get("y")
-        deconstructed_field["z"] = g2.get("z")
+        df["x"] = g2.get("x")
+        df["y"] = g2.get("y")
+        df["z"] = g2.get("z")
     
-    Nx = deconstructed_field['Nx']
-    Nz = deconstructed_field['Nz']
+    Nx = df['Nx']
+    Nz = df['Nz']
     Mx_tmp = np.arange(-np.ceil(Nx/2)+1, np.floor(Nx/2)+1)
     Mx_full = np.zeros(Nx)
     if Nx % 2 == 0:
@@ -316,11 +316,11 @@ def read_H5_Deconstructed(fileName):
         # odd Nz
         Mz_full[:np.ceil(Nz/2)] = Mz_tmp[np.floor(Nz/2):]
         Mz_full[-np.floor(Nz/2):] = Mz_tmp[:np.ceil(Nz/2)-1]
-    deconstructed_field['Mx'] = Mx_full
-    deconstructed_field['Mz'] = Mz_full
-    deconstructed_field['alpha'] = 2.0*np.pi / deconstructed_field['Lx']
-    deconstructed_field['beta'] = 2.0*np.pi / deconstructed_field['Lz']
-    return deconstructed_field
+    df['Mx'] = Mx_full
+    df['Mz'] = Mz_full
+    df['alpha'] = 2.0*np.pi / df['Lx']
+    df['beta'] = 2.0*np.pi / df['Lz']
+    return df
     
 
 def read_Output_DNS(fileName, T0, T1):    
