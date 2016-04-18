@@ -45,7 +45,7 @@ rank = min(args.Rank, 3*numModes)
 # Create empty 4D array to store mean flow field
 mean = np.zeros((deconstructed_field['Nd'], deconstructed_field['Nx'], 
                  deconstructed_field['Ny'], deconstructed_field['Nz']))
-spectral_deviation_profile = np.zeros((3*numModes),dtype=complex)
+spectral_deviation_profile = []
 deviation_profile = []
 if args.MeanProfile: # Velocity profile given
     #------------------------------------------------------------
@@ -64,10 +64,10 @@ if args.MeanProfile: # Velocity profile given
         elif deconstructed_field['bf'] == "cou": # Couette base flow
             baseflow_profile = deconstructed_field['y']
         # Remove baseflow from mean to get turbulent deviation profile
-        deviation_profile = vel_profile - np.asarray(baseflow_profile)
-deviation_profile_sp = np.fft.fft(deviation_profile)
-spectral_deviation_profile[1:numModes] = deviation_profile_sp[1:numModes]
-
+        deviation_profile = vel_profile - np.asarray(baseflow_profile)    
+    deviation_profile_sp = np.fft.fft(deviation_profile)
+    spectral_deviation_profile = np.zeros((3*numModes),dtype=complex)
+    spectral_deviation_profile[1:numModes] = deviation_profile_sp[1:numModes]
 #================================================================
 #### Reconstruct approximated flow field
 #================================================================

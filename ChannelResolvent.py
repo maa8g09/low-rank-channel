@@ -309,6 +309,7 @@ def deconstruct_field(original_ff_spectral,
             sys.stdout.write(".")
             sys.stdout.flush()
             if kx == 0 and kz == 0: # Zeroth Fourier modes
+                resolvent_modes_array[mx, mz, :, 0] = original_ff_spectral[mx, :, mz]
                 continue # Start the loop again
             #--------------------------------------------------------
             #### Calculate the state vectors
@@ -663,10 +664,13 @@ def construct_field(resolvent_modes,
             sys.stdout.write(".")
             sys.stdout.flush()
             if kx == 0 and kz == 0: # Zero Fourier modes
-                #----------------------------------------------------
-                #### Set the zero Fourier modes to equal the spectral deviation profile
-                #----------------------------------------------------
-                approximated_ff_spectral[mx, :, mz] = spectral_deviation_profile                
+                if len(spectral_deviation_profile) == 0:
+                    approximated_ff_spectral[mx, :, mz] = resolvent_modes[mx,mz,:,0]
+                else:
+                    #----------------------------------------------------
+                    #### Set the zero Fourier modes to equal the spectral deviation profile
+                    #----------------------------------------------------
+                    approximated_ff_spectral[mx, :, mz] = spectral_deviation_profile                
                 continue # Start the loop again
             #------------------------------------------------
             #### Construct approximated flow field
