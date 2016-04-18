@@ -288,7 +288,7 @@ def read_H5_Deconstructed(fileName):
         df["coefficients"] = np.array(g1.get("coefficients"))
         for item in g1.attrs:
             df[item] = g1.attrs[item]
-            print(item + " " + str(df[item]))
+#            print(item + " " + str(df[item]))
 
         g2 = hf.get("geometry")
         df["x"] = np.array(g2.get("x"))
@@ -794,7 +794,7 @@ def write_H5_Deconstructed(deconstructed_field, ff_approximated, fileName):
         
         g1.attrs['Nd'] = ff_approximated.Nd
         g1.attrs['Nx'] = ff_approximated.Nx
-        g1.attrs['Ny'] = ff_approximated.Ny
+        g1.attrs['Ny'] = ff_approximated.Ny+2
         g1.attrs['Nz'] = ff_approximated.Nz
         g1.attrs['Lx'] = ff_approximated.Lx
         g1.attrs['Lz'] = ff_approximated.Lz
