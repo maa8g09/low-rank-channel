@@ -33,7 +33,7 @@ if args.File[-3:] == ".h5":
     #------------------------------------------------------------
     #### Read the HDF5 and details file
     #------------------------------------------------------------
-    file_info = ut.read_H5(args.File)
+    file_info, original_attrs = ut.read_H5(args.File)
     details = ut.read_Details(args.Details)
 elif args.File[-3:] == ".ff":
     print("Channelflow binary file given.")
@@ -127,5 +127,5 @@ deconstructed_field = cr.deconstruct_field(ff_original.velocityField,
 #================================================================
 #### Write decomposed flow field to disk as an HDF5 file
 #================================================================
-ut.write_H5_Deconstructed(deconstructed_field, ff_original, args.File[:-3])
+ut.write_H5_Deconstructed(deconstructed_field, original_attrs, ff_original, args.File[:-3])
 print("\nFinished\n")

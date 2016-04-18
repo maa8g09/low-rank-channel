@@ -257,8 +257,10 @@ def read_H5(fileName):
     var = {}
     f = h5py.File(fileName, 'r')
     var['ff'] = np.array(f['data']['u'])
+    orig = {}
     for item in f.attrs:
         var[item] = f.attrs[item]
+        orig[item]= f.attrs[item]
     f.close()
     
     var['alpha'] = 2.0*np.pi / var['Lx']
@@ -275,7 +277,7 @@ def read_H5(fileName):
     #        and the flow field has been interpolated (by channelflow) 
     #        such that Nx and Nz are 2/3 of their original values.
     
-    return var
+    return var, orig
 
 
 def read_H5_Deconstructed(fileName):
@@ -294,6 +296,13 @@ def read_H5_Deconstructed(fileName):
         df["x"] = np.array(g2.get("x"))
         df["y"] = np.array(g2.get("y"))
         df["z"] = np.array(g2.get("z"))
+    
+        g3 = hf.get("original_attrs")
+        df["original_attrs"] = {}
+        for item in g3.attrs:
+            df["attoriginal_attrsrs"][item] = g3.attrs[item]
+            
+    
     
     Nx = df['Nx']
     Nz = df['Nz']
@@ -768,7 +777,7 @@ def write_GEOM(flowField, output_directory, fileName):
 
 
 
-def write_H5(flowField, fileName):
+def write_H5(flowField, attrs, fileName):
     
     f = h5py.File(fileName, 'w')
     f.create_dataset('data/u', data = flowField.velocityField, compression = 'gzip')
@@ -776,13 +785,13 @@ def write_H5(flowField, fileName):
     f.create_dataset('geom/y', data = flowField.y)
     f.create_dataset('geom/z', data = flowField.z)
     
-#    for a in self.attributes:
-#        f.attrs[a] = self.attributes[a] 
-#    f.close()
+    for item in attrs.items():
+        f.attrs[item] = attrs[item] 
+    f.close()
 
 
 
-def write_H5_Deconstructed(deconstructed_field, ff_approximated, fileName):
+def write_H5_Deconstructed(deconstructed_field, original_attrs, ff_approximated, fileName):
     # Make a HDF5 object and save all variable in it
     fileName += "_deconstructed.h5"
     with h5py.File(fileName, 'w') as hf:
@@ -808,6 +817,10 @@ def write_H5_Deconstructed(deconstructed_field, ff_approximated, fileName):
         g2.create_dataset("x", data=ff_approximated.x, compression="gzip")
         g2.create_dataset("y", data=ff_approximated.y, compression="gzip")
         g2.create_dataset("z", data=ff_approximated.z, compression="gzip")
+        
+        g3 = hf.create_dataset("original_attrs")
+        for k, v in original_attrs.items():
+            g3.attrs[k] = original_attrs[k] 
 
 
 
