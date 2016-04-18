@@ -303,11 +303,11 @@ def deconstruct_field(original_ff_spectral,
     startTime = datetime.now()
     for mx in range(0, len(kx_array)):
         kx = kx_array[mx]
-        print('\n\nkx:'+ str(kx))
+#        print('\n\nkx:'+ str(kx))
         for mz in range(0, len(kz_array)):
             kz  = kz_array[mz]
-            sys.stdout.write(".")
-            sys.stdout.flush()
+#            sys.stdout.write(".")
+#            sys.stdout.flush()
             if kx == 0 and kz == 0: # Zeroth Fourier modes
                 resolvent_modes_array[mx, mz, :, 0] = original_ff_spectral[mx, :, mz]
                 continue # Start the loop again
@@ -648,12 +648,6 @@ def construct_field(resolvent_modes,
                                     Stacked in wall-normal direction:
                                     dimensions: (Nx, Nd*Ny, Nz).
     '''
-    print("")
-    print(resolvent_modes.shape)
-    print("")
-    print(singular_values.shape)
-    print("")
-    print(coefficients.shape)
     #================================================================
     #### Initialize empty 3D array to store approximated velocity field
     #================================================================
@@ -664,11 +658,11 @@ def construct_field(resolvent_modes,
     #================================================================
     for mx in range(0, len(kx_array)):
         kx = kx_array[mx]
-        print('\n\nkx:'+ str(kx))
+#        print('\n\nkx:'+ str(kx))
         for mz in range(0, len(kz_array)):
             kz  = kz_array[mz]
-            sys.stdout.write(".")
-            sys.stdout.flush()
+#            sys.stdout.write(".")
+#            sys.stdout.flush()
             if kx == 0 and kz == 0: # Zero Fourier modes
                 if len(spectral_deviation_profile) == 0:
                     approximated_ff_spectral[mx, :, mz] = resolvent_modes[mx,mz,:,0]
