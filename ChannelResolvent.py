@@ -585,9 +585,7 @@ def construct_field(resolvent_modes,
                     kz_array,
                     Nm,
                     r,
-                    mean_profile,
-                    baseflow,
-                    y):
+                    spectral_deviation_profile):
 
     ''' 
     Construct a flow field using the resolvent modes, singular values and 
@@ -633,15 +631,11 @@ def construct_field(resolvent_modes,
 
     r:                              Rank to approximate to.
 
-    mean_profile:                   1D array of streamwise velocity 
-                                    profile of the turbulent mean in
-                                    wall-normal direction, 
+    spectral_deviation_profile:     1D array of Fourier transformed 
+                                    velocity profile of the turbulent 
+                                    deviation in wall-normal direction 
+                                    for all velocity components, 
                                     (endpoints included).
-    
-    baseflow:                       Base flow type: [laminar, Couette],
-                                    laminar means Plane Poiseuille.
-                                    
-    y:                              Grid-points in wall-normal direction.
 
     ================================================================
     OUTPUTS:
@@ -653,25 +647,6 @@ def construct_field(resolvent_modes,
                                     Stacked in wall-normal direction:
                                     dimensions: (Nx, Nd*Ny, Nz).
     '''
-    #================================================================
-    #### FFT mean profile
-    #================================================================
-    spectral_deviation_profile = np.zeros((3*Nm),dtype=complex)
-    if len(mean_profile) == 0:
-        spectral_deviation_profile = resolvent_modes[0,0,:,0]
-    
-    else:
-        # Remove baseflow from turbulent mean profile
-        baseflow_profile = []
-        if baseflow == "lam": # Laminary base flow
-            baseflow_profile = 1.0 - y**2.0
-        elif baseflow == "cou": # Couette base flow
-            baseflow_profile = y
-
-        # Remove baseflow from mean to get turbulent deviation profile
-        vel_profile = mean_profile - np.asarray(baseflow_profile)
-        deviation_profile_sp = np.fft.fft(vel_profile)
-        spectral_deviation_profile[1:Nm] = deviation_profile_sp[1:Nm]
     #================================================================
     #### Initialize empty 3D array to store approximated velocity field
     #================================================================

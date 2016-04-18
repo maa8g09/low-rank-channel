@@ -45,7 +45,8 @@ rank = min(args.Rank, 3*numModes)
 # Create empty 4D array to store mean flow field
 mean = np.zeros((deconstructed_field['Nd'], deconstructed_field['Nx'], 
                  deconstructed_field['Ny'], deconstructed_field['Nz']))
-mean_profile = []
+spectral_deviation_profile = np.zeros((3*numModes),dtype=complex)
+deviation_profile = []
 if args.MeanProfile: # Velocity profile given
     #------------------------------------------------------------
     #### Read velocity profile
@@ -54,16 +55,18 @@ if args.MeanProfile: # Velocity profile given
     # Check to see if it is a mean profile or a deviation profile.
     deviation = any(n < 0 for n in vel_profile)
     if deviation: # Deviation profile given
-        # Add baseflow to deviation
-        baseflow = []
-        if deconstructed_field['bf'] == "lam": # Laminary base flow
-            baseflow = 1.0 - deconstructed_field["y"].y**2.0
-        elif deconstructed_field['bf'] == "cou": # Couette base flow
-            baseflow = deconstructed_field["y"]
-        # Add baseflow to deviation to get turbulent mean profile
-        mean_profile = vel_profile + np.asarray(baseflow)
+        deviation_profile = vel_profile
     else: # Turbulent mean profile given
-        mean_profile = vel_profile
+        # Remove baseflow from turbulent mean profile
+        baseflow_profile = []
+        if deconstructed_field['bf'] == "lam": # Laminary base flow
+            baseflow_profile = 1.0 - deconstructed_field['y']**2.0
+        elif deconstructed_field['bf'] == "cou": # Couette base flow
+            baseflow_profile = deconstructed_field['y']
+        # Remove baseflow from mean to get turbulent deviation profile
+        deviation_profile = vel_profile - np.asarray(baseflow_profile)
+deviation_profile_sp = np.fft.fft(deviation_profile)
+spectral_deviation_profile[1:numModes] = deviation_profile_sp[1:numModes]
 #================================================================
 #### Reconstruct approximated flow field
 #================================================================
@@ -74,9 +77,7 @@ approximated_ff_spectral = cr.construct_field(deconstructed_field['resolvent_mod
                                               kz_array,
                                               numModes,
                                               rank,
-                                              mean_profile,
-                                              deconstructed_field['bf'],
-                                              deconstructed_field["y"])
+                                              spectral_deviation_profile)
 #================================================================
 #### Initialize approximated flow field object
 #================================================================
