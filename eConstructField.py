@@ -110,6 +110,6 @@ ff_approximated.add_wall_boundaries()
 #================================================================
 #### Write approximated HDF5 file
 #================================================================
-fileName = args.File[:-3] + "_rank_" + str(rank)
+fileName = args.File[:-3] + "_rank_" + str(rank) + ".h5"
 ut.write_H5(ff_approximated, fileName) # need to write attributes to file...
-print("Finished\n")
+print("\nFinished\n")
