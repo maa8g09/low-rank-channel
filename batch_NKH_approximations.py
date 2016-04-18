@@ -14,8 +14,10 @@ args = parser.parse_args()
 name=str(args.File)
 directory="/home/arslan/Documents/work/cfd-channelflow_solutions/w03_EQ/"+name+"/"
 os.chdir(directory)
+print(directory)
 # Deconstruct
 deconstruct = "eDeconstructField.py -d eq1_Details.txt -f "+name+".h5"
+print(deconstruct)
 os.system(deconstruct)
 # Construct
 # Rank: Full
