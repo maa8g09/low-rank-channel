@@ -785,8 +785,8 @@ def write_H5(flowField, orig_attrs, fileName):
     f.create_dataset('geom/x', data = flowField.x)
     f.create_dataset('geom/y', data = flowField.y)
     f.create_dataset('geom/z', data = flowField.z)
-    for key, item in orig_attrs.items():
-        print(str(key) + " " + str(orig_attrs[key]))
+#    for key, item in orig_attrs.items():
+#        print(str(key) + " " + str(orig_attrs[key]))
 
     for key, item in orig_attrs.items():
         f.attrs[key] = orig_attrs[key] 
