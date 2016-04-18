@@ -776,7 +776,7 @@ def write_GEOM(flowField, output_directory, fileName):
 
 
 
-def write_H5(flowField, attrs, fileName):
+def write_H5(flowField, orig_attrs, fileName):
     
     f = h5py.File(fileName, 'w')
     f.create_dataset('data/u', data = flowField.velocityField, compression = 'gzip')
@@ -784,8 +784,8 @@ def write_H5(flowField, attrs, fileName):
     f.create_dataset('geom/y', data = flowField.y)
     f.create_dataset('geom/z', data = flowField.z)
     
-    for item in attrs.items():
-        f.attrs[item] = attrs[item] 
+    for item in orig_attrs.items():
+        f.attrs[item] = orig_attrs[item] 
     f.close()
 
 
