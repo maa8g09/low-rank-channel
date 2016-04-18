@@ -581,10 +581,13 @@ def test_deconstruct_field(original_ff_spectral,
 def construct_field(resolvent_modes,
                     singular_values,
                     coefficients,
-                    mean_ff_spectral,
                     kx_array,
                     kz_array,
-                    r):
+                    Nm,
+                    r,
+                    mean_profile,
+                    baseflow,
+                    y):
 
     ''' 
     Construct a flow field using the resolvent modes, singular values and 
@@ -630,6 +633,16 @@ def construct_field(resolvent_modes,
 
     r:                              Rank to approximate to.
 
+    mean_profile:                   1D array of streamwise velocity 
+                                    profile of the turbulent mean in
+                                    wall-normal direction, 
+                                    (endpoints included).
+    
+    baseflow:                       Base flow type: [laminar, Couette],
+                                    laminar means Plane Poiseuille.
+                                    
+    y:                              Grid-points in wall-normal direction.
+
     ================================================================
     OUTPUTS:
     ================================================================
@@ -640,45 +653,52 @@ def construct_field(resolvent_modes,
                                     Stacked in wall-normal direction:
                                     dimensions: (Nx, Nd*Ny, Nz).
     '''
+    #================================================================
+    #### FFT mean profile
+    #================================================================
+    spectral_deviation_profile = np.zeros((3*Nm),dtype=complex)
+    if len(mean_profile) == 0:
+        spectral_deviation_profile = resolvent_modes[0,0,:,0]
+    
+    else:
+        # Remove baseflow from turbulent mean profile
+        baseflow_profile = []
+        if baseflow == "lam": # Laminary base flow
+            baseflow_profile = 1.0 - y**2.0
+        elif baseflow == "cou": # Couette base flow
+            baseflow_profile = y
 
+        # Remove baseflow from mean to get turbulent deviation profile
+        vel_profile = mean_profile - np.asarray(baseflow_profile)
+        deviation_profile_sp = np.fft.fft(vel_profile)
+        spectral_deviation_profile[1:Nm] = deviation_profile_sp[1:Nm]
     #================================================================
     #### Initialize empty 3D array to store approximated velocity field
     #================================================================
-    Nm = resolvent_modes.shape[2] # len[uvw] in wall-normal direction with wall boundaries removed
-    
     # Approximated velocity field is stacked in the wall-normal direction
-    approximated_ff_spectral  = np.zeros((len(kx_array), Nm, len(kz_array)), dtype=np.complex128)
-
+    approximated_ff_spectral  = np.zeros((len(kx_array), 3*Nm, len(kz_array)), dtype=np.complex128)
+    #================================================================
+    #### Loop through wavenumbers 
+    #================================================================
     for mx in range(0, len(kx_array)):
         kx = kx_array[mx]
         print('\n\nkx:'+ str(kx))
-
         for mz in range(0, len(kz_array)):
             kz  = kz_array[mz]
             sys.stdout.write(".")
             sys.stdout.flush()
-
-            if kx == 0 or kz == 0: # Zero Fourier modes
-                #------------------------------------------------
-                #### Set the zero Fourier modes to equal the mean flow
-                #------------------------------------------------
-                approximated_ff_spectral[mx, :, mz] = mean_ff_spectral[mx, :, mz]
-
-                # [uvw] of approximation at the zero Fourier modes 
-                # equals the [uvw] of mean at the zero Fourier modes.
-                
-                # Therefore the projection will be of the total flow,
-                # i.e. original + mean flow
-
+            if kx == 0 and kz == 0: # Zero Fourier modes
+                #----------------------------------------------------
+                #### Set the zero Fourier modes to equal the spectral deviation profile
+                #----------------------------------------------------
+                approximated_ff_spectral[mx, :, mz] = spectral_deviation_profile                
                 continue # Start the loop again
-
             #------------------------------------------------
             #### Construct approximated flow field
             #------------------------------------------------
-            psi = np.asmatrix(resolvent_modes[mx,mz,:,:])
-            sigma = np.asmatrix(np.diag(singular_values[mx,mz,:]))
-            xi = np.asmatrix(coefficients[mx,mz,:]).T
-
+            psi = np.asmatrix(resolvent_modes[mx,mz,:,:r])
+            sigma = np.asmatrix(np.diag(singular_values[mx,mz,:r]))
+            xi = np.asmatrix(coefficients[mx,mz,:r]).T
             tmp = psi * sigma * xi
             approximated_ff_spectral[mx, :, mz] = np.squeeze(np.asarray(tmp))
     
