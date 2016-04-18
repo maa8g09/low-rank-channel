@@ -822,7 +822,7 @@ def write_H5_Deconstructed(deconstructed_field, original_attrs, ff_approximated,
         
         for k, v in original_attrs.items():
             g2.attrs[k] = original_attrs[k] 
-            print(k + " " + str(g2.attrs[k])
+            print(k + " " + str(g2.attrs[k]))
 
 
 
