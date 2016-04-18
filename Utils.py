@@ -300,6 +300,7 @@ def read_H5_Deconstructed(fileName):
         df["original_attrs"] = {}
         for item in g2.attrs:
             df["original_attrs"][item] = g2.attrs[item]
+            print(item + " " + str(df["original_attrs"][item]))
             
     
     
@@ -786,6 +787,8 @@ def write_H5(flowField, orig_attrs, fileName):
     
     for item in orig_attrs.items():
         f.attrs[item] = orig_attrs[item] 
+        print(item + " " + str(f.attrs[item]))
+        
     f.close()
 
 
@@ -819,6 +822,7 @@ def write_H5_Deconstructed(deconstructed_field, original_attrs, ff_approximated,
         
         for k, v in original_attrs.items():
             g2.attrs[k] = original_attrs[k] 
+            print(k + " " + str(g2.attrs[k])
 
 
 
