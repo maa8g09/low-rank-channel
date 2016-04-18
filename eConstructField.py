@@ -67,6 +67,7 @@ if args.MeanProfile: # Velocity profile given
         deviation_profile = vel_profile - np.asarray(baseflow_profile)
 deviation_profile_sp = np.fft.fft(deviation_profile)
 spectral_deviation_profile[1:numModes] = deviation_profile_sp[1:numModes]
+
 #================================================================
 #### Reconstruct approximated flow field
 #================================================================
