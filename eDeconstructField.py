@@ -128,4 +128,4 @@ deconstructed_field = cr.deconstruct_field(ff_original.velocityField,
 #### Write decomposed flow field to disk as an HDF5 file
 #================================================================
 ut.write_H5_Deconstructed(deconstructed_field, ff_original, args.File[:-3])
-print("Finished\n")
+print("\nFinished\n")

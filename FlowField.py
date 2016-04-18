@@ -329,8 +329,8 @@ class FlowFieldChannelFlow(object):
                                                      axis=2)
 
             elif self.baseflow == "cou": # Couette base flow
-                top_boundary = np.ones((self.Nd, self.Nx, 1, self.Nz))
-                bot_boundary = -1.0*top_boundary # no-slip boundary condition
+                top_boundary = np.zeros((self.Nd, self.Nx, 1, self.Nz))
+                bot_boundary =top_boundary # no-slip boundary condition
                 self.velocityField = np.concatenate((top_boundary[:,:,:,:],
                                                      self.velocityField[:,:,:,:],
                                                      bot_boundary[:,:,:,:]),
