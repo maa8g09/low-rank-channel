@@ -297,10 +297,9 @@ def read_H5_Deconstructed(fileName):
         df["y"] = np.array(g2.get("y"))
         df["z"] = np.array(g2.get("z"))
     
-        g3 = hf.get("original_attrs")
         df["original_attrs"] = {}
-        for item in g3.attrs:
-            df["attoriginal_attrsrs"][item] = g3.attrs[item]
+        for item in g2.attrs:
+            df["attoriginal_attrsrs"][item] = g2.attrs[item]
             
     
     
@@ -818,9 +817,8 @@ def write_H5_Deconstructed(deconstructed_field, original_attrs, ff_approximated,
         g2.create_dataset("y", data=ff_approximated.y, compression="gzip")
         g2.create_dataset("z", data=ff_approximated.z, compression="gzip")
         
-        g3 = hf.create_dataset("original_attrs")
         for k, v in original_attrs.items():
-            g3.attrs[k] = original_attrs[k] 
+            g2.attrs[k] = original_attrs[k] 
 
 
 
