@@ -111,6 +111,9 @@ ff_approximated.add_wall_boundaries()
 #### Write approximated HDF5 file
 #================================================================
 prefix = args.File.split("deconstructed")[0]
-fileName = prefix + "rank_" + str(rank) + ".h5"
+fileName = prefix + "rank_" + str(rank)
+# Make a folder to put it in
+ut.make_Folder(os.getcwd(), fileName, True)
+fileName += ".h5"
 ut.write_H5(ff_approximated, deconstructed_field['original_attrs'],fileName) # need to write attributes to file...
 print("\n\nFinished\n")

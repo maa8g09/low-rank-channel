@@ -884,25 +884,29 @@ def format_Directory_Path(directory):
         directory += "/"
     return directory
 
-def make_Temporary_Folder(parent_directory, name, delete):
-    tmp_folder = "tmp-" + name + "/"
-    tmp_folder = parent_directory + tmp_folder
+
+
+def make_Folder(parent_directory, name, delete):
+    parent_directory = format_Directory_Path(parent_directory)
+    folder = name + "/"
+    folder = parent_directory + folder
     
     #if a temporary directory exists
-    if os.path.exists(tmp_folder) and delete:
-        command = "rm -rf " + tmp_folder
+    if os.path.exists(folder) and delete:
+        command = "rm -rf " + folder
         os.system(command)
 
-    elif os.path.exists(tmp_folder) and not delete:
-        print("Temporary folder already exists:")
-        print(tmp_folder)
+    elif os.path.exists(folder) and not delete:
+        print("Folder already exists:")
+        print(folder)
         print("Will write to it...\n")
     
     #if a temporary directory doesn't exist, create one.
-    if not os.path.exists(tmp_folder):
-        os.mkdir(tmp_folder)
+    if not os.path.exists(folder):
+        os.mkdir(folder)
     
-    return tmp_folder
+    return folder
+
 
 
 def plot_Contour(output_directory, fileName, 
