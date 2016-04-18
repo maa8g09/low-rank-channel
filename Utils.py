@@ -282,17 +282,17 @@ def read_H5_Deconstructed(fileName):
     df = {}
     with h5py.File(fileName, 'r') as hf:
         g1 = hf.get("deconstructed_field")
-        df["resolvent_modes"] = g1.get("resolvent_modes")
-        df["forcing_modes"] = g1.get("forcing_modes")
-        df["singular_values"] = g1.get("singular_values")
-        df["coefficients"] = g1.get("coefficients")
+        df["resolvent_modes"] = np.array(g1.get("resolvent_modes"))
+        df["forcing_modes"] = np.array(g1.get("forcing_modes"))
+        df["singular_values"] = np.array(g1.get("singular_values"))
+        df["coefficients"] = np.array(g1.get("coefficients"))
         for item in g1.attrs:
             df[item] = g1.attrs[item]
 
         g2 = hf.get("geometry")
-        df["x"] = g2.get("x")
-        df["y"] = g2.get("y")
-        df["z"] = g2.get("z")
+        df["x"] = np.array(g2.get("x"))
+        df["y"] = np.array(g2.get("y"))
+        df["z"] = np.array(g2.get("z"))
     
     Nx = df['Nx']
     Nz = df['Nz']
