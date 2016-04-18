@@ -299,7 +299,7 @@ def read_H5_Deconstructed(fileName):
     
         df["original_attrs"] = {}
         for item in g2.attrs:
-            df["original_attrsrs"][item] = g2.attrs[item]
+            df["original_attrs"][item] = g2.attrs[item]
             
     
     
