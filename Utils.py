@@ -358,6 +358,7 @@ def read_Output_DNS(fileName, T0, T1):
     data = {}
     data['t'] = []
     data['L2Norm(u)'] = []
+    data['Uparab*h/nu'] = []
 #    data['dissip(u+U)'] = []
 #    data['CFL'] = []
 
