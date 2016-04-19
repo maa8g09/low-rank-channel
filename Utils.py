@@ -1027,7 +1027,7 @@ def plot_Convergence_DNS(data, T0, T1): # include T0 and T1 in the name of the f
 
 def plot_Convergence_DNS_log(data, T0, T1): # include T0 and T1 in the name of the file
 
-    fileName = "convergence_DNS_Re"+str(data['Uparab*h/nu'])+"_log_"+str(T0)+"-"+str(T1)+".png"
+    fileName = "convergence_DNS_Re"+str(int(data['Uparab*h/nu'][0]))+"_log_"+str(T0)+"-"+str(T1)+".png"
 
     x = data['t']
     y = data['L2Norm(u)']
