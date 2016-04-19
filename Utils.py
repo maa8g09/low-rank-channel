@@ -377,6 +377,11 @@ def read_Output_DNS(fileName, T0, T1):
                     data['L2Norm(u)'].append(float(values[2]))
                     continue
 
+            elif values[0] == 'Uparab*h/nu':
+                if values[2] != '-nan' or values[2] != 'nan' or values[2] != 'done!':
+                    data['Uparab*h/nu'].append(float(values[2]))
+                    continue
+
 #            elif values[0] == 'dissip(u+U)':
 #                if values[2] != '-nan' or values[2] != 'nan' or values[2] != 'done!':
 #                    data['dissip(u+U)'].append(float(values[2]))
@@ -389,6 +394,7 @@ def read_Output_DNS(fileName, T0, T1):
 
     data['t']           = np.asarray(data['t'])
     data['L2Norm(u)']   = np.asarray(data['L2Norm(u)'])
+    data['Uparab*h/nu'] = np.asarray(data['Uparab*h/nu'])
 #    data['dissip(u+U)'] = np.asarray(data['dissip(u+U)'])
 #    data['CFL']         = np.asarray(data['CFL'])
 
@@ -397,6 +403,7 @@ def read_Output_DNS(fileName, T0, T1):
 
     data['t']         = data['t'][T0:T1]
     data['L2Norm(u)'] = data['L2Norm(u)'][T0:T1]
+    data['Uparab*h/nu']= data['Uparab*h/nu'][T0:T1]
 
     return data
 
@@ -1019,7 +1026,7 @@ def plot_Convergence_DNS(data, T0, T1): # include T0 and T1 in the name of the f
 
 def plot_Convergence_DNS_log(data, T0, T1): # include T0 and T1 in the name of the file
 
-    fileName = "convergence_DNS_log_"+str(T0)+"-"+str(T1)+".png"
+    fileName = "convergence_DNS_Re"+str(data['Uparab*h/nu'])+"_log_"+str(T0)+"-"+str(T1)+".png"
 
     x = data['t']
     y = data['L2Norm(u)']
