@@ -32,4 +32,5 @@ T1 = int(args.t_end)
 
 data = ut.read_Output_DNS(args.File, T0, T1)
 ut.plot_Convergence_DNS(data, T0, T1)
+ut.plot_Convergence_DNS_log(data, T0, T1)
 ut.print_EndMessage()

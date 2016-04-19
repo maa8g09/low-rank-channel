@@ -303,11 +303,11 @@ def deconstruct_field(original_ff_spectral,
     startTime = datetime.now()
     for mx in range(0, len(kx_array)):
         kx = kx_array[mx]
-#        print('\n\nkx:'+ str(kx))
+        print('\nkx:'+ str(kx))
         for mz in range(0, len(kz_array)):
             kz  = kz_array[mz]
-#            sys.stdout.write(".")
-#            sys.stdout.flush()
+            sys.stdout.write(".")
+            sys.stdout.flush()
             if kx == 0 and kz == 0: # Zeroth Fourier modes
                 resolvent_modes_array[mx, mz, :, 0] = original_ff_spectral[mx, :, mz]
                 continue # Start the loop again

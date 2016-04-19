@@ -1017,6 +1017,27 @@ def plot_Convergence_DNS(data, T0, T1): # include T0 and T1 in the name of the f
 
     return 0
 
+def plot_Convergence_DNS_log(data, T0, T1): # include T0 and T1 in the name of the file
+
+    fileName = "convergence_DNS_log_"+str(T0)+"-"+str(T1)+".png"
+
+    x = data['t']
+    y = data['L2Norm(u)']
+    y = np.log(y)
+    
+    ymax = max(y) * 1.01 # 1% above max
+    ymin = min(y) * 0.99 # 1% below min
+    plt.figure()
+    plt.plot(x, y, 'b-')
+    plt.xlabel('t')
+    plt.ylabel('$ln(\|u\|_{2})$')
+    plt.ylim([ymin, ymax])
+    plt.grid(True)
+    plt.title("DNS Convergence")
+    plt.savefig(fileName)
+
+    return 0
+    
 
 def plot_Vel_Profile(output_directory, fileName, vel_profile, y,
                      xAxisName, yAxisName):
