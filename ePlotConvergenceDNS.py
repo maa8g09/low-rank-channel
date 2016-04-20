@@ -23,7 +23,6 @@ parser.add_argument("-f",
                     metavar='\b',
                     help="File to read.",
                     required=True)
-ut.print_Start_Bar()
 args = parser.parse_args()
 
 # Make sure that the numbers are integers for start and end time

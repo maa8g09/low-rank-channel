@@ -179,7 +179,7 @@ def fft_ifft(A):
 def no_difference(A, B, tolerance):
     difference = np.linalg.norm(A - B)
     if difference >= tolerance:
-        err = 'Something went wrong with the projection, difference is ||u_approx - u_original|| = %.2E' % difference
+        err = 'Something went wrong with the projection, difference is ||u_approx - u_original|| = %.6e' % difference
         ut.error(err)
     return
     

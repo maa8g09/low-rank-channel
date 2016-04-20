@@ -361,12 +361,12 @@ def read_Output_DNS(fileName, T0, T1):
     data['Uparab*h/nu'] = []
 #    data['dissip(u+U)'] = []
 #    data['CFL'] = []
-
+    tmp = -1
     for k, line in enumerate(file):
         values = line.split()
 
         if len(values) == 0:
-            print("Reading...")
+            tmp+=1
 
         else:
             if values[0] == 't':
@@ -905,11 +905,10 @@ def make_Folder(parent_directory, name, delete):
         os.system(command)
 
     elif os.path.exists(folder) and not delete:
-        print("Folder already exists:")
-        print(folder)
-        print("Will write to it...\n")
+        print("Folder already exists:\t" + folder)
+        print("Will write to it...")
     
-    #if a temporary directory doesn't exist, create one.
+    #if directory doesn't exist, create one.
     if not os.path.exists(folder):
         os.mkdir(folder)
     
@@ -933,7 +932,7 @@ def plot_Contour(output_directory, fileName,
     x, y = np.meshgrid(xAxis, yAxis)
     v_min = np.amin(data)
     v_max = np.amax(data)
-    v = np.linspace(VL_min, VL_max, 21, endpoint=True)
+    v = np.linspace(VL_min, VL_max, 100, endpoint=True)
     ticks_at = [VL_min, v_min, 0, v_max, VL_max]
 #    print(ticks_at)
     origin = 'lower'
@@ -986,7 +985,7 @@ def plot_Contour(output_directory, fileName,
     plt.xlabel(xAxisName)
     plt.ylabel(yAxisName)
 
-    title = "Re" + str(Re) + "\nt = " + fileName[1:] + "\n[ " + velName + " , " + xCoordStr + " , " + yCoordStr + " , " + zCoordStr + " ]"
+    title = "Re" + str(Re) + "\nt = " + fileName[1:] + "\n[ " + xCoordStr + " , " + yCoordStr + " , " + zCoordStr + " ]"
     plt.title(title)
 
 #    cbar = fig.colorbar(CS)
@@ -998,8 +997,13 @@ def plot_Contour(output_directory, fileName,
     plt.xticks(xticks)#, fontsize = 15)
     plt.yticks(yticks)#, fontsize = 15)
 
-    fileName = output_directory + fileName + "_" + velName + "_x" + nxCoordStr + "_y" + nyCoordStr + "_z" + nzCoordStr + ".png"
-    plt.savefig(fileName, bbox_inches='tight', dpi=96)
+    fileName = output_directory + fileName + "_" + velName + "_x" + nxCoordStr + "_y" + nyCoordStr + "_z" + nzCoordStr 
+    if quiv:
+        fileName += "_q.png"
+    else:
+        fileName += ".png"
+
+    plt.savefig(fileName, bbox_inches='tight', dpi=my_dpi)
     plt.close(fig)
 
     return 0
@@ -1027,7 +1031,9 @@ def plot_Convergence_DNS(data, T0, T1): # include T0 and T1 in the name of the f
 
 def plot_Convergence_DNS_log(data, T0, T1): # include T0 and T1 in the name of the file
 
-    fileName = "convergence_DNS_Re"+str(int(data['Uparab*h/nu'][0]))+"_log_"+str(T0)+"-"+str(T1)+".png"
+#    fileName = "convergence_DNS_Re"+str(int(data['Uparab*h/nu'][0]))+"_log_"+str(T0)+"-"+str(T1)+".png"
+
+    fileName = "convergence_DNS_log_"+str(T0)+"-"+str(T1)+".png"
 
     x = data['t']
     y = data['L2Norm(u)']
@@ -1045,6 +1051,36 @@ def plot_Convergence_DNS_log(data, T0, T1): # include T0 and T1 in the name of t
     plt.savefig(fileName)
 
     return 0
+
+
+def plot_Recurrence(x, y, data, T0, T1, tmax, fileName):
+    fileName+=".png"
+    my_dpi = 150
+    figx = len(x)*8
+    figy = len(y)*8
+    #### Plot output
+    fig = plt.figure(figsize=(figx/my_dpi, figy/my_dpi), dpi=my_dpi)
+    x, y = np.meshgrid(x, y)
+    origin = 'lower'
+    levels = 111
+#    levels = np.linspace(0.0, 0.04, 12, endpoint=False)
+    CS = plt.contourf(x, y, data, 
+                      levels,
+                      cmap=cm.jet, origin=origin)
+    cbar = fig.colorbar(CS,format='%.4e')
+    plt.axes().set_aspect('equal')
+    plt.xlabel('$t$ (Time units)')
+    plt.ylabel('$T$ (shift)')
+    plt.title('$||u(t)  -  u(t+T)||$')
+    plt.grid(True)
+    plt.xlim([T0, T1])
+    plt.ylim([0, tmax])
+    plt.savefig(fileName, bbox_inches='tight', dpi=my_dpi)
+    plt.close(fig)
+#    plt.show()
+    
+    return 0
+    
     
 
 def plot_Vel_Profile(output_directory, fileName, vel_profile, y,
@@ -1203,8 +1239,8 @@ def print_DNSSubHeader():
 
 
 def print_EndMessage():
-    print('\nAll finished!')
-    print('___________________________________________________________________________________\n\n')
+    print('Finished!')
+#    print('___________________________________________________________________________________\n\n')
     return 0
 
 
