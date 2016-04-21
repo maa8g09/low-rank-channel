@@ -29,7 +29,11 @@ os.system(deconstruct)
 
 #### Rank: Full
 #### ---Construct
-rankfull = "eConstructField.py -f "+name+"_deconstructed.h5 -r 1000"
+print("\n======================================================================")
+print("RANK: Full")
+print("======================================================================")
+rankfull = "\n\neConstructField.py -f "+name+"_deconstructed.h5 -r 1000"
+print(rankfull)
 os.system(rankfull)
 fileName = name+"_rank_full"
 rankfull_d = directory + fileName
@@ -42,20 +46,24 @@ plot = "ePlotField.py -f "+fileName+".h5 -d ../eq1_Details.txt -i 0 -n 2"
 print(plot)
 os.system(plot)
 #### ---NKH Search
-nkh = "findsoln -eqb -log nkh-"+fileName+".log "+fileName+".h5"
+nkh = "findsoln -eqb -sn -log nkh-"+fileName+".log "+fileName+".h5"
 print(nkh)
 os.system(nkh)
 print("\n\n::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n\n")
 
 #### Loop through ranks
-ranks = [2,4,10,20]
+ranks = [2,4,10,20,40,60]
 for r in range(0, len(ranks)):
     rank = ranks[r]
+    print("\n======================================================================")
+    print("RANK: " + str(rank))
+    print("======================================================================")
     #### Change into main folder
     os.chdir(directory)
     #### Construct field into rank folder
-    rank = "eConstructField.py -f "+name+"_deconstructed.h5 -r " + str(rank)
-    os.system(rank)
+    construct = "\neConstructField.py -f "+name+"_deconstructed.h5 -r " + str(rank)
+    print(construct)
+    os.system(construct)
     #### Change into rank folder
     fileName = name+"_rank_" + str(rank)
     rank_dir = directory + fileName
@@ -68,7 +76,7 @@ for r in range(0, len(ranks)):
     print(plot)
     os.system(plot)
     #### NKH Search
-    nkh = "\nfindsoln -eqb -log nkh-"+fileName+".log "+fileName+".h5"
+    nkh = "\nfindsoln -eqb -sn -log nkh-"+fileName+".log "+fileName+".h5"
     print(nkh)
     os.system(nkh)
-    print("\n\n::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n\n")
+
