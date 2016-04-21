@@ -52,11 +52,11 @@ def make_FlowField_output_directory_wIteration(output_directory, flowFieldGeomet
     return output_directory
 
 
-def make_ff_from_profile(turb_mean, Nd, Nx, Nz):
-    ff = np.zeros((Nd, Nx, len(turb_mean), Nz))
+def make_ff_from_profile(profile, Nd, Nx, Nz):
+    ff = np.zeros((Nd, Nx, len(profile), Nz))
     for nx in range(0, Nx):
         for nz in range(0, Nz):
-            ff[0, nx, :, nz] = turb_mean
+            ff[0, nx, :, nz] = profile
     return ff
 
 
