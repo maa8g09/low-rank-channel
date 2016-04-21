@@ -49,17 +49,21 @@ suffix = ""
 profile = []
 if args.Baseflow: # given baseflow flag
     if args.Baseflow == "lam": # Laminary base flow
+        print("Adding laminar baseflow to " + str(args.File))
         profile = 1.0 - ff_original.y**2.0
         suffix = "bf_lam"
     elif args.Baseflow == "cou": # Couette base flow
+        print("Adding Couette baseflow to " + str(args.File))
         profile = ff_original.y
         suffix = "bf_cou"
 elif args.Profile: # given velocity profile file.
     profile = ut.read_Vel_Profile(args.Profile)
     deviation = any(n < 0 for n in profile)
     if deviation:
+        print("Adding deviation profile to " + str(args.File))
         suffix = "turb_deviation"
     else:
+        print("Adding mean profile to " + str(args.File))
         suffix = "turb_mean"
 profile_ff = ut.make_ff_from_profile(profile,
                                      ff_original.Nd,
