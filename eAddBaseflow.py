@@ -17,7 +17,7 @@ parser.add_argument("-bf",
 #                    metavar='\b',
                     help="The baseflow to add.",
                     choices=['lam', 'cou'])
-parser.add_argument("-v",
+parser.add_argument("-p",
                     "--Profile",
                     metavar='\b',
                     help="The mean/deviation/baseflow profile to add")

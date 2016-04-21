@@ -119,6 +119,5 @@ fileName = prefix + "rank_" + rankStr
 # Make a folder to put it in
 folder = ut.make_Folder(os.getcwd(), fileName, True)
 os.chdir(folder)
-fileName += ".h5"
 ut.write_H5(ff_approximated, deconstructed_field['original_attrs'],fileName)
 ut.print_EndMessage()
