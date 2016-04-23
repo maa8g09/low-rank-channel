@@ -2,18 +2,17 @@
 import argparse
 import os
 import sys
-sys.path.append("..")
+sys.path.append("/".join(sys.path[0].split("/")[:-1]))
 import Utils as ut
 parser = argparse.ArgumentParser(description="Convergence plot of NKH data.")
 parser.add_argument("-f",
                     "--File",
                     metavar='\b',
-                    help="File to read.",
-                    required=True)
+                    help="File to read.")
 parser.add_argument("-dir",
                     "--Directory",
                     metavar='\b',
-                    help="Directory to perform searches in.")
+                    help="Directory to look for convergence data in.")
 args = parser.parse_args()
 
 # If a convergence file given:
