@@ -1111,6 +1111,7 @@ def plot_Convergence_NKH_multi(all_convergence_data, xTitle, yTitle):
               "teal"]
     # You need to iterate through each dictionary and plot
     i=-1
+    fileName = ""
     sorted_data = collections.OrderedDict(sorted(all_convergence_data.items()))
     for case, v in sorted_data.items():
         i+=1
@@ -1129,6 +1130,7 @@ def plot_Convergence_NKH_multi(all_convergence_data, xTitle, yTitle):
         l = case.split("_")
         if len(l) == 1:
             l = l[0]
+            fileName = l
         else:
             l = l[1] + " " + l[2]
         ax1.plot(x, y, color=clrs[i], label=l)
@@ -1172,7 +1174,7 @@ def plot_Convergence_NKH_multi(all_convergence_data, xTitle, yTitle):
     plt.tick_params(axis='both', which='minor', labelsize=ticksMinorFontSize)
 
     plt.grid(True)
-    plt.savefig("all_convergence_plot_"+xTitle+"_vs_"+yTitle+".eps", format='eps', dpi=1000)
+    plt.savefig(fileName+"_convergence_plot_"+xTitle+"_vs_"+yTitle+".eps", format='eps', dpi=1000)
 
     return 0
 
