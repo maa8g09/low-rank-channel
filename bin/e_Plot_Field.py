@@ -3,42 +3,45 @@ import argparse
 import time
 import os
 import numpy as np
+import sys
+sys.path.append("/".join(sys.path[0].split("/")[:-1]))
 import Utils as ut
 import FlowField as ffClass
-date = time.strftime("%Y_%m_%d")
 parser = argparse.ArgumentParser(description="Plot flow field.")
-parser.add_argument("-f",
-                    "--File",
-                    metavar='\b',
-                    help="File to plot",
-                    required=True)
-parser.add_argument("-d",
-                    "--Details",
-                    metavar='\b',
-                    help="Details file.",
-                    required=True)
-parser.add_argument("-i",
-                    "--VelComponent",
-                    metavar='\b',
-                    help="Velocity component to plot (integers i.e. 0 = u, ...)",
-                    required=True,
-                    type=int)
-parser.add_argument("-n",
-                    "--SpatialComponent",
-                    metavar='\b',
-                    help="Spatial direction to plot in (integers i.e. 0 = x, ...),\nE.g. selecting 0 will plot yz planes.",
-                    required=True,
-                    type=int)
-parser.add_argument("-q",
-                    "--Quiver",
-                    help="Plot vector arrows as well.",
+parser.add_argument("-f", "--File", help="File to plot",
+                    metavar='\b', required=True)
+parser.add_argument("-d", "--Details", help="Details file.",
+                    metavar='\b', required=True)
+parser.add_argument("-i", "--VelComponent", help="Velocity component to plot (integers i.e. 0 = u, ...)",
+                    metavar='\b', required=True, type=int)
+parser.add_argument("-n", "--SpatialComponent", help="Spatial direction to plot in (integers i.e. 0 = x, ...),\nE.g. selecting 0 will plot yz planes.",
+                    metavar='\b', required=True, type=int)
+parser.add_argument("-full", "--Full", help="Plot vector arrows as well.",
+                    action='store_true')
+parser.add_argument("-c", "--Coordinate", help="Spatial co-ordinate of normal plane.",
+                    metavar='\b', type=float)
+parser.add_argument("-a", "--SpatiallyAveraged", help="Spatially averaged?.",
+                    action='store_true')
+parser.add_argument("-q", "--Quiver", help="Plot vector arrows as well.",
                     action='store_true')
 args = parser.parse_args()
+#===================================================================#
+#### Format current directory path                               ####
+#===================================================================#
 pwd = ut.format_Directory_Path(os.getcwd())
+#===================================================================#
+#### Read file and details file                                  ####
+#===================================================================#
 file_info, original_attrs = ut.read_H5(args.File)
 details = ut.read_Details(args.Details)
+#===================================================================#
+#### Make output directory for images and change into it         ####
+#===================================================================#
 images_directory = ut.make_Folder(pwd, "images_" + str(args.File)[:-3], False)
 os.chdir(images_directory)
+#===================================================================#
+#### Initialise flow field class with given file                 ####
+#===================================================================#
 ff = ffClass.FlowFieldChannelFlow( file_info['Nd'],
                                             file_info['Nx'],
                                             file_info['Ny'],
@@ -52,6 +55,9 @@ ff = ffClass.FlowFieldChannelFlow( file_info['Nd'],
                                             details['Re'],
                                             file_info['ff'],
                                             "pp")
+#===================================================================#
+#### Set velocity and spatial components                         ####
+#===================================================================#
 i = args.VelComponent
 n = args.SpatialComponent
 m=n+1; p=n-1
@@ -66,45 +72,149 @@ elif i==1:
     velName = "v"
 elif i==2:
     velName = "w"
+#===================================================================#
+#### Start plotting                                              ####
+#===================================================================#
 print("Plotting...")
 vl_max = np.amax(ff.velocityField[i, :, :, :])
 vl_min = np.amin(ff.velocityField[i, :, :, :])
-if n == 0:
-    x_directory = ut.make_Folder(images_directory, "x", False)
-    for j in range(0, ff.Nx):
-        ut.plot_Contour(x_directory, str(args.File[:-3]), 
-                        ff.z, ff.y, ff.velocityField[i, j, :, :], 
-                        format(ff.x[j], '.2f'), ":", ":", 
+#===================================================================#
+#### If FULL selected                                            ####
+#===================================================================#
+if args.Full
+    if n == 0:
+        x_directory = ut.make_Folder(images_directory, "x", False)
+        for j in range(0, ff.Nx):
+            ut.plot_Contour(x_directory, str(args.File[:-3]), 
+                            ff.z, ff.y, ff.velocityField[i, j, :, :], 
+                            format(ff.x[j], '.2f'), ":", ":", 
+                            ff.Re, 
+                            str(j),  "-", "-",
+                            ff.velocityField[m, j, :, :], 
+                            ff.velocityField[p, j, :, :], 
+                            "z", "y", velName,
+                            vl_max, vl_min, args.Quiver)
+    elif n == 1:
+        y_directory = ut.make_Folder(images_directory, "y", False)
+        for j in range(0, ff.Ny):
+            ut.plot_Contour(y_directory, str(args.File[:-3]), 
+                            ff.z, ff.x, ff.velocityField[i, :, j, :], 
+                            ":", format(ff.y[j], '.2f'), ":", 
+                            ff.Re, 
+                            "-", str(j), "-", 
+                            ff.velocityField[m, :, j, :], 
+                            ff.velocityField[p, :, j, :], 
+                            "z", "x", velName,
+                            vl_max, vl_min, args.Quiver)
+    elif n == 2:
+        z_directory = ut.make_Folder(images_directory, "z", False)
+        for j in range(0, ff.Nz):
+            ut.plot_Contour(z_directory, str(args.File[:-3]), 
+                            ff.x, ff.y, ff.velocityField[i, :, :, j].T, 
+                            ":", ":", format(ff.z[j], '.2f'), 
+                            ff.Re, 
+                            "-", "-", str(j), 
+                            ff.velocityField[m, :, :, j].T, 
+                            ff.velocityField[p, :, :, j].T, 
+                            "x", "y", velName,
+                            vl_max, vl_min, args.Quiver)
+#===================================================================#
+#### If Co-Ordinate given                                        ####
+#===================================================================#
+if args.Coordinate:
+    if n == 0:
+        coords = Tests.indices(ff.x, lambda m: m > float(args.Coordinate))
+        x_coord = coords[0]
+        ut.plot_Contour(pwd, str(args.File[:-3]), 
+                        ff.z, ff.y, ff.velocityField[i, x_coord, :, :], 
+                        format(ff.x[x_coord], '.2f'), ":", ":", 
                         ff.Re, 
-                        str(j),  "-", "-",
-                        ff.velocityField[m, j, :, :], 
-                        ff.velocityField[p, j, :, :], 
+                        str(x_coord),  "-", "-",
+                        ff.velocityField[m, x_coord, :, :], 
+                        ff.velocityField[p, x_coord, :, :], 
                         "z", "y", velName,
                         vl_max, vl_min, args.Quiver)
-
-
-elif n == 1:
-    y_directory = ut.make_Folder(images_directory, "y", False)
-    for j in range(0, ff.Ny):
-        ut.plot_Contour(y_directory, str(args.File[:-3]), 
-                        ff.z, ff.x, ff.velocityField[i, :, j, :], 
-                        ":", format(ff.y[j], '.2f'), ":", 
+    elif n == 1:
+        coords = Tests.indices(ff.y, lambda m: m > float(args.Coordinate))
+        y_coord = coords[-1]
+        ut.plot_Contour(pwd, str(args.File[:-3]), 
+                        ff.z, ff.x, ff.velocityField[i, :, y_coord, :], 
+                        ":", format(ff.y[y_coord], '.2f'), ":", 
                         ff.Re, 
-                        "-", str(j), "-", 
-                        ff.velocityField[m, :, j, :], 
-                        ff.velocityField[p, :, j, :], 
+                        "-", str(y_coord), "-", 
+                        ff.velocityField[m, :, y_coord, :], 
+                        ff.velocityField[p, :, y_coord, :], 
                         "z", "x", velName,
                         vl_max, vl_min, args.Quiver)
-elif n == 2:
-    z_directory = ut.make_Folder(images_directory, "z", False)
-    for j in range(0, ff.Nz):
-        ut.plot_Contour(z_directory, str(args.File[:-3]), 
-                        ff.x, ff.y, ff.velocityField[i, :, :, j].T, 
-                        ":", ":", format(ff.z[j], '.2f'), 
+    elif n == 2:
+        coords = Tests.indices(ff.z, lambda m: m > float(args.Coordinate))
+        z_coord = coords[0]
+        ut.plot_Contour(pwd, str(args.File[:-3]), 
+                        ff.x, ff.y, ff.velocityField[i, :, :, z_coord].T, 
+                        ":", ":", format(ff.z[z_coord], '.2f'), 
                         ff.Re, 
-                        "-", "-", str(j), 
-                        ff.velocityField[m, :, :, j].T, 
-                        ff.velocityField[p, :, :, j].T, 
+                        "-", "-", str(z_coord), 
+                        ff.velocityField[m, :, :, z_coord].T, 
+                        ff.velocityField[p, :, :, z_coord].T, 
+                        "x", "y", velName,
+                        vl_max, vl_min, False)
+#===================================================================#
+#### If Spatially averaging selected                             ####
+#===================================================================#
+if args.SpatiallyAveraged:
+    if n == 0:
+        # Average the flow field in teh streamwise direction.
+        x_averaged_ff = np.zeros((ff.Nd, ff.Ny, ff.Nz))
+        for nd in range(0, ff.Nd):
+            for nx in range(0, ff.Nx):
+                x_averaged_ff[nd, :, :] += ff.velocityField[nd, nx, :, :]
+        x_averaged_ff *= (1.0 / ff.Nx)
+        vl_max = np.amax(x_averaged_ff[i, :, :])
+        vl_min = np.amin(x_averaged_ff[i, :, :])
+        ut.plot_Contour(images_directory, fileName, 
+                        ff.z, ff.y, x_averaged_ff[i, :, :], 
+                        "avg", ":", ":", 
+                        ff.Re, 
+                        "x-avg",  "-", "-",
+                        x_averaged_ff[m, :, :], 
+                        x_averaged_ff[p, :, :], 
+                        "z", "y", velName,
+                        vl_max, vl_min, args.Quiver)
+    elif n == 1:
+        # Average the flow field in teh streamwise direction.
+        y_averaged_ff = np.zeros((ff.Nd, ff.Nx, ff.Nz))
+        for nd in range(0, ff.Nd):
+            for ny in range(0, ff.Ny):
+                y_averaged_ff[nd, :, :] += ff.velocityField[nd, :, ny, :]
+        y_averaged_ff *= (1.0 / ff.Ny)
+        vl_max = np.amax(y_averaged_ff[i, :, :])
+        vl_min = np.amin(y_averaged_ff[i, :, :])
+        ut.plot_Contour(images_directory, fileName, 
+                        ff.z, ff.x, y_averaged_ff[i, :, :], 
+                        ":", "avg", ":", 
+                        ff.Re, 
+                        "-", "y-avg", "-", 
+                        y_averaged_ff[m, :, :], 
+                        y_averaged_ff[p, :, :], 
+                        "z", "x", velName,
+                        vl_max, vl_min, args.Quiver)
+    elif n == 2:
+        # Average the flow field in teh streamwise direction.
+        z_averaged_ff = np.zeros((ff.Nd, ff.Nx, ff.Ny))
+        for nd in range(0, ff.Nd):
+            for nz in range(0, ff.Nz):
+                z_averaged_ff[nd, :, :] += ff.velocityField[nd, :, :, nz]
+        z_averaged_ff *= (1.0 / ff.Nz)
+        vl_max = np.amax(z_averaged_ff[i, :, :])
+        vl_min = np.amin(z_averaged_ff[i, :, :])    
+        ut.plot_Contour(images_directory, fileName, 
+                        ff.x, ff.y, z_averaged_ff[i, :, :].T, 
+                        ":", ":", "avg", 
+                        ff.Re, 
+                        "-", "-", "z-avg", 
+                        z_averaged_ff[m, :, :].T, 
+                        z_averaged_ff[p, :, :].T, 
                         "x", "y", velName,
                         vl_max, vl_min, args.Quiver)
+
 ut.print_EndMessage()
