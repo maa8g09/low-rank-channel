@@ -123,7 +123,6 @@ class FlowFieldChannelFlow(object):
         self.Nz = Nz
         self.Lx = Lx
         self.Lz = Lz
-
         Mx_tmp = np.arange(-np.ceil(Nx/2)+1, np.floor(Nx/2)+1)
         self.Mx = np.zeros(Nx)
         if Nx % 2 == 0:
@@ -145,38 +144,26 @@ class FlowFieldChannelFlow(object):
             # odd Nz
             self.Mz[:np.ceil(Nz/2)] = Mz_tmp[np.floor(Nz/2):]
             self.Mz[-np.floor(Nz/2):] = Mz_tmp[:np.ceil(Nz/2)-1]
-
-
         self.alpha = alpha
         self.beta = beta
         self.c = c
         self.baseflow = baseflow
         self.Re = Re
         self.velocityField = ff
-
         if self.velocityField.ndim == 4:
             self.is_stacked_in_y = False
-
         elif self.velocityField.ndim == 3:
             self.is_stacked_in_y = True
-
         self.state = state
-        
         self.x = np.linspace(0.0, self.Lx, Nx)
         self.z = np.linspace(0.0, self.Lz, Nz)
         self.y = np.linspace(1.0, -1.0, Ny) # uniform grid spacing
         for ny in range(0, Ny): # Chebyshev nodes
             self.y[ny] = np.cos(ny * np.pi/ (Ny-1))
 
-
-
-
     def set_ff(self, ff, state):
         self.velocityField = ff
         self.state = state
-
-
-
 
     def make_xz_spectral(self):
         if self.velocityField.ndim == 4:
@@ -188,9 +175,6 @@ class FlowFieldChannelFlow(object):
             self.velocityField = np.fft.fft(self.velocityField, axis=0)
             self.state = "sp"
 
-
-
-
     def make_xz_physical(self):
         if self.velocityField.ndim == 4:
             self.velocityField = np.fft.ifft(self.velocityField, axis=1)
@@ -201,10 +185,7 @@ class FlowFieldChannelFlow(object):
             self.velocityField = np.fft.ifft(self.velocityField, axis=0)
             self.velocityField = np.fft.ifft(self.velocityField, axis=2)
             self.state = "sp"
-
-
-
-
+    
     def stack_ff_in_y(self):
         self.is_stacked_in_y = True
 #        self.velocityField = np.concatenate((self.velocityField[0, :, :, :],
@@ -215,8 +196,6 @@ class FlowFieldChannelFlow(object):
                                                          self.Ny*self.Nd,
                                                          self.Nz))
 
-
-
     def unstack_ff(self):
         self.is_stacked_in_y = False
         self.velocityField = self.velocityField.reshape((self.Nd,
@@ -224,16 +203,11 @@ class FlowFieldChannelFlow(object):
                                                          self.Ny,
                                                          self.Nz))
 
-
-
-
     def remove_wall_boundaries(self):
         if self.velocityField.ndim == 4:
             self.Ny -= 2 # end points removed
             self.numModes = self.Ny # since end points removed, Nm = Ny
             self.velocityField = self.velocityField[:, :, 1:-1, :]
-
-
 
     def add_wall_boundaries(self):
         if self.velocityField.ndim == 4:
@@ -245,7 +219,6 @@ class FlowFieldChannelFlow(object):
                                                      self.velocityField[:,:,:,:],
                                                      wall_boundary[:,:,:,:]),
                                                      axis=2)
-
             elif self.baseflow == "cou": # Couette base flow
                 top_boundary = np.zeros((self.Nd, self.Nx, 1, self.Nz))
                 bot_boundary =top_boundary # no-slip boundary condition
@@ -253,7 +226,6 @@ class FlowFieldChannelFlow(object):
                                                      self.velocityField[:,:,:,:],
                                                      bot_boundary[:,:,:,:]),
                                                      axis=2)
-
 
     def make_real(self):
         for nx in range(self.Nx):

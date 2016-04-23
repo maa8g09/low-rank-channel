@@ -960,7 +960,7 @@ def plot_Contour(output_directory, fileName,
                  xAxisVel, yAxisVel,
                  xAxisName, yAxisName, 
                  velName, VL_max, VL_min,
-                 quiv):
+                 quiv, printFullTitle):
 
     xticks = np.linspace(xAxis[0], xAxis[-1], 4)
     yticks = np.linspace(yAxis[0], yAxis[-1], 5)
@@ -997,32 +997,21 @@ def plot_Contour(output_directory, fileName,
 
     if quiv:
         plt.quiver(x, y,
-           xAxisVel,
-           yAxisVel,
-           color='k'
-           )
-                   
+                   xAxisVel,
+                   yAxisVel,
+                   color='k'
+                   )
 
-#    if xAxisName == "x" and yAxisName == "y":
-#        plt.quiver(x, y,
-#                   xAxisVel,
-#                   yAxisVel,
-#                   color='k',
-#                   scale=1.5
-#                   )
-#    else:
-#        plt.quiver(x, y,
-#                   xAxisVel,
-#                   yAxisVel,
-#                   color='k'
-#                   )
+    axisLabelFontSize = 18
+    ticksMajorFontSize = 12
+    ticksMinorFontSize = 8
 
+    plt.xlabel(xAxisName, fontsize=axisLabelFontSize)
+    plt.ylabel(yAxisName, fontsize=axisLabelFontSize)
 
-    plt.xlabel(xAxisName)
-    plt.ylabel(yAxisName)
-
-    title = "Re" + str(Re) + "\nt = " + fileName[1:] + "\n[ " + xCoordStr + " , " + yCoordStr + " , " + zCoordStr + " ]"
-    plt.title(title)
+    if printFullTitle:
+        title = "Re" + str(Re) + "\nt = " + fileName[1:] + "\n[ " + xCoordStr + " , " + yCoordStr + " , " + zCoordStr + " ]"
+        plt.title(title)
 
 #    cbar = fig.colorbar(CS)
     cbar = fig.colorbar(CS,ticks=ticks_at,format='%1.2g')#,fraction=0.046, pad=0.04)
@@ -1030,8 +1019,8 @@ def plot_Contour(output_directory, fileName,
 
     plt.axes().set_aspect('equal')
 
-    plt.xticks(xticks)#, fontsize = 15)
-    plt.yticks(yticks)#, fontsize = 15)
+    plt.xticks(xticks, fontsize = ticksMajorFontSize)
+    plt.yticks(yticks, fontsize = ticksMajorFontSize)
 
     fileName = output_directory + fileName + "_" + velName + "_x" + nxCoordStr + "_y" + nyCoordStr + "_z" + nzCoordStr 
     if quiv:

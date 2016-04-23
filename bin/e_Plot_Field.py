@@ -43,19 +43,19 @@ os.chdir(images_directory)
 #===================================================================#
 #### Initialise flow field class with given file                 ####
 #===================================================================#
-ff = ffClass.FlowFieldChannelFlow( file_info['Nd'],
-                                            file_info['Nx'],
-                                            file_info['Ny'],
-                                            file_info['Nz'],
-                                            file_info['Lx'],
-                                            file_info['Lz'],
-                                            file_info['alpha'],
-                                            file_info['beta'],
-                                            details['c'],
-                                            details['bf'],
-                                            details['Re'],
-                                            file_info['ff'],
-                                            "pp")
+ff = ffClass.FlowFieldChannelFlow(  file_info['Nd'],
+                                    file_info['Nx'],
+                                    file_info['Ny'],
+                                    file_info['Nz'],
+                                    file_info['Lx'],
+                                    file_info['Lz'],
+                                    file_info['alpha'],
+                                    file_info['beta'],
+                                    details['c'],
+                                    details['bf'],
+                                    details['Re'],
+                                    file_info['ff'],
+                                    "pp")
 #===================================================================#
 #### Set velocity and spatial components                         ####
 #===================================================================#
@@ -82,6 +82,7 @@ vl_min = np.amin(ff.velocityField[i, :, :, :])
 #===================================================================#
 #### If FULL selected                                            ####
 #===================================================================#
+printFullTitle = True
 if args.Full:
     if n == 0:
         x_directory = ut.make_Folder(images_directory, "x", False)
@@ -94,7 +95,8 @@ if args.Full:
                             ff.velocityField[m, j, :, :], 
                             ff.velocityField[p, j, :, :], 
                             "z", "y", velName,
-                            vl_max, vl_min, args.Quiver)
+                            vl_max, vl_min, args.Quiver,
+                            printFullTitle)
     elif n == 1:
         y_directory = ut.make_Folder(images_directory, "y", False)
         for j in range(0, ff.Ny):
@@ -106,7 +108,8 @@ if args.Full:
                             ff.velocityField[m, :, j, :], 
                             ff.velocityField[p, :, j, :], 
                             "z", "x", velName,
-                            vl_max, vl_min, args.Quiver)
+                            vl_max, vl_min, args.Quiver,
+                            printFullTitle)
     elif n == 2:
         z_directory = ut.make_Folder(images_directory, "z", False)
         for j in range(0, ff.Nz):
@@ -118,10 +121,12 @@ if args.Full:
                             ff.velocityField[m, :, :, j].T, 
                             ff.velocityField[p, :, :, j].T, 
                             "x", "y", velName,
-                            vl_max, vl_min, args.Quiver)
+                            vl_max, vl_min, args.Quiver,
+                            printFullTitle)
 #===================================================================#
 #### If Co-Ordinate given                                        ####
 #===================================================================#
+printFullTitle = True
 if args.Coordinate:
     if n == 0:
         coords = Tests.indices(ff.x, lambda m: m > float(args.Coordinate))
@@ -162,6 +167,7 @@ if args.Coordinate:
 #===================================================================#
 #### If Spatially averaging selected                             ####
 #===================================================================#
+printFullTitle = False
 if args.SpatiallyAveraged:
     if n == 0:
         # Average the flow field in teh streamwise direction.
@@ -172,6 +178,7 @@ if args.SpatiallyAveraged:
         x_averaged_ff *= (1.0 / ff.Nx)
         vl_max = np.amax(x_averaged_ff[i, :, :])
         vl_min = np.amin(x_averaged_ff[i, :, :])
+        fileName = str(args.File)[:-3] + "_x_avgd_"
         ut.plot_Contour(images_directory, fileName, 
                         ff.z, ff.y, x_averaged_ff[i, :, :], 
                         "avg", ":", ":", 
@@ -190,6 +197,7 @@ if args.SpatiallyAveraged:
         y_averaged_ff *= (1.0 / ff.Ny)
         vl_max = np.amax(y_averaged_ff[i, :, :])
         vl_min = np.amin(y_averaged_ff[i, :, :])
+        fileName = str(args.File)[:-3] + "_y_avgd_"
         ut.plot_Contour(images_directory, fileName, 
                         ff.z, ff.x, y_averaged_ff[i, :, :], 
                         ":", "avg", ":", 
@@ -207,8 +215,9 @@ if args.SpatiallyAveraged:
                 z_averaged_ff[nd, :, :] += ff.velocityField[nd, :, :, nz]
         z_averaged_ff *= (1.0 / ff.Nz)
         vl_max = np.amax(z_averaged_ff[i, :, :])
-        vl_min = np.amin(z_averaged_ff[i, :, :])    
-        ut.plot_Contour(images_directory, fileName, 
+        vl_min = np.amin(z_averaged_ff[i, :, :])
+        fileName = str(args.File)[:-3] + "_z_avgd_"
+        ut.plot_Contour(images_directory, fileName,
                         ff.x, ff.y, z_averaged_ff[i, :, :].T, 
                         ":", ":", "avg", 
                         ff.Re, 
