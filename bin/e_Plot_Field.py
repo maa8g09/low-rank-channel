@@ -25,7 +25,7 @@ parser.add_argument("-a", "--SpatiallyAveraged", help="Spatially averaged?.",
 parser.add_argument("-q", "--Quiver", help="Plot vector arrows as well?",
                     action='store_true')
 parser.add_argument("-l", "--Levels", help="How many levels the colorbar should have?",
-                    action='store_true')
+                    metavar='\b', type=int)
 args = parser.parse_args()
 #===================================================================#
 #### Format current directory path                               ####
