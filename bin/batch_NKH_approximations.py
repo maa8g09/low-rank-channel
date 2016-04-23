@@ -82,7 +82,7 @@ for r in range(0, len(ranks)):
 #    print(construct)
 #    os.system(construct)
     #### Change into rank folder
-    fileName = name+"_rank_" + str(rank)
+    fileName = name+"_rank_" + str(rank).zfill(2) 
     rank_dir = directory + fileName
     os.chdir(rank_dir)
     #### Plot flow field
