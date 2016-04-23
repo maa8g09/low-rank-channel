@@ -960,7 +960,7 @@ def plot_Contour(output_directory, fileName,
                  xAxisVel, yAxisVel,
                  xAxisName, yAxisName, 
                  velName, VL_max, VL_min,
-                 quiv, printFullTitle):
+                 quiv, levels, printFullTitle):
 
     xticks = np.linspace(xAxis[0], xAxis[-1], 4)
     yticks = np.linspace(yAxis[0], yAxis[-1], 5)
@@ -968,7 +968,8 @@ def plot_Contour(output_directory, fileName,
     x, y = np.meshgrid(xAxis, yAxis)
     v_min = np.amin(data)
     v_max = np.amax(data)
-    v = np.linspace(VL_min, VL_max, 100, endpoint=True)
+    
+    v = np.linspace(VL_min, VL_max, levels, endpoint=True)
     ticks_at = [VL_min, v_min, 0, v_max, VL_max]
 #    print(ticks_at)
     origin = 'lower'
@@ -1024,11 +1025,11 @@ def plot_Contour(output_directory, fileName,
 
     fileName = output_directory + fileName + "_" + velName + "_x" + nxCoordStr + "_y" + nyCoordStr + "_z" + nzCoordStr 
     if quiv:
-        fileName += "_q.png"
+        fileName += "_q.eps"
     else:
-        fileName += ".png"
+        fileName += ".eps"
 
-    plt.savefig(fileName, bbox_inches='tight', dpi=my_dpi)
+    plt.savefig(fileName, bbox_inches='tight', dpi=700)
     plt.close(fig)
 
     return 0

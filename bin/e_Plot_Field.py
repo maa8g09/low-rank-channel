@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import argparse
-import time
 import os
 import numpy as np
 import sys
@@ -17,13 +16,15 @@ parser.add_argument("-i", "--VelComponent", help="Velocity component to plot (in
                     metavar='\b', required=True, type=int)
 parser.add_argument("-n", "--SpatialComponent", help="Spatial direction to plot in (integers i.e. 0 = x, ...),\nE.g. selecting 0 will plot yz planes.",
                     metavar='\b', required=True, type=int)
-parser.add_argument("-full", "--Full", help="Plot vector arrows as well.",
-                    action='store_true')
 parser.add_argument("-c", "--Coordinate", help="Spatial co-ordinate of normal plane.",
                     metavar='\b', type=float)
+parser.add_argument("-full", "--Full", help="Plot all frames?",
+                    action='store_true')
 parser.add_argument("-a", "--SpatiallyAveraged", help="Spatially averaged?.",
                     action='store_true')
-parser.add_argument("-q", "--Quiver", help="Plot vector arrows as well.",
+parser.add_argument("-q", "--Quiver", help="Plot vector arrows as well?",
+                    action='store_true')
+parser.add_argument("-l", "--Levels", help="How many levels the colorbar should have?",
                     action='store_true')
 args = parser.parse_args()
 #===================================================================#
@@ -95,7 +96,7 @@ if args.Full:
                             ff.velocityField[m, j, :, :], 
                             ff.velocityField[p, j, :, :], 
                             "z", "y", velName,
-                            vl_max, vl_min, args.Quiver,
+                            vl_max, vl_min, args.Quiver, args.Levels,
                             printFullTitle)
     elif n == 1:
         y_directory = ut.make_Folder(images_directory, "y", False)
@@ -108,7 +109,7 @@ if args.Full:
                             ff.velocityField[m, :, j, :], 
                             ff.velocityField[p, :, j, :], 
                             "z", "x", velName,
-                            vl_max, vl_min, args.Quiver,
+                            vl_max, vl_min, args.Quiver, args.Levels,
                             printFullTitle)
     elif n == 2:
         z_directory = ut.make_Folder(images_directory, "z", False)
@@ -121,7 +122,7 @@ if args.Full:
                             ff.velocityField[m, :, :, j].T, 
                             ff.velocityField[p, :, :, j].T, 
                             "x", "y", velName,
-                            vl_max, vl_min, args.Quiver,
+                            vl_max, vl_min, args.Quiver, args.Levels,
                             printFullTitle)
 #===================================================================#
 #### If Co-Ordinate given                                        ####
@@ -139,7 +140,8 @@ if args.Coordinate:
                         ff.velocityField[m, x_coord, :, :], 
                         ff.velocityField[p, x_coord, :, :], 
                         "z", "y", velName,
-                        vl_max, vl_min, args.Quiver)
+                        vl_max, vl_min, args.Quiver, args.Levels,
+                        printFullTitle)
     elif n == 1:
         coords = Tests.indices(ff.y, lambda m: m > float(args.Coordinate))
         y_coord = coords[-1]
@@ -151,7 +153,8 @@ if args.Coordinate:
                         ff.velocityField[m, :, y_coord, :], 
                         ff.velocityField[p, :, y_coord, :], 
                         "z", "x", velName,
-                        vl_max, vl_min, args.Quiver)
+                        vl_max, vl_min, args.Quiver, args.Levels,
+                        printFullTitle)
     elif n == 2:
         coords = Tests.indices(ff.z, lambda m: m > float(args.Coordinate))
         z_coord = coords[0]
@@ -163,7 +166,8 @@ if args.Coordinate:
                         ff.velocityField[m, :, :, z_coord].T, 
                         ff.velocityField[p, :, :, z_coord].T, 
                         "x", "y", velName,
-                        vl_max, vl_min, False)
+                        vl_max, vl_min, args.Quiver, args.Levels,
+                        printFullTitle)
 #===================================================================#
 #### If Spatially averaging selected                             ####
 #===================================================================#
@@ -187,7 +191,8 @@ if args.SpatiallyAveraged:
                         x_averaged_ff[m, :, :], 
                         x_averaged_ff[p, :, :], 
                         "z", "y", velName,
-                        vl_max, vl_min, args.Quiver)
+                        vl_max, vl_min, args.Quiver, args.Levels,
+                        printFullTitle)
     elif n == 1:
         # Average the flow field in teh streamwise direction.
         y_averaged_ff = np.zeros((ff.Nd, ff.Nx, ff.Nz))
@@ -206,7 +211,8 @@ if args.SpatiallyAveraged:
                         y_averaged_ff[m, :, :], 
                         y_averaged_ff[p, :, :], 
                         "z", "x", velName,
-                        vl_max, vl_min, args.Quiver)
+                        vl_max, vl_min, args.Quiver, args.Levels,
+                        printFullTitle)
     elif n == 2:
         # Average the flow field in teh streamwise direction.
         z_averaged_ff = np.zeros((ff.Nd, ff.Nx, ff.Ny))
@@ -225,6 +231,6 @@ if args.SpatiallyAveraged:
                         z_averaged_ff[m, :, :].T, 
                         z_averaged_ff[p, :, :].T, 
                         "x", "y", velName,
-                        vl_max, vl_min, args.Quiver)
-
+                        vl_max, vl_min, args.Quiver, args.Levels,
+                        printFullTitle)
 ut.print_EndMessage()
