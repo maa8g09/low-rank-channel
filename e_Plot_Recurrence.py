@@ -22,9 +22,13 @@ for j, line in enumerate(seriesFile):
     if j==0:
         # Get details
         items = line.split()
-        T0 = int(items[3])
-        T1 = int(items[5])
-        tmax = int(items[9])
+        for k in range(0,len(items)):
+            if str(items[k]) == "-T0":
+                T0 = int(items[k+1])
+            elif items[k] == "-T1":
+                T1 = int(items[k+1])
+            elif items[k] == "-tmax":
+                tmax = int(items[k+1])
     else:
         values = line.split()
         vl_len=len(values)

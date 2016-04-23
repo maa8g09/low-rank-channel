@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import argparse
 from datetime import datetime
 import numpy as np
