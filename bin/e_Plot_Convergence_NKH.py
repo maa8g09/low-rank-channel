@@ -55,8 +55,9 @@ if args.Directory: # if a directory is given...
         break
     os.chdir(directory)
     
-    ut.make_Folder(directory, "convergence_NKH", False)  
-    
+    convergence_folder = ut.make_Folder(directory, "convergence_NKH", False)  
+    os.chdir(convergence_folder)
+
     ut.plot_Convergence_NKH_multi(all_convergence_data, "Newton_Steps", "L2Norm(u)")
     ut.plot_Convergence_NKH_multi(all_convergence_data, "ftotal", "L2Norm(u)")
     ut.plot_Convergence_NKH_multi(all_convergence_data, "fnewt", "L2Norm(u)")
