@@ -41,8 +41,9 @@ if args.Directory: # if a directory is given...
                  # populate the dictionary
 #                 all_convergence_data[fileName] = ut.read_NKH_convergence(file)
         
-
+        
         for sub_dir in sub_dirs:
+            sub_dir = os.path.join(root, sub_dir)
             os.chdir(sub_dir)
             for file in os.listdir(sub_dir):
                 if file.endswith("convergence.asc"):
