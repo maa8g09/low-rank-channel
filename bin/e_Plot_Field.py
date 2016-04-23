@@ -7,6 +7,7 @@ import sys
 sys.path.append("/".join(sys.path[0].split("/")[:-1]))
 import Utils as ut
 import FlowField as ffClass
+import Tests
 parser = argparse.ArgumentParser(description="Plot flow field.")
 parser.add_argument("-f", "--File", help="File to plot",
                     metavar='\b', required=True)
@@ -81,7 +82,7 @@ vl_min = np.amin(ff.velocityField[i, :, :, :])
 #===================================================================#
 #### If FULL selected                                            ####
 #===================================================================#
-if args.Full
+if args.Full:
     if n == 0:
         x_directory = ut.make_Folder(images_directory, "x", False)
         for j in range(0, ff.Nx):
