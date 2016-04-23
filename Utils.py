@@ -1120,11 +1120,11 @@ def plot_Convergence_NKH_multi(all_convergence_data, xTitle, yTitle):
             if key == xTitle:
                 x = data_set[key]
                 if yTitle == "L2Norm(du)":
-                    x = data_set[1:]
+                    x = data_set[key][1:]
             elif key == yTitle:
                 y = data_set[key]
                 if yTitle == "L2Norm(du)":
-                    y = data_set[1:]
+                    y = data_set[key][1:]
         # youve populated x and y, youve got your data_set. 
         # format case name with padded zeros
         l = case.split("_")
