@@ -332,7 +332,13 @@ def read_H5_Deconstructed(fileName):
     df['alpha'] = 2.0*np.pi / df['Lx']
     df['beta'] = 2.0*np.pi / df['Lz']
     return df
+
+
+def read_NKH_convergence(fileName):
+    convergence_data = {}
     
+    
+    return convergence_data
 
 def read_Output_DNS(fileName, T0, T1):    
     '''
