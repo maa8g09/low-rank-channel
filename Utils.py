@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+import collections
 import h5py
 #import pylab 
 import matplotlib
@@ -8,6 +9,11 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 #from matplotlib import animation
 from matplotlib import cm as cm
+from matplotlib.ticker import FormatStrFormatter
+import matplotlib.colors as colors
+matplotlib.rcParams['mathtext.fontset'] = 'stix'
+matplotlib.rcParams['font.family'] = 'STIXGeneral'
+plt.title(r'ABC123 vs $\mathrm{ABC123}^{123}$')
 
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
@@ -162,6 +168,44 @@ def read_ASC_SP(directory, fileName):
     var['ff'] = U_hat
 
     return var
+
+
+def read_Convergence_NKH(fileName):
+    convergence_data = {}
+    convergence_data["L2Norm(G)"] = []
+    convergence_data["r"] = []
+    convergence_data["delta"] = []
+    convergence_data["L2Norm(du)"] = []
+    convergence_data["L2Norm(u)"] = []
+    convergence_data["L2Norm(dxN)"] = []
+    convergence_data["dxNalign"] = []
+    convergence_data["L2Norm(dxH)"] = []
+    convergence_data["GMRESerr"] = []
+    convergence_data["ftotal"] = []
+    convergence_data["fnewt"] = []
+    convergence_data["fhook"] = []
+    convergence_data["CFL"] = []
+    convergence_data["Newton_Steps"] = []
+    file = open(fileName, 'r')
+    for i, line in enumerate(file):
+        values = line.split()
+        if i !=0: # Not on the first line
+            convergence_data["L2Norm(G)"].append(float(values[0]))
+            convergence_data["r"].append(float(values[1]))
+            convergence_data["delta"].append(float(values[2]))
+            convergence_data["L2Norm(du)"].append(float(values[3]))
+            convergence_data["L2Norm(u)"].append(float(values[4]))
+            convergence_data["L2Norm(dxN)"].append(float(values[5]))
+            convergence_data["dxNalign"].append(float(values[6]))
+            convergence_data["L2Norm(dxH)"].append(float(values[7]))
+            convergence_data["GMRESerr"].append(float(values[8]))
+            convergence_data["ftotal"].append(float(values[9]))
+            convergence_data["fnewt"].append(float(values[10]))
+            convergence_data["fhook"].append(float(values[11]))
+            convergence_data["CFL"].append(float(values[12]))
+            convergence_data["Newton_Steps"].append(i)
+    
+    return convergence_data
 
 
 def read_Details(fileName):
@@ -333,12 +377,6 @@ def read_H5_Deconstructed(fileName):
     df['beta'] = 2.0*np.pi / df['Lz']
     return df
 
-
-def read_NKH_convergence(fileName):
-    convergence_data = {}
-    
-    
-    return convergence_data
 
 def read_Output_DNS(fileName, T0, T1):    
     '''
@@ -915,7 +953,6 @@ def make_Folder(parent_directory, name, delete):
     return folder
 
 
-
 def plot_Contour(output_directory, fileName, 
                  xAxis, yAxis, data, 
                  xCoordStr, yCoordStr, zCoordStr, 
@@ -1044,7 +1081,8 @@ def plot_Convergence_DNS_log(data, T0, T1): # include T0 and T1 in the name of t
     plt.figure()
     plt.plot(x, y, 'b-')
     plt.xlabel('t')
-    plt.ylabel('$ln(\|u\|_{2})$')
+    plt.ylabel('$log_e(\|u\|_{2})$')
+    plt.yscale('log')
     plt.ylim([ymin, ymax])
     plt.grid(True)
     plt.title("DNS Convergence")
@@ -1052,6 +1090,90 @@ def plot_Convergence_DNS_log(data, T0, T1): # include T0 and T1 in the name of t
 
     return 0
 
+
+def plot_Convergence_NKH_multi(all_convergence_data, xTitle, yTitle):
+    # Make a plot from the convergence dictionary
+    # all_convergence_data is a dictioanr with other dictioanaries in it.
+
+    x = []
+    y = []
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+
+    clrs   = ["blue",
+              "green",
+              "red",
+              "cyan",
+              "fuchsia",
+              "gold",
+              "midnightblue",
+              "purple",
+              "sienna",
+              "teal"]
+    # You need to iterate through each dictionary and plot
+    i=-1
+    sorted_data = collections.OrderedDict(sorted(all_convergence_data.items()))
+    for case, v in sorted_data.items():
+        i+=1
+        data_set = all_convergence_data[case]
+        for key, value in data_set.items():
+            if key == xTitle:
+                x = data_set[key]
+            elif key == yTitle:
+                y = data_set[key]
+        # youve populated x and y, youve got your data_set. 
+        # format case name with padded zeros
+        l = case.split("_")
+        if len(l) == 1:
+            l = l[0]
+        else:
+            l = l[1] + " " + l[2]
+        ax1.plot(x, y, color=clrs[i], label=l)
+        ax1.plot(x, y, 'o')
+    
+    plt.legend(loc='best')
+    
+    axisLabelFontSize = 18
+    ticksMajorFontSize = 12
+    ticksMinorFontSize = 8
+    #### X Axis formatting
+    if xTitle == "Newton_Steps":
+        plt.xlabel("Total Newton steps", fontsize=axisLabelFontSize)
+
+    elif xTitle == "ftotal":
+        plt.xlabel("Total NKH steps", fontsize=axisLabelFontSize)
+        
+    elif xTitle == "fnewt":
+        plt.xlabel("Newton steps", fontsize=axisLabelFontSize)
+
+    elif xTitle == "fhook":
+        plt.xlabel("Hook steps", fontsize=axisLabelFontSize)
+    
+    #### Y Axis formatting
+    if yTitle == "L2Norm(G)":
+        plt.yscale('log')
+        plt.ylabel('$|| \sigma f_{t} \mathbf{u} - \mathbf{u}||$', fontsize=axisLabelFontSize)
+        
+    elif yTitle == "L2Norm(u)":
+        plt.yscale('log')
+        plt.ylabel('$|| \mathbf{u}||$', fontsize=axisLabelFontSize)
+
+    elif yTitle == "L2Norm(du)":
+        plt.yscale('log')
+        plt.ylabel('$|| \mathbf{u}_{i+1} - \mathbf{u}_{i}||$', fontsize=axisLabelFontSize)
+        
+    elif yTitle == "GMRESerr":
+        plt.yscale('log')
+        plt.ylabel('$GMRES error$', fontsize=axisLabelFontSize)
+    
+
+    plt.tick_params(axis='both', which='major', labelsize=ticksMajorFontSize)
+    plt.tick_params(axis='both', which='minor', labelsize=ticksMinorFontSize)
+
+    plt.grid(True)
+    plt.savefig("all_convergence_plot_"+xTitle+"_vs_"+yTitle+".eps", format='eps', dpi=1000)
+
+    return 0
 
 def plot_Recurrence(x, y, data, T0, T1, tmax, fileName):
     fileName+=".png"
