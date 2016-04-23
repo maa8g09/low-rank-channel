@@ -1158,13 +1158,16 @@ def plot_Convergence_NKH_multi(all_convergence_data, xTitle, yTitle):
     if yTitle == "L2Norm(G)":
         plt.yscale('log')
         plt.ylabel('$|| \sigma f_{t} \mathbf{u} - \mathbf{u}||$', fontsize=axisLabelFontSize)
+        yTitle = "L2Norm_G"
         
     elif yTitle == "L2Norm(u)":
         plt.ylabel('$|| \mathbf{u}||$', fontsize=axisLabelFontSize)
+        yTitle = "L2Norm_u"
 
     elif yTitle == "L2Norm(du)":
         plt.yscale('log')
         plt.ylabel('$|| \mathbf{u}_{i+1} - \mathbf{u}_{i}||$', fontsize=axisLabelFontSize)
+        yTitle = "L2Norm_du"
         
     elif yTitle == "GMRESerr":
         plt.ylabel('GMRES error', fontsize=axisLabelFontSize)
