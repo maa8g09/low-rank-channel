@@ -64,6 +64,27 @@ def make_ff_from_profile(profile, Nd, Nx, Nz):
         for nz in range(0, Nz):
             ff[0, nx, :, nz] = profile
     return ff
+    
+    
+def make_Folder(parent_directory, name, delete):
+    parent_directory = format_Directory_Path(parent_directory)
+    folder = name + "/"
+    folder = parent_directory + folder
+    
+    #if a temporary directory exists
+    if os.path.exists(folder) and delete:
+        command = "rm -rf " + folder
+        os.system(command)
+
+    elif os.path.exists(folder) and not delete:
+        print("Folder already exists:\t" + folder)
+        print("Will write to it...")
+    
+    #if directory doesn't exist, create one.
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+    
+    return folder
 
 
 def read_ASC_channelflow(directory, fileName):
@@ -929,28 +950,6 @@ def format_Directory_Path(directory):
     if directory[-1] != "/":
         directory += "/"
     return directory
-
-
-
-def make_Folder(parent_directory, name, delete):
-    parent_directory = format_Directory_Path(parent_directory)
-    folder = name + "/"
-    folder = parent_directory + folder
-    
-    #if a temporary directory exists
-    if os.path.exists(folder) and delete:
-        command = "rm -rf " + folder
-        os.system(command)
-
-    elif os.path.exists(folder) and not delete:
-        print("Folder already exists:\t" + folder)
-        print("Will write to it...")
-    
-    #if directory doesn't exist, create one.
-    if not os.path.exists(folder):
-        os.mkdir(folder)
-    
-    return folder
 
 
 def plot_Contour(output_directory, fileName, 
