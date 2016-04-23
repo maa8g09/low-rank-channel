@@ -57,7 +57,7 @@ rankfull_d = directory + fileName
 os.chdir(rankfull_d)
 #### ---Plot flow field
 #plot = "ePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0"
-plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -a -l 16"
+plot = "e_Plot_Field.py -f "+fileName+".h5 -d "+args.Details+" -i 0 -n 0 -a -l 16"
 print(plot)
 os.system(plot)
 #plot = "ePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 2"
@@ -83,11 +83,12 @@ for r in range(0, len(ranks)):
 #    os.system(construct)
     #### Change into rank folder
     fileName = name+"_rank_" + str(rank).zfill(2) 
+    fileName2= name+"_rank_" + str(rank)
     rank_dir = directory + fileName
     os.chdir(rank_dir)
     #### Plot flow field
 #    plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0"
-    plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -a -l 16"
+    plot = "e_Plot_Field.py -f "+fileName2+".h5 -d "+args.Details+" -i 0 -n 0 -a -l 16"
     print(plot)
     os.system(plot)
 #    plot = "\nePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 2"
