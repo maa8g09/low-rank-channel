@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import argparse
 import os
-from .. import Utils as ut
+import sys
+sys.path.append("..")
+import Utils as ut
 parser = argparse.ArgumentParser(description="Convergence plot of NKH data.")
 parser.add_argument("-f",
                     "--File",
