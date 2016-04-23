@@ -36,7 +36,7 @@ def continuity(resolvent_modes, S, kx, kz, Nm, D1):
     w = projected_field[2*Nm:3*Nm, :]
     continuty = 1.0j*kx*u + np.dot(D1, v) + 1.0j*kz*w
     norm = np.linalg.norm(continuty)
-    if norm >= 1e-8:
+    if norm >= 1e-7:
         err = 'Something went wrong with the continuity condition, norm is %.2E' % norm 
         ut.error(err)
     
@@ -166,8 +166,8 @@ def fft_ifft(A):
     
     # The difference between the flow field after having gone through
     # above operations and the original should be the same.
-    difference = np.linalg.norm(original - A.velocityField.real)
-    if difference >= 1e-12:
+    diff = np.linalg.norm(original - A.velocityField.real)
+    if diff >= 1e-12:
         message = "FFT <=> IFFT test failed."
         ut.error(message)
     else:
@@ -176,18 +176,19 @@ def fft_ifft(A):
     return
 
 
-def no_difference(A, B, tolerance):
-    difference = np.linalg.norm(A - B)
-    if difference >= tolerance:
-        err = 'Something went wrong with the projection, difference is ||u_approx - u_original|| = %.6e' % difference
+def difference(A, B, tolerance, message):
+    diff = np.linalg.norm(A - B)
+    if diff >= tolerance:
+        print(message)
+        err = "Matrices are not equal, ||delta|| = %.2E" % diff 
         ut.error(err)
     return
     
-def projection(chi, sigma, psi, u_hat):
+def projection(chi, sigma, psi, u_hat, tolerance):
     test = psi * sigma * chi    
     d = u_hat - test
     d = np.linalg.norm(d)
-    if d >= 1e-12:
+    if d >= tolerance:
         err = "Projection failed."
         ut.error(err)
     return

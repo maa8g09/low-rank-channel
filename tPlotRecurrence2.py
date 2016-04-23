@@ -18,9 +18,13 @@ def main(File):
         if j==0:
             # Get details
             items = line.split()
-            T0 = int(items[3])
-            T1 = int(items[5])
-            tmax = int(items[9])
+            for k in range(0,len(items)):
+                if str(items[k]) == "-T0":
+                    T0 = int(items[k+1])
+                elif items[k] == "-T1":
+                    T1 = int(items[k+1])
+                elif items[k] == "-tmax":
+                    tmax = int(items[k+1])
         else:
             values = line.split()
             vl_len=len(values)
@@ -42,7 +46,7 @@ def main(File):
     
     
     
-directory = "/home/arslan/temp"
+directory = "/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re1800.0/KB/2016_02_22/005_theta_-2.0000"
 os.chdir(directory)
-file = "dist.asc"
+file = "seriesdist-0-1300-18-18.asc"
 main(file)

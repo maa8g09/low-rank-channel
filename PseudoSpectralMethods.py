@@ -313,7 +313,7 @@ def chebint(fk, x, debug):
 
 def my_ifft(u_tilde, alpha, beta, ffg):
 
-    u = np.zeros((ffg.Nx, 3*ffg.modes, ffg.Nz), dtype=np.complex128)
+    u = np.zeros((ffg.Nx, 3*ffg.Nm, ffg.Nz), dtype=complex)
     u_tilde = np.asarray(u_tilde)
     u_tilde = u_tilde[:, 0]
 
@@ -393,7 +393,6 @@ def calculate_derivatives(N, vel_profile, bf):
 
 
 def calculate_transfer_function(alpha, beta, Re, Nm, omega, chebyshev_differentiation, mean_flow_derivatives):
-
     #================================================================
     #### Calculate Laplacian for constructing operators
     #================================================================
@@ -402,7 +401,6 @@ def calculate_transfer_function(alpha, beta, Re, Nm, omega, chebyshev_differenti
     kappa = (alpha*alpha) + (beta*beta)                 # variable calculated from (del)dot(del)
     del_hat_2 = chebyshev_differentiation['D2'] - kappa*I                            # Laplacian
     del_hat_4 = chebyshev_differentiation['D4'] - 2.0*chebyshev_differentiation['D2']*kappa + kappa*kappa*I       # Laplacian_2
-
     #================================================================
     #### Construct operators
     #================================================================
@@ -417,26 +415,23 @@ def calculate_transfer_function(alpha, beta, Re, Nm, omega, chebyshev_differenti
     a2=(-1.0j * alpha * np.asmatrix(mean_flow_derivatives['U']) * np.asmatrix(del_hat_2))
     O_os = a0 + a1 + a2
     x0 = np.linalg.solve(del_hat_2, O_os)
-
     #================================================================
     #### Calculate state operator
     #================================================================
     # Equation 2.7
     # (Moarref, Model-based scaling of the streamwise energy density in 
     # high-Reynolds number turbulent channels, 2013)
-    #
+    # 
     # State operator
     # A = | x0   Z  |
     #     |  C   SQ |
     A = np.vstack((np.hstack((x0,Z)), np.hstack((O_c, O_sq))))
-
     #================================================================
     #### Calculate unweighted resolvent/transfer function
     #================================================================
     I = np.eye(A.shape[0]) # identity matrix (length of state operator)
     L = -1.0j*omega*I - A
     R = inv(L) # resolvent of A
-
     #================================================================
     #### Calculate conversion matrix
     #================================================================
@@ -447,19 +442,14 @@ def calculate_transfer_function(alpha, beta, Re, Nm, omega, chebyshev_differenti
                    np.hstack(( I, Z)), 
                    np.hstack(( (1.0j/kappa) * (beta*chebyshev_differentiation['D1']),  ( 1.0j/kappa) * (alpha*I)))))
     C = np.asmatrix(C)
-
-
     #================================================================
     #### Calculate conversion matrix adjoint
     #================================================================
     Ch = C.H
-
     # Moarref's formulation:
     invLap = np.asmatrix(inv(del_hat_2))
     Ch_Moarref = np.vstack((np.hstack(( (1.0j/kappa) * (alpha*invLap*chebyshev_differentiation['D1']) ,   kappa*invLap, (1.0j/kappa) * (beta*invLap*chebyshev_differentiation['D1']) )),
                             np.hstack((                                       (1.0j/kappa) * (beta*I) ,              Z,                                    (-1.0j/kappa) * (alpha*I) ))))
-
-
     #================================================================
     #### Calculate Clenshaw–Curtis quadrature
     #================================================================
@@ -470,7 +460,6 @@ def calculate_transfer_function(alpha, beta, Re, Nm, omega, chebyshev_differenti
                    np.hstack((Z,w,Z)),
                    np.hstack((Z,Z,w))))
     w = np.asmatrix(w)
-
 #    ================================================================
 #     Grid weighted conversion matrix
 #    ================================================================
@@ -478,12 +467,11 @@ def calculate_transfer_function(alpha, beta, Re, Nm, omega, chebyshev_differenti
 #     Adjoint of C maps the forcing vector to resolvent
 #    w_inv_C_adj = C.H * np.linalg.inv(w)
 #    invw_C_adj = pinv(C_w) # this is the calculation used in Ati's code. Why?
-    
-
     #================================================================
     #### Calculate weighted resolvent/transfer function
     #================================================================
-    R_A = C * R * Ch_Moarref    # Resolvent operator in terms of [uvw]
+#    R_A = C * R * Ch_Moarref    # Resolvent operator in terms of [uvw]
+    R_A = C * R * Ch    # Resolvent operator in terms of [uvw]
     H = w * R_A * inv(w)        # Weighted transfer function
 
     return H, w

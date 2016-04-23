@@ -48,31 +48,28 @@ chi7 = 2.0
 
 
 
-wavepackets={}
-wavepackets['KA_x'] = np.array([kx2])
-wavepackets['KA_z'] = np.array([kz2])
-wavepackets['KA_a'] = np.array([chi1])
+wavepackets_dictionary={}
+wavepackets_dictionary['KA'] = {}
+wavepackets_dictionary['KA']['x'] = np.array([kx2])
+wavepackets_dictionary['KA']['z'] = np.array([kz2])
+wavepackets_dictionary['KA']['a'] = np.array([chi1])
 
+wavepackets_dictionary['KB'] = {}
+wavepackets_dictionary['KB']['x'] = np.array([kx2, kx1])
+wavepackets_dictionary['KB']['z'] = np.array([kz2, kz1])
+wavepackets_dictionary['KB']['a'] = np.array([chi2, chi1])
 
+wavepackets_dictionary['KC'] = {}
+wavepackets_dictionary['KC']['x'] = np.array([kx2, kx1, kx3])
+wavepackets_dictionary['KC']['z'] = np.array([kz2, kz1, kz3])
+wavepackets_dictionary['KC']['a'] = np.array([chi2, chi1, chi3])
 
-wavepackets['KB_x'] = np.array([kx2, kx1])
-wavepackets['KB_z'] = np.array([kz2, kz1])
-wavepackets['KB_a'] = np.array([chi2, chi1])
+wavepackets_dictionary['KD'] = {}
+wavepackets_dictionary['KD']['x'] = np.array([kx2, kx1_star, kx3_star])
+wavepackets_dictionary['KD']['z'] = np.array([kz2, kz1_star, kz3_star])
+wavepackets_dictionary['KD']['a'] = np.array([chi2, chi1_star, chi3_star])
 
-
-
-wavepackets['KC_x'] = np.array([kx2, kx1, kx3])
-wavepackets['KC_z'] = np.array([kz2, kz1, kz3])
-wavepackets['KC_a'] = np.array([chi2, chi1, chi3])
-
-
-
-wavepackets['KD_x'] = np.array([kx2, kx1_star, kx3_star])
-wavepackets['KD_z'] = np.array([kz2, kz1_star, kz3_star])
-wavepackets['KD_a'] = np.array([chi2, chi1_star, chi3_star])
-
-
-
-wavepackets['KE_x'] = np.array([kx4, kx5, kx6, kx7])
-wavepackets['KE_z'] = np.array([kz4, kz5, kz6, kz7])
-wavepackets['KE_a'] = np.array([chi4, chi5, chi6, chi7])
+wavepackets_dictionary['KE'] = {}
+wavepackets_dictionary['KE']['x'] = np.array([kx4, kx5, kx6, kx7])
+wavepackets_dictionary['KE']['z'] = np.array([kz4, kz5, kz6, kz7])
+wavepackets_dictionary['KE']['a'] = np.array([chi4, chi5, chi6, chi7])

@@ -10,29 +10,6 @@ import numpy as np
 
 
 def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
-
-    #================================================================
-    #### Create a temporary folder
-    #================================================================
-    parent_directory = os.getcwd()
-    # Add slash at the end of the string if there isn't one already
-    if parent_directory[-1] != "/":
-        parent_directory += "/"
-    
-    temp_rank_folder = "rank-temp/"
-    temp_rank_folder = parent_directory + temp_rank_folder
-    
-    #if a temporary directory exists, delete it.
-    if os.path.exists(temp_rank_folder):
-        command = "rm -rf " + temp_rank_folder
-        os.system(command)
-    
-    #if a temporary directory doesn't exist, create one.
-    if not os.path.exists(temp_rank_folder):
-        os.mkdir(temp_rank_folder)
-    
-    # All work is done from the temporary directory.
-    os.chdir(temp_rank_folder)
     
     
     #================================================================
@@ -43,8 +20,8 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
         #------------------------------------------------------------
         #### Read the HDF5 and details file
         #------------------------------------------------------------
-        file_info = ut.read_H5(parent_directory, File)
-        details = ut.read_Details(parent_directory, "u0_Details.txt")
+        file_info, original_attrs = ut.read_H5(File)
+        details = ut.read_Details("eq1_Details.txt")
     
         #------------------------------------------------------------
         #### Copy geometry file into rank-temp
@@ -62,16 +39,16 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
         #------------------------------------------------------------
         #### Read ASCII file and details file
         #------------------------------------------------------------
-        file_info = ut.read_ASC_channelflow(temp_rank_folder, str(File)[:-3])
-        details = ut.read_Details(parent_directory, "u0_Details.txt")
+        file_info = ut.read_ASC_channelflow("", str(File)[:-3])
+        details = ut.read_Details("", "u0_Details.txt")
     
     
     elif File[-3:] == "asc":
         #------------------------------------------------------------
         #### Read ASCII file and details file
         #------------------------------------------------------------
-        file_info = ut.read_ASC_PP(parent_directory, str(File)[:-7])
-        details = ut.read_Details(parent_directory, "u0_Details.txt")
+        file_info = ut.read_ASC_PP("", str(File)[:-7])
+        details = ut.read_Details("", "u0_Details.txt")
     
     
     else: # No file type given.
@@ -110,7 +87,7 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
         #------------------------------------------------------------
         #### Read velocity profile
         #------------------------------------------------------------
-        vel_profile = ut.read_Vel_Profile(parent_directory, MeanProfile)
+        vel_profile = ut.read_Vel_Profile("", MeanProfile)
         # Check to see if it is a mean profile or a deviation profile.
         deviation = any(n < 0 for n in vel_profile)
         if deviation: # Deviation profile given
@@ -521,16 +498,15 @@ def main(File, Rank, Directory, MeanProfile, Sparse, Testing):
 
 
 
-dirc="/home/arslan/Documents/work/cfd-symmetry_scans/s_tw1_sigma_z_tau_x/Re600.0/KB/2016_02_18/002_theta_-0.5000/data-alt"
-
+dirc="/home/arslan/Documents/work/cfd-channelflow_solutions/w03_EQ/eq10"
 os.chdir(dirc)
-fileName = "u975.000.h5"
+fileName = "eq10.h5"
 vel_profile_file = "turbulent_deviation950-999.txt"
 vel_profile_file = ""
 testing=False
-sparse=True
+sparse=False
 main(fileName,
-     2,
+     2000000,
      dirc,
      vel_profile_file,
      sparse,

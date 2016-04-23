@@ -1,29 +1,44 @@
 #!/usr/bin/env python3
 import argparse
 import os
-parser = argparse.ArgumentParser(description="Run nkh searches for W03 EQ")
+import Utils as ut
+parser = argparse.ArgumentParser(description="Run nkh searches")
 
 parser.add_argument("-f",
                     "--File",
                     metavar='\b',
                     help="File to approximate",
                     required=True)
-
-
+parser.add_argument("-dir",
+                    "--Directory",
+                    metavar='\b',
+                    help="Directory to perform searches in.",
+                    required=True)
+parser.add_argument("-d",
+                    "--Details",
+                    metavar='\b',
+                    help="Details file.",
+                    required=True)
 args = parser.parse_args()
 name=str(args.File)
-directory="/home/arslan/Documents/work/cfd-channelflow_solutions/w03_EQ/"+name+"/"
+directory = ut.format_Directory_Path(args.Directory)
+directory+=name
+directory = ut.format_Directory_Path(directory)
 os.chdir(directory)
 print(directory)
 #### Plot flow field
-plot = "ePlotField.py -f "+name+".h5 -d eq1_Details.txt -i 0 -n 0"
+plot = "ePlotField.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0"
 print(plot)
 os.system(plot)
-plot = "ePlotField.py -f "+name+".h5 -d eq1_Details.txt -i 0 -n 2"
+plot = "ePlotField.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 2"
 print(plot)
 os.system(plot)
+#### ---NKH Search
+nkh = "findsoln -eqb -sn -log nkh-"+name+".log "+name+".h5"
+print(nkh)
+os.system(nkh)
 #### Deconstruct
-deconstruct = "eDeconstructField.py -d eq1_Details.txt -f "+name+".h5"
+deconstruct = "eDeconstructField.py -d "+args.Details+" -f "+name+".h5"
 print(deconstruct)
 os.system(deconstruct)
 
@@ -39,17 +54,16 @@ fileName = name+"_rank_full"
 rankfull_d = directory + fileName
 os.chdir(rankfull_d)
 #### ---Plot flow field
-plot = "ePlotField.py -f "+fileName+".h5 -d ../eq1_Details.txt -i 0 -n 0"
+plot = "ePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0"
 print(plot)
 os.system(plot)
-plot = "ePlotField.py -f "+fileName+".h5 -d ../eq1_Details.txt -i 0 -n 2"
+plot = "ePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 2"
 print(plot)
 os.system(plot)
 #### ---NKH Search
 nkh = "findsoln -eqb -sn -log nkh-"+fileName+".log "+fileName+".h5"
 print(nkh)
 os.system(nkh)
-print("\n\n::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n\n")
 
 #### Loop through ranks
 ranks = [2,4,10,20,40,60]
@@ -69,10 +83,10 @@ for r in range(0, len(ranks)):
     rank_dir = directory + fileName
     os.chdir(rank_dir)
     #### Plot flow field
-    plot = "\nePlotField.py -f "+fileName+".h5 -d ../eq1_Details.txt -i 0 -n 0"
+    plot = "\nePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0"
     print(plot)
     os.system(plot)
-    plot = "\nePlotField.py -f "+fileName+".h5 -d ../eq1_Details.txt -i 0 -n 2"
+    plot = "\nePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 2"
     print(plot)
     os.system(plot)
     #### NKH Search

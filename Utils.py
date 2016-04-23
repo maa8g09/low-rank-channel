@@ -21,7 +21,7 @@ def make_FlowField_output_directory(output_directory, flowFieldGeometry, date):
 
     # Create the output directory name
     # It is based on the date
-    main_direc = 'Re' + str(flowFieldGeometry.Re) + '/' + flowFieldGeometry.wavepacket + '/' + date + '/theta_' + format(flowFieldGeometry.theta, '.4f') + '/'
+    main_direc = 'Re' + str(flowFieldGeometry.Re) + '/' + flowFieldGeometry.Wavepacket + '/' + date + '/theta_' + format(flowFieldGeometry.theta, '.4f') + '/'
     output_directory += main_direc
 
     # if directory doesn't exist, create it
@@ -40,7 +40,7 @@ def make_FlowField_output_directory_wIteration(output_directory, flowFieldGeomet
 
     # Create the output directory name
     # It is based on the date
-    main_direc = 'Re' + str(flowFieldGeometry.Re) + '/' + flowFieldGeometry.wavepacket + '/' + date + '/' + str(iteration).zfill(3) +'_theta_' + format(flowFieldGeometry.theta, '.4f') + '/'
+    main_direc = 'Re' + str(flowFieldGeometry.Re) + '/' + flowFieldGeometry.Wavepacket + '/' + date + '/' + str(iteration).zfill(3) +'_theta_' + format(flowFieldGeometry.theta, '.4f') + '/'
     output_directory += main_direc
 
     # if directory doesn't exist, create it
@@ -698,7 +698,7 @@ def write_Details(flowField, output_directory, fileName):
 #    output+= "\nLz:\t\t" + str(flowField.Lz) + "\n"
     output+= "\nRe:\t\t" + str(flowField.Re)
     output+= "\nc:\t\t"  + str(flowField.c) + "\n"
-    output+= "\nwp:\t\t" + str(flowField.wavepacket)
+    output+= "\nwp:\t\t" + str(flowField.Wavepacket)
     output+= "\nkx:\t\t" + str(flowField.kx)
     output+= "\nkz:\t\t" + str(flowField.kz)
     output+= "\nchi:\t\t"  + str(flowField.chi)
@@ -742,16 +742,10 @@ def write_DAT(ff, output_directory, fileName):
 
     print('\nSaved DAT file')
 
-
-
-def write_FF(output_directory, fileName):
-    
+def ascii2field(output_directory, fileName, fileType):
     fileName = output_directory + fileName
-    
-    command = "ascii2field -p false -ge " + fileName + ".geom " + fileName + ".asc " + fileName
-    
+    command = "ascii2field -p false -ge " + fileName + ".geom " + fileName + ".asc " + fileName + "." + fileType
     os.system(command)
-
 
 
 def write_GEOM(flowField, output_directory, fileName):
