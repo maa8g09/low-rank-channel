@@ -2,6 +2,8 @@
 import argparse
 import os
 import numpy as np
+import sys
+sys.path.append("/".join(sys.path[0].split("/")[:-1]))
 import ChannelResolvent as cr
 import FlowField as ffClass
 import Tests
