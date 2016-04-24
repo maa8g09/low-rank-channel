@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 from matplotlib import cm as cm
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.colors as colors
+from matplotlib.colors import LogNorm
 matplotlib.rcParams['mathtext.fontset'] = 'stix'
 matplotlib.rcParams['font.family'] = 'STIXGeneral'
 plt.title(r'ABC123 vs $\mathrm{ABC123}^{123}$')
@@ -1033,6 +1034,48 @@ def plot_Contour(output_directory, fileName,
     plt.close(fig)
 
     return 0
+
+
+def plot_Contour_coeffs(output_directory, fileName,
+                         xAxis, yAxis, data,
+                         xAxisName, yAxisName, 
+                         velName, VL_max, VL_min,
+                         levels):
+
+    xticks = np.linspace(xAxis[0], xAxis[-1], abs(xAxis[-1] - xAxis[0]) + 1)
+    yticks = np.linspace(yAxis[0], yAxis[-1], abs(yAxis[-1] - yAxis[0]) + 1)
+
+    x, y = np.meshgrid(xAxis, yAxis)
+
+    origin = 'lower'
+    fig = plt.figure()
+    plt.pcolor(x, 
+                y, 
+                data,
+                norm=LogNorm(vmin=data.min(), vmax=data.max()),
+                cmap=cm.seismic,
+                origin=origin)
+    plt.colorbar()
+    
+    axisLabelFontSize = 18
+    ticksMajorFontSize = 12
+
+    plt.xlabel(xAxisName, fontsize=axisLabelFontSize)
+    plt.ylabel(yAxisName, fontsize=axisLabelFontSize)
+
+    title = "Singular values at each Fourier mode"
+    plt.title(title)
+    plt.axes().set_aspect('equal')
+
+    plt.xticks(xticks, fontsize = ticksMajorFontSize)
+    plt.yticks(yticks, fontsize = ticksMajorFontSize)
+
+    fileName = output_directory + fileName + ".eps"
+
+    plt.savefig(fileName, bbox_inches='tight', dpi=700)
+    plt.close(fig)
+ 
+    return
 
 
 def plot_Convergence_DNS(data, T0, T1): # include T0 and T1 in the name of the file
