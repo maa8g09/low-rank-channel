@@ -996,7 +996,9 @@ def plot_Contour(output_directory, fileName,
                       v,
                       cmap=cm.seismic,
                       origin=origin)
-
+    
+    plt.contour(x, y, data, v, linewidths=0.5, colors='k')
+    
     if quiv:
         plt.quiver(x, y,
                    xAxisVel,
@@ -1026,11 +1028,11 @@ def plot_Contour(output_directory, fileName,
 
     fileName = output_directory + fileName + "_" + velName + "_x" + nxCoordStr + "_y" + nyCoordStr + "_z" + nzCoordStr 
     if quiv:
-        fileName += "_q.eps"
+        fileName += "_q.svg"
     else:
-        fileName += ".eps"
+        fileName += ".svg"
 
-    plt.savefig(fileName, bbox_inches='tight', dpi=700)
+    plt.savefig(fileName, bbox_inches='tight', dpi=1200)
     plt.close(fig)
 
     return 0
@@ -1040,22 +1042,49 @@ def plot_Contour_coeffs(output_directory, fileName,
                          xAxis, yAxis, data,
                          xAxisName, yAxisName, 
                          velName, VL_max, VL_min,
-                         levels):
+                         levels, title, contourPlot):
 
-    xticks = np.linspace(xAxis[0], xAxis[-1], abs(xAxis[-1] - xAxis[0]) + 1)
-    yticks = np.linspace(yAxis[0], yAxis[-1], abs(yAxis[-1] - yAxis[0]) + 1)
+    ymin = yAxis.min()
+    ymax = yAxis.max()
+    dy = abs(yAxis[0] - yAxis[1])
+    xmin = xAxis.min()
+    xmax = xAxis.max()
+    dx = abs(xAxis[0] - xAxis[1])
+    
+    xAxis_modified = np.arange(xmin,xmax+dx,dx)-dx/2.0
+    yAxis_modified = np.arange(ymin,ymax+dy,dy)-dy/2.0
+    
+    xticks = np.arange(xmin, xmax, 2*dx)
+    yticks = np.arange(ymin, ymax, 2*dy)
+    
 
-    x, y = np.meshgrid(xAxis, yAxis)
-
-    origin = 'lower'
     fig = plt.figure()
-    plt.pcolor(x, 
-                y, 
-                data,
-                norm=LogNorm(vmin=data.min(), vmax=data.max()),
-                cmap=cm.seismic,
-                origin=origin)
-    plt.colorbar()
+    
+    if VL_min <= 1e-7:
+        VL_min=1e-0
+    
+
+    if contourPlot:
+        x, y = np.meshgrid(xAxis, yAxis)
+        origin = 'lower'
+        CS = plt.contourf(x, 
+                          y, 
+                          data, 
+                          levels,
+                          cmap=cm.PiYG,
+                          norm=LogNorm(vmin = VL_min, vmax = VL_max),
+                          origin=origin)
+        cbar = fig.colorbar(CS, 
+                            format='%1.2g')#,fraction=0.046, pad=0.04)
+        cbar.ax.set_ylabel(velName)
+    else:
+        x, y = np.meshgrid(xAxis_modified, yAxis_modified)
+        plt.pcolor( xAxis_modified, yAxis_modified, data,
+                    norm=LogNorm(vmin = VL_min, vmax = VL_max),
+                    cmap=cm.PiYG)
+#                    shading='faceted',
+#                    edgecolors='k')
+        plt.colorbar(label=velName)
     
     axisLabelFontSize = 18
     ticksMajorFontSize = 12
@@ -1063,16 +1092,17 @@ def plot_Contour_coeffs(output_directory, fileName,
     plt.xlabel(xAxisName, fontsize=axisLabelFontSize)
     plt.ylabel(yAxisName, fontsize=axisLabelFontSize)
 
-    title = "Singular values at each Fourier mode"
     plt.title(title)
     plt.axes().set_aspect('equal')
 
+
     plt.xticks(xticks, fontsize = ticksMajorFontSize)
     plt.yticks(yticks, fontsize = ticksMajorFontSize)
+    plt.axis([xAxis_modified.min(),xAxis_modified.max(),
+              yAxis_modified.min(),yAxis_modified.max()])
+    fileName = output_directory + fileName + ".svg"
 
-    fileName = output_directory + fileName + ".eps"
-
-    plt.savefig(fileName, bbox_inches='tight', dpi=700)
+    plt.savefig(fileName, bbox_inches='tight', format='svg', dpi=1200)
     plt.close(fig)
  
     return
@@ -1080,7 +1110,7 @@ def plot_Contour_coeffs(output_directory, fileName,
 
 def plot_Convergence_DNS(data, T0, T1): # include T0 and T1 in the name of the file
 
-    fileName = "convergence_DNS_"+str(T0)+"-"+str(T1)+".png"
+    fileName = "convergence_DNS_"+str(T0)+"-"+str(T1)+".svg"
 
     x = data['t']
     y = data['L2Norm(u)']
@@ -1102,7 +1132,7 @@ def plot_Convergence_DNS_log(data, T0, T1): # include T0 and T1 in the name of t
 
 #    fileName = "convergence_DNS_Re"+str(int(data['Uparab*h/nu'][0]))+"_log_"+str(T0)+"-"+str(T1)+".png"
 
-    fileName = "convergence_DNS_log_"+str(T0)+"-"+str(T1)+".png"
+    fileName = "convergence_DNS_log_"+str(T0)+"-"+str(T1)+".svg"
 
     x = data['t']
     y = data['L2Norm(u)']
@@ -1210,7 +1240,7 @@ def plot_Convergence_NKH_multi(all_convergence_data, xTitle, yTitle):
     plt.tick_params(axis='both', which='minor', labelsize=ticksMinorFontSize)
 
     plt.grid(True)
-    plt.savefig(fileName+"_convergence_plot_"+xTitle+"_vs_"+yTitle+".eps", format='eps', dpi=1000)
+    plt.savefig(fileName+"_convergence_plot_"+xTitle+"_vs_"+yTitle, format='svg', dpi=1200)
 
     return 0
 
