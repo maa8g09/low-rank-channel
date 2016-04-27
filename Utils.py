@@ -20,7 +20,10 @@ plt.title(r'ABC123 vs $\mathrm{ABC123}^{123}$')
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
-
+    
+#### .
+#### ...
+#### ======== MAKE ========
 def make_FlowField_output_directory(output_directory, flowFieldGeometry, date):
     # Make sure that the trailing character is a forward slash
     if output_directory[-1] != '/':
@@ -86,8 +89,10 @@ def make_Folder(parent_directory, name, delete):
         os.mkdir(folder)
     
     return folder
-
-
+    
+#### .
+#### ...
+#### ======== READ ========
 def read_ASC_channelflow(directory, fileName):
 
     var = read_GEOM(directory, fileName)
@@ -344,6 +349,20 @@ def read_H5(fileName):
     #        and the flow field has been interpolated (by channelflow) 
     #        such that Nx and Nz are 2/3 of their original values.
     
+    # Check to see that the dimensions of 'u' are correct
+    tmp = np.zeros((var['Nd'],
+                    var['Nx'],
+                    var['Ny'],
+                    var['Nz']))
+    if tmp.shape == var['ff'].shape:
+        print("All good")
+    else:
+        tmp_ff = var['ff']
+        tmp_ff = tmp_ff.reshape((var['Nd'],
+                                var['Nx'],
+                                var['Ny'],
+                                var['Nz']))
+        var['ff'] = tmp_ff
     return var, orig
 
 
@@ -501,6 +520,17 @@ def read_Vel_Profile(fileName):
     aray = np.asanyarray(aray)
 
     return aray
+
+
+    
+#### .
+#### ...
+#### ======== WRITE ========
+
+def ascii2field(output_directory, fileName, fileType):
+    fileName = output_directory + fileName
+    command = "ascii2field -p false -ge " + fileName + ".geom " + fileName + ".asc " + fileName + "." + fileType
+    os.system(command)
 
 
 def write_amplitude_coefficients(flowField, output_directory, fileName, abc_array):
@@ -808,12 +838,6 @@ def write_DAT(ff, output_directory, fileName):
 
     print('\nSaved DAT file')
 
-def ascii2field(output_directory, fileName, fileType):
-    fileName = output_directory + fileName
-    command = "ascii2field -p false -ge " + fileName + ".geom " + fileName + ".asc " + fileName + "." + fileType
-    os.system(command)
-
-
 def write_GEOM(flowField, output_directory, fileName):
     fileName += '.geom'
     file = open(output_directory + fileName, "w")
@@ -945,7 +969,9 @@ def write_Vel_Profile(vel_profile, output_directory, fileName):
     file.close()
 
 
-
+#### .
+#### ...
+#### ======== FORMAT ========
 def format_Directory_Path(directory):
     # Add slash at the end of the string if there isn't one already
     if directory[-1] != "/":
@@ -953,6 +979,9 @@ def format_Directory_Path(directory):
     return directory
 
 
+#### .
+#### ...
+#### ======== PLOT ========
 def plot_Contour(output_directory, fileName, 
                  xAxis, yAxis, data, 
                  xCoordStr, yCoordStr, zCoordStr, 
@@ -970,7 +999,8 @@ def plot_Contour(output_directory, fileName,
     v_min = np.amin(data)
     v_max = np.amax(data)
     
-    v = np.linspace(VL_min, VL_max, levels, endpoint=True)
+    vf = np.linspace(VL_min, VL_max, levels, endpoint=True)
+    v = np.linspace(VL_min, VL_max, levels/2, endpoint=True)
     ticks_at = [VL_min, v_min, 0, v_max, VL_max]
 #    print(ticks_at)
     origin = 'lower'
@@ -993,11 +1023,11 @@ def plot_Contour(output_directory, fileName,
     CS = plt.contourf(x, 
                       y, 
                       data, 
-                      v,
+                      vf,
                       cmap=cm.seismic,
                       origin=origin)
     
-    plt.contour(x, y, data, v, linewidths=0.5, colors='k')
+    plt.contour(x, y, data, linewidths=0.5, colors='k')
     
     if quiv:
         plt.quiver(x, y,
@@ -1008,7 +1038,6 @@ def plot_Contour(output_directory, fileName,
 
     axisLabelFontSize = 18
     ticksMajorFontSize = 12
-    ticksMinorFontSize = 8
 
     plt.xlabel(xAxisName, fontsize=axisLabelFontSize)
     plt.ylabel(yAxisName, fontsize=axisLabelFontSize)
@@ -1287,7 +1316,9 @@ def plot_Vel_Profile(output_directory, fileName, vel_profile, y,
 
     return 0
 
-
+#### .
+#### ...
+#### ======== CALCULATE ========
 def calculate_Difference(ff1, ff2): # 4D velocity fields
 
     delta = ff1 - ff2
@@ -1396,6 +1427,9 @@ def calculate_Vel_Profiles(ff):
     return var
 
 
+#### .
+#### ...
+#### ======== PRINT ========
 def print_Start_Bar():
     print('___________________________________________________________________________________\n\n')
     return 0
