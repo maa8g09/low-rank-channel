@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-import os
 import numpy as np
-from matplotlib import cm as cm
-from matplotlib import pyplot as plt
 import sys
 sys.path.append("/".join(sys.path[0].split("/")[:-1]))
 import Utils as ut
