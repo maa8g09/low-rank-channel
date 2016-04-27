@@ -44,7 +44,7 @@ rank = min(args.Rank, 3*numModes)
 if rank == 3*numModes:
     rankStr = "full"
 else:
-    rankStr = str(rank)
+    rankStr = str(rank).zfill(2) 
 #================================================================
 #### Check velocity profile
 #================================================================

@@ -32,17 +32,17 @@ print(directory)
 plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -a -l 16"
 print(plot)
 os.system(plot)
-#plot = "ePlotField.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 2"
-#print(plot)
-#os.system(plot)
-##### ---NKH Search
-#nkh = "findsoln -eqb -sn -log nkh-"+name+".log "+name+".h5"
-#print(nkh)
-#os.system(nkh)
-##### Deconstruct
-#deconstruct = "eDeconstructField.py -d "+args.Details+" -f "+name+".h5"
-#print(deconstruct)
-#os.system(deconstruct)
+plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -f -l 16"
+print(plot)
+os.system(plot)
+#### ---NKH Search
+nkh = "findsoln -eqb -sn -log nkh-"+name+".log "+name+".h5"
+print(nkh)
+os.system(nkh)
+#### Deconstruct
+deconstruct = "eDeconstructField.py -d "+args.Details+" -f "+name+".h5"
+print(deconstruct)
+os.system(deconstruct)
 
 #### Rank: Full
 #### ---Construct
@@ -60,13 +60,13 @@ os.chdir(rankfull_d)
 plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0 -a -l 16"
 print(plot)
 os.system(plot)
-#plot = "ePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 2"
-#print(plot)
-#os.system(plot)
-##### ---NKH Search
-#nkh = "findsoln -eqb -sn -log nkh-"+fileName+".log "+fileName+".h5"
-#print(nkh)
-#os.system(nkh)
+plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -f -l 16"
+print(plot)
+os.system(plot)
+#### ---NKH Search
+nkh = "findsoln -eqb -sn -log nkh-"+fileName+".log "+fileName+".h5"
+print(nkh)
+os.system(nkh)
 
 #### Loop through ranks
 ranks = [2,4,10,20,40,60]
@@ -78,24 +78,24 @@ for r in range(0, len(ranks)):
     #### Change into main folder
     os.chdir(directory)
     #### Construct field into rank folder
-#    construct = "\neConstructField.py -f "+name+"_deconstructed.h5 -r " + str(rank)
-#    print(construct)
-#    os.system(construct)
+    construct = "\neConstructField.py -f "+name+"_deconstructed.h5 -r " + str(rank)
+    print(construct)
+    os.system(construct)
     #### Change into rank folder
     fileName = name+"_rank_" + str(rank).zfill(2) 
     fileName2= name+"_rank_" + str(rank)
     rank_dir = directory + fileName
     os.chdir(rank_dir)
     #### Plot flow field
-#    plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0"
+    plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0"
     plot = "e_Plot_Field.py -f "+fileName2+".h5 -d ../"+args.Details+" -i 0 -n 0 -a -l 16"
     print(plot)
     os.system(plot)
-#    plot = "\nePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 2"
-#    print(plot)
-#    os.system(plot)
-#    #### NKH Search
-#    nkh = "\nfindsoln -eqb -sn -log nkh-"+fileName+".log "+fileName+".h5"
-#    print(nkh)
-#    os.system(nkh)
-#
+    plot = "\nePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 2"
+    print(plot)
+    os.system(plot)
+    #### NKH Search
+    nkh = "\nfindsoln -eqb -sn -log nkh-"+fileName+".log "+fileName+".h5"
+    print(nkh)
+    os.system(nkh)
+

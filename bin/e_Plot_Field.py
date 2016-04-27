@@ -24,7 +24,7 @@ parser.add_argument("-a", "--SpatiallyAveraged", help="Spatially averaged?.",
                     action='store_true')
 parser.add_argument("-q", "--Quiver", help="Plot vector arrows as well?",
                     action='store_true')
-parser.add_argument("-l", "--Levels", help="How many levels the colorbar should have?",
+parser.add_argument("-l", "--Levels", help="How many levels the colorbar should have? (Default = 20)",
                     metavar='\b', type=int)
 args = parser.parse_args()
 #===================================================================#
@@ -80,10 +80,15 @@ elif i==2:
 print("Plotting...")
 vl_max = np.amax(ff.velocityField[i, :, :, :])
 vl_min = np.amin(ff.velocityField[i, :, :, :])
+
+printFullTitle = True
+if args.Levels:
+    contour_levels = args.Levels
+else:
+    contour_levels = 20
 #===================================================================#
 #### If FULL selected                                            ####
 #===================================================================#
-printFullTitle = True
 if args.Full:
     if n == 0:
         x_directory = ut.make_Folder(images_directory, "x", False)
@@ -96,7 +101,7 @@ if args.Full:
                             ff.velocityField[m, j, :, :], 
                             ff.velocityField[p, j, :, :], 
                             "z", "y", velName,
-                            vl_max, vl_min, args.Quiver, args.Levels,
+                            vl_max, vl_min, args.Quiver, contour_levels,
                             printFullTitle)
     elif n == 1:
         y_directory = ut.make_Folder(images_directory, "y", False)
@@ -109,7 +114,7 @@ if args.Full:
                             ff.velocityField[m, :, j, :], 
                             ff.velocityField[p, :, j, :], 
                             "z", "x", velName,
-                            vl_max, vl_min, args.Quiver, args.Levels,
+                            vl_max, vl_min, args.Quiver, contour_levels,
                             printFullTitle)
     elif n == 2:
         z_directory = ut.make_Folder(images_directory, "z", False)
@@ -122,7 +127,7 @@ if args.Full:
                             ff.velocityField[m, :, :, j].T, 
                             ff.velocityField[p, :, :, j].T, 
                             "x", "y", velName,
-                            vl_max, vl_min, args.Quiver, args.Levels,
+                            vl_max, vl_min, args.Quiver, contour_levels,
                             printFullTitle)
 #===================================================================#
 #### If Co-Ordinate given                                        ####
@@ -132,7 +137,8 @@ if args.Coordinate:
     if n == 0:
         coords = Tests.indices(ff.x, lambda m: m > float(args.Coordinate))
         x_coord = coords[0]
-        ut.plot_Contour(pwd, str(args.File[:-3]), 
+        x_directory = ut.make_Folder(images_directory, "x", False)
+        ut.plot_Contour(x_directory, str(args.File[:-3]), 
                         ff.z, ff.y, ff.velocityField[i, x_coord, :, :], 
                         format(ff.x[x_coord], '.2f'), ":", ":", 
                         ff.Re, 
@@ -140,12 +146,13 @@ if args.Coordinate:
                         ff.velocityField[m, x_coord, :, :], 
                         ff.velocityField[p, x_coord, :, :], 
                         "z", "y", velName,
-                        vl_max, vl_min, args.Quiver, args.Levels,
+                        vl_max, vl_min, args.Quiver, contour_levels,
                         printFullTitle)
     elif n == 1:
         coords = Tests.indices(ff.y, lambda m: m > float(args.Coordinate))
         y_coord = coords[-1]
-        ut.plot_Contour(pwd, str(args.File[:-3]), 
+        y_directory = ut.make_Folder(images_directory, "y", False)
+        ut.plot_Contour(y_directory, str(args.File[:-3]), 
                         ff.z, ff.x, ff.velocityField[i, :, y_coord, :], 
                         ":", format(ff.y[y_coord], '.2f'), ":", 
                         ff.Re, 
@@ -153,12 +160,13 @@ if args.Coordinate:
                         ff.velocityField[m, :, y_coord, :], 
                         ff.velocityField[p, :, y_coord, :], 
                         "z", "x", velName,
-                        vl_max, vl_min, args.Quiver, args.Levels,
+                        vl_max, vl_min, args.Quiver, contour_levels,
                         printFullTitle)
     elif n == 2:
         coords = Tests.indices(ff.z, lambda m: m > float(args.Coordinate))
         z_coord = coords[0]
-        ut.plot_Contour(pwd, str(args.File[:-3]), 
+        z_directory = ut.make_Folder(images_directory, "z", False)
+        ut.plot_Contour(z_directory, str(args.File[:-3]), 
                         ff.x, ff.y, ff.velocityField[i, :, :, z_coord].T, 
                         ":", ":", format(ff.z[z_coord], '.2f'), 
                         ff.Re, 
@@ -166,7 +174,7 @@ if args.Coordinate:
                         ff.velocityField[m, :, :, z_coord].T, 
                         ff.velocityField[p, :, :, z_coord].T, 
                         "x", "y", velName,
-                        vl_max, vl_min, args.Quiver, args.Levels,
+                        vl_max, vl_min, args.Quiver, contour_levels,
                         printFullTitle)
 #===================================================================#
 #### If Spatially averaging selected                             ####
@@ -191,7 +199,7 @@ if args.SpatiallyAveraged:
                         x_averaged_ff[m, :, :], 
                         x_averaged_ff[p, :, :], 
                         "z", "y", velName,
-                        vl_max, vl_min, args.Quiver, args.Levels,
+                        vl_max, vl_min, args.Quiver, contour_levels,
                         printFullTitle)
     elif n == 1:
         # Average the flow field in teh streamwise direction.
@@ -211,7 +219,7 @@ if args.SpatiallyAveraged:
                         y_averaged_ff[m, :, :], 
                         y_averaged_ff[p, :, :], 
                         "z", "x", velName,
-                        vl_max, vl_min, args.Quiver, args.Levels,
+                        vl_max, vl_min, args.Quiver, contour_levels,
                         printFullTitle)
     elif n == 2:
         # Average the flow field in teh streamwise direction.
@@ -231,6 +239,6 @@ if args.SpatiallyAveraged:
                         z_averaged_ff[m, :, :].T, 
                         z_averaged_ff[p, :, :].T, 
                         "x", "y", velName,
-                        vl_max, vl_min, args.Quiver, args.Levels,
+                        vl_max, vl_min, args.Quiver, contour_levels,
                         printFullTitle)
 ut.print_EndMessage()

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import argparse
+import numpy as np
+import sys
+sys.path.append("/".join(sys.path[0].split("/")[:-1]))
 import ChannelResolvent as cr
 import FlowField as ffClass
 import Tests
 import Utils as ut
-import numpy as np
 parser = argparse.ArgumentParser(description="Project modes onto a velocity field to get a rank approximation.")
 parser.add_argument("-f",
                     "--File",
