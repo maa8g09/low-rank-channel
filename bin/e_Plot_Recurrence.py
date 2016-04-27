@@ -2,9 +2,11 @@
 import argparse
 import os
 import numpy as np
-import Utils as ut
 from matplotlib import cm as cm
 from matplotlib import pyplot as plt
+import sys
+sys.path.append("/".join(sys.path[0].split("/")[:-1]))
+import Utils as ut
 
 parser = argparse.ArgumentParser(description="Plot recurrence file.")
 parser.add_argument("-f",
