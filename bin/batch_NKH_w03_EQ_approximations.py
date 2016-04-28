@@ -35,8 +35,13 @@ os.system(plot)
 plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -full -l 16"
 print(plot)
 os.system(plot)
+reynolds = 400
+if name == "eq6":
+    reynolds = 330
+elif name == "eq8":
+    reynolds = 270
 #### ---NKH Search
-nkh = "findsoln -eqb -sn -log nkh-"+name+".log "+name+".h5"
+nkh = "findsoln -eqb -R"+reynolds+" -Nn 40 -sn -log nkh-"+name+".log "+name+".h5"
 print(nkh)
 os.system(nkh)
 #### Deconstruct
@@ -60,11 +65,11 @@ os.chdir(rankfull_d)
 plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0 -a -l 16"
 print(plot)
 os.system(plot)
-plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -f -l 16"
+plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0 -full -l 16"
 print(plot)
 os.system(plot)
 #### ---NKH Search
-nkh = "findsoln -eqb -sn -log nkh-"+fileName+".log "+fileName+".h5"
+nkh = "findsoln -eqb -R"+reynolds+" -Nn 40 -sn -log nkh-"+fileName+".log "+fileName+".h5"
 print(nkh)
 os.system(nkh)
 
@@ -82,20 +87,18 @@ for r in range(0, len(ranks)):
     print(construct)
     os.system(construct)
     #### Change into rank folder
-    fileName = name+"_rank_" + str(rank).zfill(2) 
-    fileName2= name+"_rank_" + str(rank)
+    fileName = name+"_rank_" + str(rank).zfill(2)
     rank_dir = directory + fileName
     os.chdir(rank_dir)
     #### Plot flow field
-    plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0"
-    plot = "e_Plot_Field.py -f "+fileName2+".h5 -d ../"+args.Details+" -i 0 -n 0 -a -l 16"
+    plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0 -a -l 16"
     print(plot)
     os.system(plot)
-    plot = "\nePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 2"
+    plot = "\nePlotField.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0 -full -l 16"
     print(plot)
     os.system(plot)
     #### NKH Search
-    nkh = "\nfindsoln -eqb -sn -log nkh-"+fileName+".log "+fileName+".h5"
+    nkh = "\nfindsoln -eqb -R"+reynolds+" -Nn 40 -sn -log nkh-"+fileName+".log "+fileName+".h5"
     print(nkh)
     os.system(nkh)
 
