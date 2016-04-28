@@ -32,7 +32,7 @@ print(directory)
 plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -a -l 16"
 print(plot)
 os.system(plot)
-plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -f -l 16"
+plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -full -l 16"
 print(plot)
 os.system(plot)
 #### ---NKH Search

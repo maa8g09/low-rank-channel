@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import argparse
+import sys
+sys.path.append("/".join(sys.path[0].split("/")[:-1]))
 import Utils as ut
 
 ut.print_Convergence_DNS()

@@ -470,8 +470,8 @@ def calculate_transfer_function(alpha, beta, Re, Nm, omega, chebyshev_differenti
     #================================================================
     #### Calculate weighted resolvent/transfer function
     #================================================================
-#    R_A = C * R * Ch_Moarref    # Resolvent operator in terms of [uvw]
-    R_A = C * R * Ch    # Resolvent operator in terms of [uvw]
+    R_A = C * R * Ch_Moarref    # Resolvent operator in terms of [uvw]
+#    R_A = C * R * Ch    # Resolvent operator in terms of [uvw]
     H = w * R_A * inv(w)        # Weighted transfer function
 
     return H, w

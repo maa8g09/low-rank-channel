@@ -1167,13 +1167,13 @@ def plot_Convergence_DNS_log(data, T0, T1): # include T0 and T1 in the name of t
     y = data['L2Norm(u)']
     y = np.log(y)
     
-    ymax = max(y) * 1.01 # 1% above max
-    ymin = min(y) * 0.99 # 1% below min
+    ymax = max(y) * 0.99 # 5% above max
+    ymin = min(y) * 1.01 # 2% below min
     plt.figure()
     plt.plot(x, y, 'b-')
     plt.xlabel('t')
     plt.ylabel('$log_e(\|u\|_{2})$')
-    plt.yscale('log')
+#    plt.yscale('log')
     plt.ylim([ymin, ymax])
     plt.grid(True)
     plt.title("DNS Convergence")

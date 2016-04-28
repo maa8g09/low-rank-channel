@@ -1,5 +1,6 @@
 import numpy as np
-import time
+import sys
+sys.path.append("/".join(sys.path[0].split("/")[:-1]))
 import FlowField as ffClass
 import ChannelResolvent as cr
 import Utils as ut
