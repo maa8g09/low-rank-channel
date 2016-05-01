@@ -1,4 +1,41 @@
 #!/usr/bin/env python3
+"""
+======================================================================
+Deconstruct Field
+======================================================================
+The resolvent formulation is used to decompose a given velocity
+field into its resolvent modes, forcing modes, singular values and
+amplitude coefficients.
+
+The decomposed field's components are saved in an HDF5 file
+with the following structure:
+    deconstructed_field/:
+        resolvent_modes
+        forcing_modes
+        singular_values
+        coefficients
+
+The decomposition of the flow field takes place in the Fourier
+domain. The resolvent formulation calculates a transfer function,
+which is singular value decomposed into resolvent modes, singular
+values and forcing modes.
+
+These vectors are then projected onto the Fourier transformed
+velocity field, yielding the amplitude coefficients. 
+
+The resolvent modes, singular values and amplitude coefficients
+can be truncated and used to construct an approximation of the 
+original velocity field, see e_Construct_Field.py
+
+
+Muhammad Arslan Ahmed
+maa8g09@soton.ac.uk
+Room 5069
+Building 13
+Aerodynamics and Flight Mechanics
+University of Southampton
+
+"""
 import argparse
 import numpy as np
 import sys
@@ -27,9 +64,9 @@ parser.add_argument("-s",
                     help="Use sparse SVD algorithm.",
                     action='store_true')
 args = parser.parse_args()
-#================================================================
+#=====================================================================#
 #### Format the output directory
-#================================================================
+#=====================================================================#
 if args.File[-3:] == ".h5":
 #    print("HDF5 file given.")
     #------------------------------------------------------------

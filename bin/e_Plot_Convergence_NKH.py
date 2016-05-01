@@ -5,10 +5,6 @@ import sys
 sys.path.append("/".join(sys.path[0].split("/")[:-1]))
 import Utils as ut
 parser = argparse.ArgumentParser(description="Convergence plot of NKH data.")
-parser.add_argument("-f",
-                    "--File",
-                    metavar='\b',
-                    help="File to read.")
 parser.add_argument("-dir",
                     "--Directory",
                     metavar='\b',
@@ -42,6 +38,7 @@ if args.Directory: # if a directory is given...
 #        print("")
         for sub_dir in sub_dirs:
             sub_fileName = sub_dir
+            print(sub_dir)
             sub_dir = os.path.join(root, sub_dir)
             os.chdir(sub_dir)
             for file in os.listdir(sub_dir):

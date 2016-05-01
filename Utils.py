@@ -202,6 +202,7 @@ def read_Convergence_NKH(fileName):
     convergence_data["L2Norm(G)"] = []
     convergence_data["r"] = []
     convergence_data["delta"] = []
+    convergence_data["dax"] = []
     convergence_data["L2Norm(du)"] = []
     convergence_data["L2Norm(u)"] = []
     convergence_data["L2Norm(dxN)"] = []
@@ -213,24 +214,78 @@ def read_Convergence_NKH(fileName):
     convergence_data["fhook"] = []
     convergence_data["CFL"] = []
     convergence_data["Newton_Steps"] = []
+    
+    
+    index_L2NormG = -1
+    index_r = -1
+    index_delta = -1
+    index_dax = -1
+    index_L2Normdu = -1
+    index_L2Normu = -1
+    index_L2NormdxN = -1
+    index_dxNalign = -1
+    index_L2NormdxH = -1
+    index_GMRESerr = -1
+    index_ftotal = -1
+    index_fnewt = -1
+    index_fhook = -1
+    index_CFL = -1
+    
+    
     file = open(fileName, 'r')
     for i, line in enumerate(file):
         values = line.split()
-        if i !=0: # Not on the first line
-            convergence_data["L2Norm(G)"].append(float(values[0]))
-            convergence_data["r"].append(float(values[1]))
-            convergence_data["delta"].append(float(values[2]))
-            convergence_data["L2Norm(du)"].append(float(values[3]))
-            convergence_data["L2Norm(u)"].append(float(values[4]))
-            convergence_data["L2Norm(dxN)"].append(float(values[5]))
-            convergence_data["dxNalign"].append(float(values[6]))
-            convergence_data["L2Norm(dxH)"].append(float(values[7]))
-            convergence_data["GMRESerr"].append(float(values[8]))
-            convergence_data["ftotal"].append(float(values[9]))
-            convergence_data["fnewt"].append(float(values[10]))
-            convergence_data["fhook"].append(float(values[11]))
-            convergence_data["CFL"].append(float(values[12]))
+        if i == 0:
+            # Check convergence table headings and their indexes
+            for j in range(0,len(values)):
+                value = values[j]
+                if value == "L2Norm(G)":
+                    index_L2NormG = j
+                elif value == "r":
+                    index_r = j
+                elif value == "delta":
+                    index_delta = j
+                elif value == "dax":
+                    index_dax = j
+                elif value == "L2Norm(du)":
+                    index_L2Normdu = j
+                elif value == "L2Norm(u)":
+                    index_L2Normu = j
+                elif value == "L2Norm(dxN)":
+                    index_L2NormdxN = j
+                elif value == "dxNalign":
+                    index_dxNalign = j
+                elif value == "L2Norm(dxH)":
+                    index_L2NormdxH = j
+                elif value == "GMRESerr":
+                    index_GMRESerr = j
+                elif value == "ftotal":
+                    index_ftotal = j
+                elif value == "fnewt":
+                    index_fnewt = j
+                elif value == "fhook":
+                    index_fhook = j
+                elif value == "CFL":
+                    index_CFL = j
+                
+            
+        elif i !=0: # Not on the first line
+            convergence_data["L2Norm(G)"].append(float(values[index_L2NormG]))
+            convergence_data["r"].append(float(values[index_r]))
+            convergence_data["delta"].append(float(values[index_delta]))
+            convergence_data["dax"].append(float(values[index_dax]))
+            convergence_data["L2Norm(du)"].append(float(values[index_L2Normdu]))
+            convergence_data["L2Norm(u)"].append(float(values[index_L2Normu]))
+            convergence_data["L2Norm(dxN)"].append(float(values[index_L2NormdxN]))
+            convergence_data["dxNalign"].append(float(values[index_dxNalign]))
+            convergence_data["L2Norm(dxH)"].append(float(values[index_L2NormdxH]))
+            convergence_data["GMRESerr"].append(float(values[index_GMRESerr]))
+            convergence_data["ftotal"].append(float(values[index_ftotal]))
+            convergence_data["fnewt"].append(float(values[index_fnewt]))
+            convergence_data["fhook"].append(float(values[index_fhook]))
+            convergence_data["CFL"].append(float(values[index_CFL]))
             convergence_data["Newton_Steps"].append(i)
+    
     
     return convergence_data
 
@@ -354,9 +409,7 @@ def read_H5(fileName):
                     var['Nx'],
                     var['Ny'],
                     var['Nz']))
-    if tmp.shape == var['ff'].shape:
-        print("All good")
-    else:
+    if tmp.shape != var['ff'].shape:
         tmp_ff = var['ff']
         tmp_ff = tmp_ff.reshape((var['Nd'],
                                 var['Nx'],
@@ -1129,9 +1182,10 @@ def plot_Contour_coeffs(output_directory, fileName,
     plt.yticks(yticks, fontsize = ticksMajorFontSize)
     plt.axis([xAxis_modified.min(),xAxis_modified.max(),
               yAxis_modified.min(),yAxis_modified.max()])
+    
     fileName = output_directory + fileName + ".svg"
-
-    plt.savefig(fileName, bbox_inches='tight', format='svg', dpi=1200)
+    print(fileName)
+    plt.savefig(fileName, bbox_inches='tight', dpi=1200)
     plt.close(fig)
  
     return
@@ -1269,7 +1323,7 @@ def plot_Convergence_NKH_multi(all_convergence_data, xTitle, yTitle):
     plt.tick_params(axis='both', which='minor', labelsize=ticksMinorFontSize)
 
     plt.grid(True)
-    plt.savefig(fileName+"_convergence_plot_"+xTitle+"_vs_"+yTitle, format='svg', dpi=1200)
+    plt.savefig(fileName+"_convergence_plot_"+xTitle+"_vs_"+yTitle+".svg", dpi=1200)
 
     return 0
 
