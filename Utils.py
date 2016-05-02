@@ -239,7 +239,7 @@ def read_Convergence_NKH(fileName):
             # Check convergence table headings and their indexes
             for j in range(0,len(values)):
                 value = values[j]
-                if value == "L2Norm(G)":
+                if value == "%-L2Norm(G)":
                     index_L2NormG = j
                 elif value == "r":
                     index_r = j
