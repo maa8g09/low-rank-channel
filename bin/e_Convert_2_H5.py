@@ -1,6 +1,32 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+"""
+=====================================================================
+Convert to H5
+=====================================================================
+The decomposed flow field is reconstructed using its resolvent modes,
+singular values and amplitude coefficients.
+
+At each Fourier mode pair:
+u_hat[mx,:,mz] = resolvent_modes[mx,mz,:,rank] * singular_values[mx,mz,rank] *
+        amplitude_coefficients[mx,mz,rank]
+
+The decomposed field's components are saved in an HDF5 file
+with the following structure:
+    deconstructed_field/:
+        resolvent_modes
+        forcing_modes
+        singular_values
+        coefficients
 
 
+Muhammad Arslan Ahmed
+maa8g09@soton.ac.uk
+Room 5069
+Building 13
+Aerodynamics and Flight Mechanics
+University of Southampton
+
+"""
 import argparse
 import os
 

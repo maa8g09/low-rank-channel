@@ -1,34 +1,42 @@
 #!/usr/bin/env python3
+"""
+=====================================================================
+Add profile to field
+=====================================================================
+Add given velocity profile to the streamwise component of the 
+given flow field.
+
+#### To do:
+####    - Interpolate velocity profile if len(profile) != field.Ny
+
+Muhammad Arslan Ahmed
+maa8g09@soton.ac.uk
+Room 5069
+Building 13
+Aerodynamics and Flight Mechanics
+University of Southampton
+
+"""
 import argparse
-import os
-import numpy as np
-import ChannelResolvent as cr
+import sys
+sys.path.append("/".join(sys.path[0].split("/")[:-1]))
 import FlowField as ffClass
-import Tests
 import Utils as ut
-parser = argparse.ArgumentParser(description="Construct an (approximate)field at a given rank with a given mean profile (if specified).")
-parser.add_argument("-f",
-                    "--File",
-                    metavar='\b',
-                    help="File to add to.",
-                    required=True)
-parser.add_argument("-bf",
-                    "--Baseflow",
-#                    metavar='\b',
-                    help="The baseflow to add.",
+parser = argparse.ArgumentParser(description="Construct an (approximate) field at a given rank with a given mean profile (if specified).")
+parser.add_argument("-f", "--File", help="File to add to.",
+                    metavar='\b', required=True)
+parser.add_argument("-bf", "--Baseflow", help="The baseflow to add.",
                     choices=['lam', 'cou'])
-parser.add_argument("-p",
-                    "--Profile",
-                    metavar='\b',
-                    help="The mean/deviation/baseflow profile to add")
+parser.add_argument("-p", "--Profile", help="The mean/deviation/baseflow profile to add",
+                    metavar='\b')
 args = parser.parse_args()
-#================================================================
-#### Read the HDF5 and details file
-#================================================================
+#===================================================================#
+#### Read the HDF5 and details file                              ####
+#===================================================================#
 file_info, original_attrs = ut.read_H5(args.File)
-#================================================================
-#### Declare flow field object
-#================================================================
+#===================================================================#
+#### Declare flow field object                                   ####
+#===================================================================#
 ff_original = ffClass.FlowFieldChannelFlow( file_info['Nd'],
                                             file_info['Nx'],
                                             file_info['Ny'],
@@ -42,9 +50,9 @@ ff_original = ffClass.FlowFieldChannelFlow( file_info['Nd'],
                                             0.0,
                                             file_info['ff'],
                                             "pp")
-#================================================================
-#### Calculate mean/deviation/baseflow profile
-#================================================================
+#===================================================================#
+#### Calculate mean/deviation/baseflow profile                   ####
+#===================================================================#
 suffix = ""
 profile = []
 if args.Baseflow: # given baseflow flag
