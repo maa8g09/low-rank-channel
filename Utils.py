@@ -1043,10 +1043,18 @@ def plot_Contour(output_directory, fileName,
                  xAxisVel, yAxisVel,
                  xAxisName, yAxisName, 
                  velName, VL_max, VL_min,
-                 quiv, levels, printFullTitle):
+                 quiv, levels, printFullTitle, small_figures,
+                 ftype):
 
-    xticks = np.linspace(xAxis[0], xAxis[-1], 4)
-    yticks = np.linspace(yAxis[0], yAxis[-1], 5)
+    if not ftype:
+        ftype = "eps"
+
+    if small_figures:
+        xticks = np.linspace(xAxis[0], xAxis[-1], 3)
+        yticks = np.linspace(yAxis[0], yAxis[-1], 5)
+    else:
+        xticks = np.linspace(xAxis[0], xAxis[-1], 4)
+        yticks = np.linspace(yAxis[0], yAxis[-1], 5)
 
     x, y = np.meshgrid(xAxis, yAxis)
     v_min = np.amin(data)
@@ -1058,16 +1066,28 @@ def plot_Contour(output_directory, fileName,
 #    print(ticks_at)
     origin = 'lower'
 
+    
     my_dpi = 150
-    if xAxisName == "z" and yAxisName == "y":
-        figx = abs(xAxis[0] - xAxis[-1]) * 600.0
-        figy = abs(yAxis[0] - yAxis[-1]) * 600.0
-    elif xAxisName == "z" and yAxisName == "x":
-        figx = abs(xAxis[0] - xAxis[-1]) * 450.0
-        figy = abs(yAxis[0] - yAxis[-1]) * 225.0
-    elif xAxisName == "x" and yAxisName == "y":
-        figx = abs(xAxis[0] - xAxis[-1]) * 400.0
-        figy = abs(yAxis[0] - yAxis[-1]) * 200.0
+    if small_figures:
+        if xAxisName == "z" and yAxisName == "y":
+            figx = abs(xAxis[0] - xAxis[-1]) * 600.0 / 4.0
+            figy = abs(yAxis[0] - yAxis[-1]) * 600.0 / 4.0
+        elif xAxisName == "z" and yAxisName == "x":
+            figx = abs(xAxis[0] - xAxis[-1]) * 450.0 / 4.0
+            figy = abs(yAxis[0] - yAxis[-1]) * 225.0 / 4.0
+        elif xAxisName == "x" and yAxisName == "y":
+            figx = abs(xAxis[0] - xAxis[-1]) * 400.0 / 4.0
+            figy = abs(yAxis[0] - yAxis[-1]) * 200.0 / 4.0
+    else:
+        if xAxisName == "z" and yAxisName == "y":
+            figx = abs(xAxis[0] - xAxis[-1]) * 600.0
+            figy = abs(yAxis[0] - yAxis[-1]) * 600.0
+        elif xAxisName == "z" and yAxisName == "x":
+            figx = abs(xAxis[0] - xAxis[-1]) * 450.0
+            figy = abs(yAxis[0] - yAxis[-1]) * 225.0
+        elif xAxisName == "x" and yAxisName == "y":
+            figx = abs(xAxis[0] - xAxis[-1]) * 400.0
+            figy = abs(yAxis[0] - yAxis[-1]) * 200.0
 
     fig = plt.figure(figsize=(figx/my_dpi, figy/my_dpi), dpi=my_dpi)
 
@@ -1080,7 +1100,7 @@ def plot_Contour(output_directory, fileName,
                       cmap=cm.seismic,
                       origin=origin)
     
-    plt.contour(x, y, data, linewidths=0.5, colors='k')
+#    plt.contour(x, y, data, linewidths=0.5, colors='k')
     
     if quiv:
         plt.quiver(x, y,
@@ -1089,8 +1109,13 @@ def plot_Contour(output_directory, fileName,
                    color='k'
                    )
 
-    axisLabelFontSize = 18
-    ticksMajorFontSize = 12
+    if small_figures:
+        axisLabelFontSize = 12
+        ticksMajorFontSize = 9
+    
+    else:
+        axisLabelFontSize = 18
+        ticksMajorFontSize = 12
 
     plt.xlabel(xAxisName, fontsize=axisLabelFontSize)
     plt.ylabel(yAxisName, fontsize=axisLabelFontSize)
@@ -1100,21 +1125,29 @@ def plot_Contour(output_directory, fileName,
         plt.title(title)
 
 #    cbar = fig.colorbar(CS)
-    cbar = fig.colorbar(CS,ticks=ticks_at,format='%1.2g')#,fraction=0.046, pad=0.04)
-    cbar.ax.set_ylabel(velName)
+    if not small_figures:
+        cbar = fig.colorbar(CS,ticks=ticks_at,format='%1.2g')#,fraction=0.046, pad=0.04)
+        cbar.ax.set_ylabel(velName)
 
     plt.axes().set_aspect('equal')
 
     plt.xticks(xticks, fontsize = ticksMajorFontSize)
     plt.yticks(yticks, fontsize = ticksMajorFontSize)
 
-    fileName = output_directory + fileName + "_" + velName + "_x" + nxCoordStr + "_y" + nyCoordStr + "_z" + nzCoordStr 
-    if quiv:
-        fileName += "_q.svg"
-    else:
-        fileName += ".svg"
 
-    plt.savefig(fileName, bbox_inches='tight', dpi=1200)
+    fileName = fileName + "_" + velName + "_x" + nxCoordStr + "_y" + nyCoordStr + "_z" + nzCoordStr
+    if quiv:
+        fileName = output_directory + "q_" + fileName
+    else:
+        fileName = output_directory + fileName
+    
+    
+    if small_figures:
+        fileName += "__small"
+    
+    
+    fileName += "." + ftype
+    plt.savefig(fileName, bbox_inches='tight', dpi=my_dpi)
     plt.close(fig)
 
     return 0
@@ -1183,9 +1216,9 @@ def plot_Contour_coeffs(output_directory, fileName,
     plt.axis([xAxis_modified.min(),xAxis_modified.max(),
               yAxis_modified.min(),yAxis_modified.max()])
     
-    fileName = output_directory + fileName + ".svg"
+    fileName = output_directory + fileName + ".eps"
     print(fileName)
-    plt.savefig(fileName, bbox_inches='tight', dpi=1200)
+    plt.savefig(fileName, bbox_inches='tight', dpi=300)
     plt.close(fig)
  
     return
@@ -1193,7 +1226,7 @@ def plot_Contour_coeffs(output_directory, fileName,
 
 def plot_Convergence_DNS(data, T0, T1): # include T0 and T1 in the name of the file
 
-    fileName = "convergence_DNS_"+str(T0)+"-"+str(T1)+".svg"
+    fileName = "convergence_DNS_"+str(T0)+"-"+str(T1)+".eps"
 
     x = data['t']
     y = data['L2Norm(u)']
@@ -1215,7 +1248,7 @@ def plot_Convergence_DNS_log(data, T0, T1): # include T0 and T1 in the name of t
 
 #    fileName = "convergence_DNS_Re"+str(int(data['Uparab*h/nu'][0]))+"_log_"+str(T0)+"-"+str(T1)+".png"
 
-    fileName = "convergence_DNS_log_"+str(T0)+"-"+str(T1)+".svg"
+    fileName = "convergence_DNS_log_"+str(T0)+"-"+str(T1)+".eps"
 
     x = data['t']
     y = data['L2Norm(u)']
@@ -1323,7 +1356,7 @@ def plot_Convergence_NKH_multi(all_convergence_data, xTitle, yTitle):
     plt.tick_params(axis='both', which='minor', labelsize=ticksMinorFontSize)
 
     plt.grid(True)
-    plt.savefig(fileName+"_convergence_plot_"+xTitle+"_vs_"+yTitle+".svg", dpi=1200)
+    plt.savefig(fileName+"_convergence_plot_"+xTitle+"_vs_"+yTitle+".eps", dpi=300)
 
     return 0
 

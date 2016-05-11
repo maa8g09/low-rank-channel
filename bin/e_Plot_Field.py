@@ -26,6 +26,10 @@ parser.add_argument("-q", "--Quiver", help="Plot vector arrows as well?",
                     action='store_true')
 parser.add_argument("-l", "--Levels", help="How many levels the colorbar should have? (Default = 20)",
                     metavar='\b', type=int)
+parser.add_argument("-s", "--Small", help="Small figures?",
+                    action='store_true')
+parser.add_argument("-t", "--Type", help="File type?",
+                    metavar='\b', type=str)
 args = parser.parse_args()
 #===================================================================#
 #### Format current directory path                               ####
@@ -102,7 +106,7 @@ if args.Full:
                             ff.velocityField[p, j, :, :], 
                             "z", "y", velName,
                             vl_max, vl_min, args.Quiver, contour_levels,
-                            printFullTitle)
+                            printFullTitle, args.Small, args.Type)
     elif n == 1:
         y_directory = ut.make_Folder(images_directory, "y", False)
         for j in range(0, ff.Ny):
@@ -115,7 +119,7 @@ if args.Full:
                             ff.velocityField[p, :, j, :], 
                             "z", "x", velName,
                             vl_max, vl_min, args.Quiver, contour_levels,
-                            printFullTitle)
+                            printFullTitle, args.Small, args.Type)
     elif n == 2:
         z_directory = ut.make_Folder(images_directory, "z", False)
         for j in range(0, ff.Nz):
@@ -128,7 +132,7 @@ if args.Full:
                             ff.velocityField[p, :, :, j].T, 
                             "x", "y", velName,
                             vl_max, vl_min, args.Quiver, contour_levels,
-                            printFullTitle)
+                            printFullTitle, args.Small, args.Type)
 #===================================================================#
 #### If Co-Ordinate given                                        ####
 #===================================================================#
@@ -147,7 +151,7 @@ if args.Coordinate:
                         ff.velocityField[p, x_coord, :, :], 
                         "z", "y", velName,
                         vl_max, vl_min, args.Quiver, contour_levels,
-                        printFullTitle)
+                        printFullTitle, args.Small, args.Type)
     elif n == 1:
         coords = Tests.indices(ff.y, lambda m: m > float(args.Coordinate))
         y_coord = coords[-1]
@@ -161,7 +165,7 @@ if args.Coordinate:
                         ff.velocityField[p, :, y_coord, :], 
                         "z", "x", velName,
                         vl_max, vl_min, args.Quiver, contour_levels,
-                        printFullTitle)
+                        printFullTitle, args.Small, args.Type)
     elif n == 2:
         coords = Tests.indices(ff.z, lambda m: m > float(args.Coordinate))
         z_coord = coords[0]
@@ -175,7 +179,7 @@ if args.Coordinate:
                         ff.velocityField[p, :, :, z_coord].T, 
                         "x", "y", velName,
                         vl_max, vl_min, args.Quiver, contour_levels,
-                        printFullTitle)
+                        printFullTitle, args.Small, args.Type)
 #===================================================================#
 #### If Spatially averaging selected                             ####
 #===================================================================#
@@ -200,7 +204,7 @@ if args.SpatiallyAveraged:
                         x_averaged_ff[p, :, :], 
                         "z", "y", velName,
                         vl_max, vl_min, args.Quiver, contour_levels,
-                        printFullTitle)
+                        printFullTitle, args.Small, args.Type)
     elif n == 1:
         # Average the flow field in teh streamwise direction.
         y_averaged_ff = np.zeros((ff.Nd, ff.Nx, ff.Nz))
@@ -220,7 +224,7 @@ if args.SpatiallyAveraged:
                         y_averaged_ff[p, :, :], 
                         "z", "x", velName,
                         vl_max, vl_min, args.Quiver, contour_levels,
-                        printFullTitle)
+                        printFullTitle, args.Small, args.Type)
     elif n == 2:
         # Average the flow field in teh streamwise direction.
         z_averaged_ff = np.zeros((ff.Nd, ff.Nx, ff.Ny))
@@ -240,5 +244,5 @@ if args.SpatiallyAveraged:
                         z_averaged_ff[p, :, :].T, 
                         "x", "y", velName,
                         vl_max, vl_min, args.Quiver, contour_levels,
-                        printFullTitle)
+                        printFullTitle, args.Small, args.Type)
 ut.print_EndMessage()

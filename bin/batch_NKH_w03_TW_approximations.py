@@ -29,53 +29,45 @@ directory = ut.format_Directory_Path(directory)
 os.chdir(directory)
 print(directory)
 #### Plot flow field
-#plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -a -l 16"
-#print(plot)
-#os.system(plot)
-#plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -full -l 16"
-#print(plot)
-#os.system(plot)
+plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -a"
+print(plot)
+os.system(plot)
 ##### ---NKH Search
-T = -1
+T = 20
 if name == "tw2":
     T = 13.9
 elif name == "tw3":
     T = 11.9
-else:
-    T = 20
-#nkh = "findsoln -eqb -xrel -T "+str(T)+" -sn -log nkh-"+name+".log "+name+".h5"
-#print(nkh)
-#os.system(nkh)
-##### Deconstruct
-#deconstruct = "e_Deconstruct_Field.py -d "+args.Details+" -f "+name+".h5"
-#print(deconstruct)
-#os.system(deconstruct)
+nkh = "findsoln -eqb -xrel -T "+str(T)+" -sn -log nkh-"+name+".log "+name+".h5"
+print(nkh)
+os.system(nkh)
+#### Deconstruct
+deconstruct = "e_Deconstruct_Field.py -d "+args.Details+" -f "+name+".h5"
+print(deconstruct)
+os.system(deconstruct)
 
 #### Rank: Full
 #### ---Construct
-#print("\n======================================================================")
-#print("RANK: Full")
-#print("======================================================================")
-#rankfull = "\n\ne_Construct_Field.py -f "+name+"_deconstructed.h5 -r 1000"
-#print(rankfull)
-#os.system(rankfull)
-#fileName = name+"_rank_full"
-#rankfull_d = directory + fileName
-#os.chdir(rankfull_d)
-##### ---Plot flow field
-#plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0 -a -l 16"
-#print(plot)
-#os.system(plot)
-#plot = "e_Plot_Field.py -f "+name+".h5 -d "+args.Details+" -i 0 -n 0 -full -l 16"
-#print(plot)
-#os.system(plot)
-##### ---NKH Search
-#nkh = "findsoln -eqb -xrel -T "+str(T)+" -sn -log nkh-"+fileName+".log "+fileName+".h5"
-#print(nkh)
-#os.system(nkh)
+print("\n======================================================================")
+print("RANK: Full")
+print("======================================================================")
+rankfull = "\n\ne_Construct_Field.py -f "+name+"_deconstructed.h5 -r 1000"
+print(rankfull)
+os.system(rankfull)
+fileName = name+"_rank_full"
+rankfull_d = directory + fileName
+os.chdir(rankfull_d)
+#### ---Plot flow field
+plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0 -a"
+print(plot)
+os.system(plot)
+#### ---NKH Search
+nkh = "findsoln -eqb -xrel -T "+str(T)+" -sn -log nkh-"+fileName+".log "+fileName+".h5"
+print(nkh)
+os.system(nkh)
 
 #### Loop through ranks
-ranks = [40,60]
+ranks = [2,4,10,20,40,60]
 for r in range(0, len(ranks)):
     rank = ranks[r]
     print("\n======================================================================")
@@ -93,10 +85,7 @@ for r in range(0, len(ranks)):
     rank_dir = directory + fileName
     os.chdir(rank_dir)
     #### Plot flow field
-    plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0 -a -l 16"
-    print(plot)
-    os.system(plot)
-    plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0 -full -l 16"
+    plot = "e_Plot_Field.py -f "+fileName+".h5 -d ../"+args.Details+" -i 0 -n 0 -a"
     print(plot)
     os.system(plot)
     #### NKH Search

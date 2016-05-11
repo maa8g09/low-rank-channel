@@ -36,7 +36,7 @@ def continuity(resolvent_modes, S, kx, kz, Nm, D1):
     w = projected_field[2*Nm:3*Nm, :]
     continuty = 1.0j*kx*u + np.dot(D1, v) + 1.0j*kz*w
     norm = np.linalg.norm(continuty)
-    if norm >= 1e-7:
+    if norm >= 1e-8:
         err = 'Something went wrong with the continuity condition, norm is %.2E' % norm 
         ut.error(err)
     
