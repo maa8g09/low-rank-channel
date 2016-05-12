@@ -182,7 +182,7 @@ def difference(A, B, tolerance, message):
         print(message)
         err = "Matrices are not equal, ||delta|| = %.2E" % diff 
         ut.error(err)
-    return
+    return diff
     
 def projection(chi, sigma, psi, u_hat, tolerance):
     test = psi * sigma * chi    

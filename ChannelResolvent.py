@@ -415,9 +415,7 @@ def construct_field(resolvent_modes,
     
     return approximated_ff_spectral
 
-
-
-
+    
 
 def test_resolvent_formulation(ff, rank):
     #===============================================================#
